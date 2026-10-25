@@ -6,10 +6,10 @@ import MeetingForm from './components/MeetingForm.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
 import TabBar from './components/TabBar.jsx';
 import Toast from './components/Toast.jsx';
-import { loadMeetings, saveMeetings } from './lib/storage.js';
+import { loadMeetings, saveMeetings, loadDeleted, saveDeleted, syncRemote, signature } from './lib/storage.js';
 import { newId } from './lib/meetings.js';
 import { todayISO } from './lib/dates.js';
-import { haptic } from './lib/telegram.js';
+import { haptic, isTelegram } from './lib/telegram.js';
 import { useBackButton, useNow } from './lib/hooks.js';
 
 export default function App() {
@@ -23,8 +23,69 @@ export default function App() {
   const toastTimer = useRef(null);
   const now = useNow();
 
+  const meetingsRef = useRef(meetings);
+  meetingsRef.current = meetings;
+  const deletedRef = useRef(loadDeleted());
+  const fromServer = useRef(false);
+  const syncing = useRef(false);
+  const syncTimer = useRef(null);
+
+  // Serverga yuboradi va birlashtirilgan ro'yxatni qaytarib oladi.
+  const doSync = useCallback(async () => {
+    if (!isTelegram || syncing.current) return;
+    syncing.current = true;
+    try {
+      const sentDeleted = [...deletedRef.current];
+      const remote = await syncRemote(meetingsRef.current, sentDeleted);
+      if (remote) {
+        deletedRef.current = deletedRef.current.filter((id) => !sentDeleted.includes(id));
+        saveDeleted(deletedRef.current);
+        if (signature(remote) !== signature(meetingsRef.current)) {
+          fromServer.current = true;
+          setMeetings(remote);
+        }
+      }
+    } catch {
+      /* tarmoq yo'q — keyingi safar urinamiz */
+    } finally {
+      syncing.current = false;
+    }
+  }, []);
+
   useEffect(() => {
     saveMeetings(meetings);
+    if (fromServer.current) {
+      fromServer.current = false;
+      return;
+    }
+    clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(doSync, 600);
+  }, [meetings, doSync]);
+
+  useEffect(() => {
+    doSync();
+    const id = setInterval(doSync, 30000);
+    const onVisible = () => document.visibilityState === 'visible' && doSync();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [doSync]);
+
+  // Bot tugmalaridan kelgan havola: ?edit=<id> yoki ?new=1
+  const deepLink = useRef(new URLSearchParams(window.location.search));
+  useEffect(() => {
+    const p = deepLink.current;
+    if (!p) return;
+    const editId = p.get('edit');
+    if (editId && meetings.some((m) => m.id === editId)) {
+      setSheet({ type: 'form', id: editId });
+      deepLink.current = null;
+    } else if (p.get('new')) {
+      setSheet({ type: 'form' });
+      deepLink.current = null;
+    }
   }, [meetings]);
 
   const showToast = useCallback((message) => {
@@ -80,10 +141,10 @@ export default function App() {
 
   const handleSave = (data) => {
     if (sheet.id) {
-      setMeetings((list) => list.map((m) => (m.id === sheet.id ? { ...m, ...data } : m)));
+      setMeetings((list) => list.map((m) => (m.id === sheet.id ? { ...m, ...data, updatedAt: Date.now() } : m)));
       setSheet({ type: 'detail', id: sheet.id });
     } else {
-      setMeetings((list) => [...list, { id: newId(), createdAt: Date.now(), ...data }]);
+      setMeetings((list) => [...list, { id: newId(), createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
       setSheet(null);
     }
     setSelectedDate(data.date);
@@ -96,13 +157,15 @@ export default function App() {
     setMeetings((list) =>
       list.map((m) =>
         m.id === meetingId
-          ? { ...m, checklist: m.checklist.map((i) => (i.id === itemId ? { ...i, done: !i.done } : i)) }
+          ? { ...m, updatedAt: Date.now(), checklist: m.checklist.map((i) => (i.id === itemId ? { ...i, done: !i.done } : i)) }
           : m,
       ),
     );
   };
 
   const handleDelete = () => {
+    deletedRef.current = [...deletedRef.current, confirmId];
+    saveDeleted(deletedRef.current);
     setMeetings((list) => list.filter((m) => m.id !== confirmId));
     setConfirmId(null);
     setSheet(null);

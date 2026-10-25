@@ -5,6 +5,7 @@ const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined;
 
 // Telegram skripti oddiy brauzerda ham yuklanadi, lekin initData faqat Telegram ichida bo'ladi.
 export const isTelegram = Boolean(tg?.initData);
+export const initData = tg?.initData ?? '';
 
 const atLeast = (version) => {
   try {
