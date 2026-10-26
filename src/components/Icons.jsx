@@ -81,3 +81,15 @@ export const IconUsers = make(
   </>,
 );
 export const IconSend = make(<path d="M21 3L3 10.5l6.5 2.5L12 19.5 21 3zM9.5 13L21 3" />);
+export const IconHome = make(<path d="M4 11.5L12 4l8 7.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />);
+export const IconChart = make(<path d="M5 20V10M12 20V4M19 20v-7" />);
+export const IconCopy = make(
+  <>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="2.5" />
+    <path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5" />
+  </>,
+);
+export const IconSparkle = make(<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" />);
+export const IconBell = make(<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.500zM10 20a2 2 0 0 0 4 0" />);
+export const IconLink = make(<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />);
+export const IconUndo = make(<path d="M9 7L4.5 11.500 9 16M5 11.500h9a5 5 0 0 1 0 10h-2" />);

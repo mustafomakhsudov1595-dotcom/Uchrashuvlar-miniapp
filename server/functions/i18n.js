@@ -64,6 +64,7 @@ const uz = {
   /* taklif */
   inviteMsg: (link) => `👥 <b>Taklif havolasi</b>\n\nUni doʻstingizga yuboring. U havolani bossa, uchrashuv uning roʻyxatiga qoʻshiladi va u ham eslatma oladi:\n\n${link}`, inviteShare: '📤 Yuborish', inviteText: (n) => `Uchrashuvga taklif: ${n}`,
   joined: '✅ <b>Uchrashuv roʻyxatingizga qoʻshildi!</b> Eslatma ham keladi.', joinedOwner: (n, m) => `👤 <b>${n}</b> taklifingizni qabul qildi: «${m}»`, joinBad: 'Taklif havolasi eskirgan yoki notoʻgʻri.', joinSelf: 'Bu sizning oʻz uchrashuvingiz.', joinAlready: 'Bu uchrashuv allaqachon roʻyxatingizda.',
+  calMsg: (link) => `📆 <b>Kalendarga ulash</b>\n\nBu havolani telefon kalendaringizga <b>obuna</b> sifatida qoʻshing (Apple: Sozlamalar → Kalendar → Hisoblar → Obuna; Google Calendar: Boshqa kalendarlar → URL orqali). Uchrashuvlar avtomatik kelib turadi:\n\n${link}`,
   contactSent: 'Kontakt yuborildi — bosib qoʻngʻiroq qiling.', noPhone: 'Telefon raqam kiritilmagan.', noLoc: 'Joy kiritilmagan.',
 };
 
@@ -119,6 +120,7 @@ const ru = {
   searchUsage: '🔎 Напишите: <code>/qidir Анвар</code>', searchRes: (q, n) => `🔎 <b>«${q}»</b> — найдено: ${n}`, searchNone: (q) => `🔎 По запросу «${q}» ничего не найдено.`,
   inviteMsg: (link) => `👥 <b>Ссылка-приглашение</b>\n\nОтправьте её другу. Когда он откроет ссылку, встреча добавится в его список, и он тоже будет получать напоминания:\n\n${link}`, inviteShare: '📤 Отправить', inviteText: (n) => `Приглашение на встречу: ${n}`,
   joined: '✅ <b>Встреча добавлена в ваш список!</b> Напоминание тоже придёт.', joinedOwner: (n, m) => `👤 <b>${n}</b> принял(а) приглашение: «${m}»`, joinBad: 'Ссылка-приглашение устарела или неверна.', joinSelf: 'Это ваша собственная встреча.', joinAlready: 'Эта встреча уже есть в вашем списке.',
+  calMsg: (link) => `📆 <b>Подключить календарь</b>\n\nДобавьте эту ссылку в календарь телефона как <b>подписку</b> (Apple: Настройки → Календарь → Учётные записи → Подписка; Google Calendar: Другие календари → По URL). Встречи будут появляться автоматически:\n\n${link}`,
   contactSent: 'Контакт отправлен — нажмите, чтобы позвонить.', noPhone: 'Телефон не указан.', noLoc: 'Место не указано.',
 };
 
@@ -172,6 +174,7 @@ const en = {
   searchUsage: '🔎 Type: <code>/qidir Anvar</code>', searchRes: (q, n) => `🔎 <b>"${q}"</b> — ${n} found`, searchNone: (q) => `🔎 Nothing found for "${q}".`,
   inviteMsg: (link) => `👥 <b>Invitation link</b>\n\nSend it to a friend. When they open it, the meeting is added to their list and they get reminders too:\n\n${link}`, inviteShare: '📤 Send', inviteText: (n) => `Meeting invitation: ${n}`,
   joined: '✅ <b>Meeting added to your list!</b> You will get reminders too.', joinedOwner: (n, m) => `👤 <b>${n}</b> accepted your invitation: "${m}"`, joinBad: 'The invitation link is expired or invalid.', joinSelf: 'This is your own meeting.', joinAlready: 'This meeting is already in your list.',
+  calMsg: (link) => `📆 <b>Connect calendar</b>\n\nAdd this link to your phone calendar as a <b>subscription</b> (Apple: Settings → Calendar → Accounts → Subscribed; Google Calendar: Other calendars → From URL). Meetings will appear automatically:\n\n${link}`,
   contactSent: 'Contact sent — tap it to call.', noPhone: 'No phone number.', noLoc: 'No place set.',
 };
 

@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import Sheet from './Sheet.jsx';
-import { IconCalendar, IconCheck, IconClock, IconClose, IconEdit, IconExternal, IconPhone, IconPin, IconSend, IconTrash, IconUsers } from './Icons.jsx';
+import { IconCalendar, IconCheck, IconClock, IconClose, IconCopy, IconEdit, IconExternal, IconPhone, IconPin, IconSend, IconTrash, IconUsers } from './Icons.jsx';
 import { checklistProgress, statusText } from '../lib/meetings.js';
 import { formatFull } from '../lib/dates.js';
 import { openExternal } from '../lib/telegram.js';
@@ -30,14 +31,15 @@ function ExtLink({ href, children }) {
       }}
     >
       {children}
-      <IconExternal width={16} height={16} />
+      <IconExternal width={15} height={15} />
     </a>
   );
 }
 
-export default function MeetingDetail({ meeting, now, onToggle, onEdit, onDelete, onClose, onStatus, onInvite, inviting }) {
+export default function MeetingDetail({ meeting, now, onToggle, onEdit, onDelete, onClose, onStatus, onInvite, onDuplicate, onCalendar, inviting }) {
   const { done, total } = checklistProgress(meeting);
   const map = mapLinks(meeting);
+  const [calOpen, setCalOpen] = useState(false);
 
   return (
     <Sheet
@@ -56,46 +58,60 @@ export default function MeetingDetail({ meeting, now, onToggle, onEdit, onDelete
         </>
       }
     >
-      <h3 className="d-name">
-        {meeting.cat && <i className={`cat-dot cat-${meeting.cat}`} aria-label={t('cats')[meeting.cat]} />}
-        {meeting.name}
-      </h3>
-      <p className="d-status">
-        {statusText(meeting, now)}
-        {meeting.cat && <span className="d-cat"> · {t('cats')[meeting.cat]}</span>}
-      </p>
+      <div className={`d-hero${meeting.cat ? ` cat-${meeting.cat}` : ''}`}>
+        <span className="d-time">{meeting.time}</span>
+        <span className="d-when">{formatFull(meeting.date)}</span>
+        <h3 className="d-name">{meeting.name}</h3>
+        <p className="d-status">
+          {statusText(meeting, now)}
+          {meeting.cat && <span className="d-cat"> · {t('cats')[meeting.cat]}</span>}
+        </p>
+      </div>
 
       <div className="actions">
         {meeting.status ? (
           <button type="button" className="act" onClick={() => onStatus('')}>
+            <span><IconCheck width={20} height={20} strokeWidth={2.2} /></span>
             {t('dReopen')}
           </button>
         ) : (
           <>
             <button type="button" className="act ok" onClick={() => onStatus('done')}>
-              <IconCheck width={18} height={18} strokeWidth={2.4} />
+              <span><IconCheck width={20} height={20} strokeWidth={2.6} /></span>
               {t('dDone')}
             </button>
             <button type="button" className="act bad" onClick={() => onStatus('cancelled')}>
-              <IconClose width={18} height={18} />
+              <span><IconClose width={20} height={20} /></span>
               {t('dCancelled')}
             </button>
           </>
         )}
         <button type="button" className="act" onClick={onInvite} disabled={inviting}>
-          <IconSend width={18} height={18} />
+          <span><IconSend width={20} height={20} /></span>
           {t('dInvite')}
+        </button>
+        <button type="button" className="act" onClick={onDuplicate}>
+          <span><IconCopy width={20} height={20} /></span>
+          {t('dDuplicate')}
+        </button>
+        <button type="button" className={`act${calOpen ? ' on' : ''}`} onClick={() => setCalOpen((v) => !v)}>
+          <span><IconCalendar width={20} height={20} /></span>
+          {t('dCalendar')}
         </button>
       </div>
 
-      <div className="info">
-        <div className="info-row">
-          <IconCalendar />
-          <div>
-            <div className="info-label">{t('dDate')}</div>
-            <div className="info-value">{formatFull(meeting.date)}</div>
-          </div>
+      {calOpen && (
+        <div className="cal-menu">
+          <button type="button" className="btn btn-glass" onClick={() => onCalendar('google')}>
+            {t('dGoogleCal')}
+          </button>
+          <button type="button" className="btn btn-glass" onClick={() => onCalendar('ics')}>
+            {t('dIcs')}
+          </button>
         </div>
+      )}
+
+      <div className="info">
         <div className="info-row">
           <IconClock />
           <div>

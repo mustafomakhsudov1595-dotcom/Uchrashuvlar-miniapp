@@ -350,6 +350,10 @@ async function onMessage(st, m) {
   else if (cmd === '/jim') { await showQuiet(ctx, u); }
   else if (cmd === '/vaqt') { await showTz(ctx, u); }
   else if (cmd === '/til') { await send(chat, STR.uz.chooseLang, langKb); }
+  else if (cmd === '/kalendar') {
+    if (!u.calToken) { u.calToken = S.newId().replace(/-/g, '').slice(0, 24); await st.set(`cal/${u.calToken}`, u.id); }
+    await send(chat, T.calMsg(`${S.SITE()}/api/cal/${u.calToken}.ics`));
+  }
   else if (cmd === '/statistika') { await showStats(ctx, u, S.todayISO(u.tz).slice(0, 7)); }
   else if (cmd === '/sozlamalar') { await settingsMenu(ctx, u); }
   else if (cmd) { await send(chat, T.unknownCmd, kbFor(T)); }

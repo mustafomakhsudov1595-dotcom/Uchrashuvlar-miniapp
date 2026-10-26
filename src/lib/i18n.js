@@ -95,6 +95,62 @@ const en = {
   sTitle: 'Settings', sLang: 'Language', sPlaces: 'Favorite places', sNoPlaces: 'No favorite places yet. Tap ★ next to the place when adding a meeting.', sBot: 'Telegram bot', sBotText: 'Reminders, daily summary, quiet hours and statistics are set up in the bot.', sBotOpen: 'Open the bot', sRemove: 'Remove',
 };
 
+
+// ---- Yangi dizayn uchun qo'shimcha matnlar ----
+const X = {
+  uz: {
+    greetMorning: 'Xayrli tong', greetDay: 'Xayrli kun', greetEvening: 'Xayrli kech', greetNight: 'Xayrli tun',
+    qaPlaceholders: ['ertaga 15:00 Anvar bilan, ofis', 'juma soat 14 bank, +998901234567', '28.10 10:30 vrach #shaxsiy', 'bugun kechqurun 7 tugʻilgan kun'],
+    qaSend: 'Qoʻshish', qaMore: 'Qoʻshimcha maʼlumot kiriting', qaHint: 'Yozing — tushunaman',
+    chipDate: 'Sana', chipTime: 'Vaqt', chipName: 'Kim', chipPlace: 'Joy', chipPhone: 'Telefon',
+    nowLabel: 'Hozir', dayEmptyTitle: 'Bu kun boʻsh', dayEmptyText: 'Uchrashuv qoʻshing yoki tez qoʻshish satriga yozing.',
+    secDay: 'Kun jadvali', secNext: 'Keyingi uchrashuvlar', heroOpen: 'Ochish', heroEmptyTitle: 'Yaqin uchrashuv yoʻq', heroEmptyText: 'Hammasi tinch. Yangi uchrashuv qoʻshing.',
+    swDone: 'Bordim', swDelete: 'Oʻchirish', undo: 'Qaytarish', toastRestored: 'Qaytarildi', toastDeletedUndo: 'Oʻchirildi',
+    tabHome: 'Bosh', tabStats: 'Statistika', statsTitle: 'Statistika', stTotal: 'Jami', stAttended: 'Oʻtgan', stUpcoming: 'Kelgusi', stCancelled: 'Bekor', stWeekday: 'Hafta kunlari', stHours: 'Soatlar boʻyicha',
+    stCats: 'Turkumlar', stNoCat: 'Turkumsiz', stPlaces: 'Koʻp boriladigan joylar', stVsPrev: (n) => (n === 0 ? 'oʻtgan oyday' : n > 0 ? `oʻtgan oydan +${n}` : `oʻtgan oydan ${n}`), stNoData: 'Bu oyda maʼlumot yoʻq', stChecklist: 'Tayyorgarlik', stDoneOf: (a, b) => `${a}/${b} bajarildi`, stMonth: 'Oy',
+    sTheme: 'Koʻrinish', sMode: 'Rejim', modeAuto: 'Avto', modeLight: 'Yorugʻ', modeDark: 'Qorongʻu', sAccent: 'Asosiy rang',
+    accent: { teal: 'Feruza', blue: 'Koʻk', violet: 'Binafsha', rose: 'Atirgul', green: 'Yashil' },
+    sCalendar: 'Kalendarga ulash', sCalendarText: 'Uchrashuvlaringiz telefon kalendariga (Apple / Google) avtomatik kelib turadi va oʻzgarsa yangilanadi.', sCalGet: 'Kalendar havolasini olish', sCalOpen: 'Kalendarga qoʻshish', sCalCopy: 'Havolani nusxalash',
+    dDuplicate: 'Nusxa', dCalendar: 'Kalendarga', dGoogleCal: 'Google Calendar', dIcs: 'Boshqa kalendar (.ics)', fDuplicate: 'Nusxa — yangi sana tanlang', toastLinkCopied: 'Havola nusxalandi', toastCalErr: 'Kalendar havolasini olib boʻlmadi',
+    searchOpen: 'Qidirish', uMin: 'daq', uH: 'soat', uD: 'kun', closeSearch: 'Yopish',
+  },
+  ru: {
+    greetMorning: 'Доброе утро', greetDay: 'Добрый день', greetEvening: 'Добрый вечер', greetNight: 'Доброй ночи',
+    qaPlaceholders: ['завтра 15:00 Анвар, офис', 'пятница в 14 банк, +998901234567', '28.10 10:30 врач #личное', 'сегодня вечером 7 день рождения'],
+    qaSend: 'Добавить', qaMore: 'Дополните данные', qaHint: 'Пишите — я пойму',
+    chipDate: 'Дата', chipTime: 'Время', chipName: 'Кто', chipPlace: 'Место', chipPhone: 'Телефон',
+    nowLabel: 'Сейчас', dayEmptyTitle: 'В этот день пусто', dayEmptyText: 'Добавьте встречу или напишите в строку быстрого добавления.',
+    secDay: 'Расписание дня', secNext: 'Следующие встречи', heroOpen: 'Открыть', heroEmptyTitle: 'Ближайших встреч нет', heroEmptyText: 'Всё спокойно. Добавьте новую встречу.',
+    swDone: 'Был(а)', swDelete: 'Удалить', undo: 'Вернуть', toastRestored: 'Возвращено', toastDeletedUndo: 'Удалено',
+    tabHome: 'Главная', tabStats: 'Статистика', statsTitle: 'Статистика', stTotal: 'Всего', stAttended: 'Прошли', stUpcoming: 'Предстоят', stCancelled: 'Отменены', stWeekday: 'Дни недели', stHours: 'По часам',
+    stCats: 'Категории', stNoCat: 'Без категории', stPlaces: 'Частые места', stVsPrev: (n) => (n === 0 ? 'как в прошлом месяце' : n > 0 ? `+${n} к прошлому месяцу` : `${n} к прошлому месяцу`), stNoData: 'В этом месяце данных нет', stChecklist: 'Подготовка', stDoneOf: (a, b) => `${a}/${b} выполнено`, stMonth: 'Месяц',
+    sTheme: 'Внешний вид', sMode: 'Режим', modeAuto: 'Авто', modeLight: 'Светлый', modeDark: 'Тёмный', sAccent: 'Основной цвет',
+    accent: { teal: 'Бирюзовый', blue: 'Синий', violet: 'Фиолетовый', rose: 'Розовый', green: 'Зелёный' },
+    sCalendar: 'Подключить календарь', sCalendarText: 'Ваши встречи будут автоматически появляться в календаре телефона (Apple / Google) и обновляться при изменениях.', sCalGet: 'Получить ссылку календаря', sCalOpen: 'Добавить в календарь', sCalCopy: 'Скопировать ссылку',
+    dDuplicate: 'Копия', dCalendar: 'В календарь', dGoogleCal: 'Google Календарь', dIcs: 'Другой календарь (.ics)', fDuplicate: 'Копия — выберите новую дату', toastLinkCopied: 'Ссылка скопирована', toastCalErr: 'Не удалось получить ссылку календаря',
+    searchOpen: 'Поиск', uMin: 'мин', uH: 'ч', uD: 'дн', closeSearch: 'Закрыть',
+  },
+  en: {
+    greetMorning: 'Good morning', greetDay: 'Good afternoon', greetEvening: 'Good evening', greetNight: 'Good night',
+    qaPlaceholders: ['tomorrow 3pm lunch with Aziz, cafe', 'friday at 2pm bank, +998901234567', '28.10 10:30 doctor #personal', 'today evening 7 birthday'],
+    qaSend: 'Add', qaMore: 'Fill in the missing details', qaHint: 'Type — I will understand',
+    chipDate: 'Date', chipTime: 'Time', chipName: 'Who', chipPlace: 'Place', chipPhone: 'Phone',
+    nowLabel: 'Now', dayEmptyTitle: 'Nothing planned', dayEmptyText: 'Add a meeting or type into the quick-add bar.',
+    secDay: 'Day schedule', secNext: 'Next meetings', heroOpen: 'Open', heroEmptyTitle: 'No upcoming meetings', heroEmptyText: 'All quiet. Add a new meeting.',
+    swDone: 'Attended', swDelete: 'Delete', undo: 'Undo', toastRestored: 'Restored', toastDeletedUndo: 'Deleted',
+    tabHome: 'Home', tabStats: 'Stats', statsTitle: 'Statistics', stTotal: 'Total', stAttended: 'Past', stUpcoming: 'Upcoming', stCancelled: 'Cancelled', stWeekday: 'Weekdays', stHours: 'By hour',
+    stCats: 'Categories', stNoCat: 'No category', stPlaces: 'Frequent places', stVsPrev: (n) => (n === 0 ? 'same as last month' : n > 0 ? `+${n} vs last month` : `${n} vs last month`), stNoData: 'No data this month', stChecklist: 'Preparation', stDoneOf: (a, b) => `${a}/${b} done`, stMonth: 'Month',
+    sTheme: 'Appearance', sMode: 'Mode', modeAuto: 'Auto', modeLight: 'Light', modeDark: 'Dark', sAccent: 'Accent color',
+    accent: { teal: 'Teal', blue: 'Blue', violet: 'Violet', rose: 'Rose', green: 'Green' },
+    sCalendar: 'Connect calendar', sCalendarText: 'Your meetings will appear in your phone calendar (Apple / Google) automatically and stay up to date.', sCalGet: 'Get calendar link', sCalOpen: 'Add to calendar', sCalCopy: 'Copy link',
+    dDuplicate: 'Copy', dCalendar: 'To calendar', dGoogleCal: 'Google Calendar', dIcs: 'Other calendar (.ics)', fDuplicate: 'Copy — pick a new date', toastLinkCopied: 'Link copied', toastCalErr: 'Could not get the calendar link',
+    searchOpen: 'Search', uMin: 'min', uH: 'h', uD: 'd', closeSearch: 'Close',
+  },
+};
+Object.assign(uz, X.uz);
+Object.assign(ru, X.ru);
+Object.assign(en, X.en);
+
 export const DICT = { uz, ru, en };
 export const LANGS = [['uz', "O'zbekcha"], ['ru', 'Русский'], ['en', 'English']];
 const KEY = 'uchrashuvlar:lang';

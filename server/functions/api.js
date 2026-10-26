@@ -18,6 +18,15 @@ exports.handler = async (event) => {
   let b;
   try { b = JSON.parse(event.body || '{}'); } catch { return json(400, { ok: false }); }
 
+  if (b.action === 'cal') {
+    if (!u.calToken) {
+      u.calToken = S.newId().replace(/-/g, '').slice(0, 24);
+      await st.set(`cal/${u.calToken}`, u.id);
+      await S.saveUser(st, u);
+    }
+    return json(200, { ok: true, token: u.calToken });
+  }
+
   if (b.action === 'invite') {
     const m = u.meetings.find((x) => x.id === b.id);
     if (!m) return json(404, { ok: false, error: 'not found' });

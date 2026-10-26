@@ -15,29 +15,7 @@ const atLeast = (version) => {
   }
 };
 
-const BG = { light: '#F3F6FA', dark: '#0A1626' };
-
-function currentTheme() {
-  if (isTelegram && tg.colorScheme) return tg.colorScheme;
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme() {
-  const theme = currentTheme();
-  document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BG[theme]);
-  if (!isTelegram) return;
-  try {
-    if (atLeast('6.9')) tg.setHeaderColor(BG[theme]);
-    if (atLeast('6.1')) tg.setBackgroundColor(BG[theme]);
-    if (atLeast('7.10')) tg.setBottomBarColor(BG[theme]);
-  } catch {
-    /* eski Telegram versiyasi — e'tibor bermaymiz */
-  }
-}
-
 export function initTelegram() {
-  applyTheme();
   if (tg) {
     tg.ready(); // Telegram'ga: "ilova tayyor"
     tg.expand(); // to'liq balandlikka ochish
@@ -49,8 +27,6 @@ export function initTelegram() {
       }
     }
   }
-  if (isTelegram) tg.onEvent('themeChanged', applyTheme);
-  else window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 }
 
 // Telegram'ning yuqoridagi "Orqaga" tugmasi (6.1+)

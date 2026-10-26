@@ -8,18 +8,18 @@ import { newId } from '../lib/meetings.js';
 import { haptic } from '../lib/telegram.js';
 
 // Yangi uchrashuv qo'shish yoki mavjudini tahrirlash formasi.
-export default function MeetingForm({ initial, presetDate, favorites = [], recent = [], onToggleFav, onSave, onClose }) {
+export default function MeetingForm({ initial, presetDate, prefill, titleKey, favorites = [], recent = [], onToggleFav, onSave, onClose }) {
   const uid = useId();
   const [f, setF] = useState(() => ({
-    name: initial?.name ?? '',
-    date: initial?.date ?? presetDate ?? todayISO(),
-    time: initial?.time ?? defaultTime(),
-    location: initial?.location ?? '',
-    phone: initial?.phone ?? '',
-    cat: initial?.cat ?? '',
-    notes: initial?.notes ?? '',
+    name: initial?.name ?? prefill?.name ?? '',
+    date: initial?.date ?? prefill?.date ?? presetDate ?? todayISO(),
+    time: initial?.time ?? prefill?.time ?? defaultTime(),
+    location: initial?.location ?? prefill?.location ?? '',
+    phone: initial?.phone ?? prefill?.phone ?? '',
+    cat: initial?.cat ?? prefill?.cat ?? '',
+    notes: initial?.notes ?? prefill?.notes ?? '',
   }));
-  const [items, setItems] = useState(() => initial?.checklist ?? []);
+  const [items, setItems] = useState(() => initial?.checklist ?? prefill?.checklist ?? []);
   const [draft, setDraft] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -74,7 +74,7 @@ export default function MeetingForm({ initial, presetDate, favorites = [], recen
 
   return (
     <Sheet
-      title={initial ? t('fEdit') : t('fNew')}
+      title={initial ? t('fEdit') : titleKey ? t(titleKey) : t('fNew')}
       onClose={onClose}
       tall
       dismissOnOverlay={false}

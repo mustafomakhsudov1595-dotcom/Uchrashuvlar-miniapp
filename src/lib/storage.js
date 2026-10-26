@@ -128,3 +128,10 @@ export async function createInvite(id) {
   if (!res.ok) throw new Error(`invite ${res.status}`);
   return res.json();
 }
+
+// Kalendar obuna havolasi uchun maxfiy kalit (server yaratadi)
+export async function getCalendarToken() {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'cal' }) });
+  if (!res.ok) throw new Error(`cal ${res.status}`);
+  return (await res.json()).token;
+}

@@ -1,34 +1,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import UpcomingView from './components/UpcomingView.jsx';
+import HomeView from './components/HomeView.jsx';
 import CalendarView from './components/CalendarView.jsx';
+import StatsView from './components/StatsView.jsx';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
 import TabBar from './components/TabBar.jsx';
 import Toast from './components/Toast.jsx';
+import Confetti from './components/Confetti.jsx';
 import {
-  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, signature,
+  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, getCalendarToken, signature,
 } from './lib/storage.js';
 import { newId } from './lib/meetings.js';
-import { todayISO } from './lib/dates.js';
-import { haptic, isTelegram, openTelegramLink } from './lib/telegram.js';
+import { addDays, fromISODate, meetingStart, toISODate, todayISO } from './lib/dates.js';
+import { haptic, isTelegram, openExternal, openTelegramLink } from './lib/telegram.js';
 import { useBackButton, useNow } from './lib/hooks.js';
 import { getLang, hasSavedLang, setLang, t, useLang } from './lib/i18n.js';
+
+const blank = { status: '', from: '', src: '', guests: 0, lat: null, lon: null, location: '', phone: '', cat: '', notes: '', checklist: [] };
+
+// Google Calendar "qo'shish" havolasi (qurilma vaqt zonasida)
+function googleCalUrl(m) {
+  const s = meetingStart(m);
+  const e = new Date(s.getTime() + 3600000);
+  const f = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const details = [m.notes, m.phone && `📞 ${m.phone}`, ...m.checklist.map((i) => `• ${i.text}`)].filter(Boolean).join('\n');
+  const q = new URLSearchParams({ action: 'TEMPLATE', text: m.name, dates: `${f(s)}/${f(e)}`, details, location: m.location || '' });
+  return `https://calendar.google.com/calendar/render?${q}`;
+}
 
 export default function App() {
   const lang = useLang(); // til o'zgarsa butun ilova qayta chiziladi
   const [meetings, setMeetings] = useState(loadMeetings);
   const [places, setPlaces] = useState(() => loadPlaces());
-  const [tab, setTab] = useState('upcoming');
+  const [tab, setTab] = useState('home');
   const [selectedDate, setSelectedDate] = useState(todayISO);
-  // sheet: null | { type: 'detail', id } | { type: 'form', id?, date? } | { type: 'settings' }
+  // sheet: null | { type: 'detail', id } | { type: 'form', id?, date?, prefill?, titleKey? } | { type: 'settings' }
   const [sheet, setSheet] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const [inviting, setInviting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [burst, setBurst] = useState(0);
   const toastTimer = useRef(null);
-  const now = useNow();
+  const calToken = useRef(null);
+  const now = useNow(15000);
 
   const meetingsRef = useRef(meetings);
   meetingsRef.current = meetings;
@@ -115,28 +131,22 @@ export default function App() {
     }
   }, [meetings]);
 
-  const showToast = useCallback((message) => {
-    setToast(message);
+  const showToast = useCallback((message, action) => {
+    setToast({ message, action });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 2200);
+    toastTimer.current = setTimeout(() => setToast(null), action ? 5200 : 2200);
   }, []);
 
   const current = sheet?.id ? meetings.find((m) => m.id === sheet.id) : null;
 
-  // Ochiq oyna o'chib ketgan uchrashuvga tegishli bo'lsa, yopamiz.
   useEffect(() => {
     if (sheet?.id && !current) setSheet(null);
   }, [sheet, current]);
 
-  // Eng ustidagi qatlamni yopadi: avval tasdiqlash oynasi, keyin forma/tafsilot.
   const closeTop = useCallback(() => {
-    if (confirmId) {
-      setConfirmId(null);
-    } else if (sheet?.type === 'form' && sheet.id) {
-      setSheet({ type: 'detail', id: sheet.id });
-    } else {
-      setSheet(null);
-    }
+    if (confirmId) setConfirmId(null);
+    else if (sheet?.type === 'form' && sheet.id) setSheet({ type: 'detail', id: sheet.id });
+    else setSheet(null);
   }, [confirmId, sheet]);
 
   const overlayOpen = Boolean(sheet || confirmId);
@@ -149,9 +159,7 @@ export default function App() {
 
   useEffect(() => {
     if (!overlayOpen) return undefined;
-    const onKey = (e) => {
-      if (e.key === 'Escape') closeTop();
-    };
+    const onKey = (e) => e.key === 'Escape' && closeTop();
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [overlayOpen, closeTop]);
@@ -160,10 +168,13 @@ export default function App() {
     haptic.tap();
     setSheet({ type: 'detail', id });
   };
-
   const openAdd = (date) => {
     haptic.tap();
     setSheet({ type: 'form', date });
+  };
+  const openSettings = () => {
+    haptic.tap();
+    setSheet({ type: 'settings' });
   };
 
   const handleSave = (data) => {
@@ -171,21 +182,30 @@ export default function App() {
       setMeetings((list) => list.map((m) => (m.id === sheet.id ? { ...m, ...data, updatedAt: Date.now() } : m)));
       setSheet({ type: 'detail', id: sheet.id });
     } else {
-      setMeetings((list) => [...list, { id: newId(), createdAt: Date.now(), updatedAt: Date.now(), status: '', from: '', src: '', guests: 0, lat: null, lon: null, ...data }]);
+      setMeetings((list) => [...list, { ...blank, id: newId(), createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
       setSheet(null);
+      setBurst((b) => b + 1);
     }
     setSelectedDate(data.date);
     haptic.success();
     showToast(t('toastSaved'));
   };
 
+  // Tez qo'shish satridan: hamma narsa tushunilsa, darhol saqlanadi
+  const quickCreate = (data) => {
+    setMeetings((list) => [...list, { ...blank, ...data, checklist: [], id: newId(), createdAt: Date.now(), updatedAt: Date.now() }]);
+    setSelectedDate(data.date);
+    setBurst((b) => b + 1);
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
+  const quickForm = (data) => setSheet({ type: 'form', date: data.date, prefill: data });
+
   const toggleItem = (meetingId, itemId) => {
     haptic.select();
     setMeetings((list) =>
       list.map((m) =>
-        m.id === meetingId
-          ? { ...m, updatedAt: Date.now(), checklist: m.checklist.map((i) => (i.id === itemId ? { ...i, done: !i.done } : i)) }
-          : m,
+        m.id === meetingId ? { ...m, updatedAt: Date.now(), checklist: m.checklist.map((i) => (i.id === itemId ? { ...i, done: !i.done } : i)) } : m,
       ),
     );
   };
@@ -193,17 +213,81 @@ export default function App() {
   const setStatus = (id, status) => {
     haptic.select();
     setMeetings((list) => list.map((m) => (m.id === id ? { ...m, status, updatedAt: Date.now() } : m)));
+    if (status === 'done') setBurst((b) => b + 1);
     showToast(t('toastDone'));
   };
 
-  const handleDelete = () => {
-    deletedRef.current = [...deletedRef.current, confirmId];
+  const removeMeeting = (id) => {
+    const m = meetingsRef.current.find((x) => x.id === id);
+    deletedRef.current = [...deletedRef.current, id];
     saveDeleted(deletedRef.current);
-    setMeetings((list) => list.filter((m) => m.id !== confirmId));
+    setMeetings((list) => list.filter((x) => x.id !== id));
+    haptic.warning();
+    return m;
+  };
+
+  // Surib o'chirish: darhol o'chadi, lekin 5 soniya ichida qaytarish mumkin
+  const swipeDelete = (id) => {
+    const m = removeMeeting(id);
+    if (!m) return;
+    showToast(t('toastDeletedUndo'), {
+      label: t('undo'),
+      fn: () => {
+        setMeetings((list) => [...list, { ...m, id: newId(), updatedAt: Date.now() }]); // yangi id: serverdagi "o'chirilgan" belgisi bilan to'qnashmasligi uchun
+        setToast(null);
+        haptic.success();
+        showToast(t('toastRestored'));
+      },
+    });
+  };
+  const swipeDone = (id) => setStatus(id, 'done');
+
+  const handleDelete = () => {
+    removeMeeting(confirmId);
     setConfirmId(null);
     setSheet(null);
-    haptic.warning();
     showToast(t('toastDeleted'));
+  };
+
+  const duplicate = (m) => {
+    haptic.tap();
+    const base = fromISODate(m.date);
+    const next = toISODate(addDays(base < new Date() ? new Date() : base, base < new Date() ? 1 : 7));
+    setSheet({
+      type: 'form', date: next, titleKey: 'fDuplicate',
+      prefill: { name: m.name, date: next, time: m.time, location: m.location, phone: m.phone, cat: m.cat, notes: m.notes, checklist: m.checklist.map((i) => ({ id: newId(), text: i.text, done: false })) },
+    });
+  };
+
+  const ensureToken = async () => {
+    if (!calToken.current) {
+      clearTimeout(syncTimer.current);
+      syncing.current = false;
+      await doSync();
+      calToken.current = await getCalendarToken();
+    }
+    return calToken.current;
+  };
+  const calendarAction = async (m, kind) => {
+    try {
+      if (kind === 'google') openExternal(googleCalUrl(m));
+      else openExternal(`${window.location.origin}/api/cal/${await ensureToken()}.ics?m=${m.id}`);
+    } catch {
+      haptic.error();
+      showToast(t('toastCalErr'));
+    }
+  };
+  const calendarLink = async (flag) => {
+    if (flag === 'copied') { showToast(t('toastLinkCopied')); return null; }
+    try {
+      const tok = await ensureToken();
+      const host = window.location.host;
+      return { https: `${window.location.origin}/api/cal/${tok}.ics`, webcal: `webcal://${host}/api/cal/${tok}.ics` };
+    } catch {
+      haptic.error();
+      showToast(t('toastCalErr'));
+      return null;
+    }
   };
 
   // Taklif: uchrashuv serverda bo'lishi kerak, shuning uchun avval sinxronlaymiz.
@@ -229,7 +313,6 @@ export default function App() {
     }
   };
 
-  // Sevimli joylar
   const savePlacesList = (list) => {
     const next = { list, at: Date.now() };
     savePlaces(next.list, next.at);
@@ -252,31 +335,26 @@ export default function App() {
     setLang(l);
     scheduleSync();
   };
-
   const changeTab = (next) => {
     if (next !== tab) haptic.select();
     setTab(next);
+    window.scrollTo({ top: 0 });
   };
 
-  const openSettings = () => { haptic.tap(); setSheet({ type: 'settings' }); };
-
+  const common = { meetings, now, onOpen: openDetail, onAdd: openAdd, onSettings: openSettings };
   return (
     <div className="app" data-lang={lang || getLang()}>
-      {tab === 'upcoming' ? (
-        <UpcomingView meetings={meetings} now={now} onOpen={openDetail} onAdd={openAdd} onSettings={openSettings} />
-      ) : (
-        <CalendarView
-          meetings={meetings}
-          now={now}
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          onOpen={openDetail}
-          onAdd={openAdd}
-          onSettings={openSettings}
-        />
-      )}
+      <div className="aurora" aria-hidden="true"><i /><i /><i /></div>
 
-      <TabBar tab={tab} onTab={changeTab} onAdd={() => openAdd(tab === 'calendar' ? selectedDate : undefined)} />
+      {tab === 'home' && (
+        <HomeView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} onQuickCreate={quickCreate} onQuickForm={quickForm} />
+      )}
+      {tab === 'calendar' && (
+        <CalendarView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} />
+      )}
+      {tab === 'stats' && <StatsView meetings={meetings} now={now} onSettings={openSettings} />}
+
+      <TabBar tab={tab} onTab={changeTab} onAdd={() => openAdd(tab === 'calendar' ? selectedDate : undefined)} onSettings={openSettings} />
 
       {sheet?.type === 'detail' && current && (
         <MeetingDetail
@@ -286,6 +364,8 @@ export default function App() {
           onToggle={(itemId) => toggleItem(current.id, itemId)}
           onStatus={(s) => setStatus(current.id, s)}
           onInvite={() => handleInvite(current.id)}
+          onDuplicate={() => duplicate(current)}
+          onCalendar={(kind) => calendarAction(current, kind)}
           onEdit={() => setSheet({ type: 'form', id: current.id })}
           onDelete={() => setConfirmId(current.id)}
           onClose={closeTop}
@@ -297,6 +377,8 @@ export default function App() {
           key={sheet.id ?? 'new'}
           initial={current}
           presetDate={sheet.date}
+          prefill={sheet.prefill}
+          titleKey={sheet.titleKey}
           favorites={places.list}
           recent={recent}
           onToggleFav={toggleFav}
@@ -306,25 +388,15 @@ export default function App() {
       )}
 
       {sheet?.type === 'settings' && (
-        <SettingsSheet
-          places={places.list}
-          onLang={changeLang}
-          onRemovePlace={(p) => savePlacesList(places.list.filter((x) => x !== p))}
-          onClose={closeTop}
-        />
+        <SettingsSheet places={places.list} onLang={changeLang} onRemovePlace={(p) => savePlacesList(places.list.filter((x) => x !== p))} onCalendarLink={calendarLink} onClose={closeTop} />
       )}
 
       {confirmId && (
-        <ConfirmDialog
-          title={t('cDelTitle')}
-          text={t('cDelText')}
-          confirmLabel={t('cDelYes')}
-          onConfirm={handleDelete}
-          onCancel={() => setConfirmId(null)}
-        />
+        <ConfirmDialog title={t('cDelTitle')} text={t('cDelText')} confirmLabel={t('cDelYes')} onConfirm={handleDelete} onCancel={() => setConfirmId(null)} />
       )}
 
-      <Toast message={toast} />
+      <Confetti burst={burst} />
+      <Toast toast={toast} />
     </div>
   );
 }
