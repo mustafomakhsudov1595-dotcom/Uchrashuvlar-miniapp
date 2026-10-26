@@ -101,7 +101,7 @@ object Jarvis {
         if (!working && speaking.get() <= 0) main.post { onIdle?.invoke() }
     }
 
-    fun setStatus(s: String) {
+    fun updateStatus(s: String) {
         status = s
         statusListener?.invoke(s)
     }
@@ -129,7 +129,7 @@ object Jarvis {
         if (text.isEmpty()) return
         add("u", text)
         working = true
-        setStatus("O'ylayapman…")
+        updateStatus("O'ylayapman…")
         main.post { onWorking?.invoke() }
         exec.execute {
             val out = try {
@@ -139,7 +139,7 @@ object Jarvis {
             }
             if (out.isNotBlank()) say(out)
             working = false
-            setStatus("Tayyor")
+            updateStatus("Tayyor")
             checkIdle()
         }
     }

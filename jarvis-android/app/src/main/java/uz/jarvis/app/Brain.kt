@@ -88,7 +88,7 @@ Xotira: $mem."""
                 if (sb.isNotBlank()) Jarvis.say(sb.toString().trim())
                 val results = JSONArray()
                 for (u in uses) {
-                    Jarvis.setStatus("Bajaryapman: " + u.optString("name"))
+                    Jarvis.updateStatus("Bajaryapman: " + u.optString("name"))
                     val out = try {
                         Tools.run(u.getString("name"), u.optJSONObject("input") ?: JSONObject())
                     } catch (e: Throwable) {

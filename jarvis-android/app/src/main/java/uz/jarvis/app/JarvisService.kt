@@ -114,7 +114,7 @@ class JarvisService : Service() {
         listening = true
         try {
             r.startListening(i)
-            Jarvis.setStatus(if (talkOnce || awaitingCommand || !Prefs.wakeMode) "Gapiring…" else "Tinglayapman (\"${Prefs.wakeWord}\" deng)…")
+            Jarvis.updateStatus(if (talkOnce || awaitingCommand || !Prefs.wakeMode) "Gapiring…" else "Tinglayapman (\"${Prefs.wakeWord}\" deng)…")
         } catch (e: Exception) {
             listening = false
             recreate()
@@ -147,7 +147,7 @@ class JarvisService : Service() {
         if (Prefs.wakeMode || awaitingCommand || talkOnce) {
             startListening()
         } else {
-            Jarvis.setStatus("Tayyor")
+            Jarvis.updateStatus("Tayyor")
             stopSelf()
         }
     }
@@ -238,7 +238,7 @@ class JarvisService : Service() {
         Jarvis.onWorking = null
         Jarvis.onIdle = null
         recreate()
-        Jarvis.setStatus("To'xtadi")
+        Jarvis.updateStatus("To'xtadi")
         super.onDestroy()
     }
 }
