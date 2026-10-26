@@ -66,13 +66,33 @@ const dur = s => (s >= 3600 ? `${Math.round(s / 360) / 10} soat` : s >= 60 ? `${
 /* ---------- Yordamchi funksiyalar ---------- */
 const contacts = () =>
   Object.fromEntries(store.get('contacts').split('\n').map(l => l.split('=').map(s => s.trim())).filter(p => p[0] && p[1]));
+const norm = s => s.toLowerCase().replace(/[’ʻʼ`‘´]/g, "'").trim();
 const resolveNumber = who => {
-  const c = contacts();
-  const key = Object.keys(c).find(n => who.toLowerCase().startsWith(n.toLowerCase()));
-  return key ? c[key] : who.replace(/[^\d+]/g, '');
+  const digits = who.replace(/[^\d+]/g, '');
+  if (digits.replace(/\D/g, '').length >= 5) return digits;
+  const c = contacts(), w = norm(who);
+  const key = Object.keys(c).find(n => w.startsWith(norm(n)));
+  return key ? c[key] : '';
 };
-const go = url => { location.href = url; };
-const openTab = url => { window.open(url, '_blank') || go(url); };
+
+/* Brauzer foydalanuvchi bosishisiz tel:/sms: ni ochmasligi mumkin — shunda tasdiqlash tugmasi chiqadi */
+const active = () => navigator.userActivation?.isActive ?? true;
+function actionButton(label, fn) {
+  const d = document.createElement('div'); d.className = 'm j';
+  const b = document.createElement('button'); b.textContent = label; b.onclick = fn;
+  d.append(b); $('log').append(d); $('log').scrollTop = 1e9;
+}
+function go(url, label = 'Davom etish', confirm = false) {
+  const open = () => { location.href = url; };
+  if (active() || !confirm) { try { open(); } catch {} if (!active()) actionButton(label, open); return active(); }
+  actionButton(label, open);
+  return false;
+}
+function openTab(url, label = '🔗 Ochish') {
+  const open = () => { window.open(url, '_blank') || (location.href = url); };
+  if (active()) open(); else actionButton(label, open);
+}
+const iOS = /iPhone|iPad/.test(navigator.userAgent);
 const intent = (action, extra = '') => `intent://#Intent;action=${action};${extra}end`;
 
 async function camStream(facing) {
@@ -148,9 +168,26 @@ function calc({ expression }) {
 
 /* ---------- Amallar ---------- */
 const A = {
-  call: ({ who }) => { go('tel:' + resolveNumber(who)); return `${who}ga qo'ng'iroq qilyapman.`; },
-  sms: ({ who, text = '' }) => { go(`sms:${resolveNumber(who)}?body=${q(text)}`); return `${who}ga SMS tayyor, yuborishni tasdiqlang.`; },
-  whatsapp: ({ who, text = '' }) => { openTab(`https://wa.me/${resolveNumber(who).replace('+', '')}?text=${q(text)}`); return 'WhatsApp ochilmoqda.'; },
+  call: ({ who }) => {
+    const n = resolveNumber(who);
+    if (!n) return `"${who}" kontaktlar ro'yxatida yo'q. ⚙ Sozlamalarda "ism=+998…" qo'shing yoki raqamni ayting.`;
+    return go('tel:' + n, `📞 ${who} (${n}) ga qo'ng'iroq qilish`, true)
+      ? `${who}ga qo'ng'iroq qilyapman.` : `${who} (${n}) — qo'ng'iroq uchun pastdagi tugmani bosing.`;
+  },
+  sms: ({ who, text = '' }) => {
+    const n = resolveNumber(who);
+    if (!n) return `"${who}" kontaktlar ro'yxatida yo'q. ⚙ Sozlamalarda "ism=+998…" qo'shing yoki raqamni ayting.`;
+    const body = text.replace(/^(yoz|yubor|jo'nat|deb|text)\s+/i, '');
+    const sent = go(`sms:${n}${iOS ? '&' : '?'}body=${q(body)}`, `💬 ${who} ga SMS ochish`, true);
+    return sent ? `${who}ga SMS tayyor, yuborishni o'zingiz tasdiqlang.` : `${who}ga SMS tayyor — ochish uchun pastdagi tugmani bosing.`;
+  },
+  say: ({ text }) => text,
+  diag: () => diag(),
+  whatsapp: ({ who, text = '' }) => {
+    const n = resolveNumber(who);
+    if (!n) return `"${who}" kontaktlar ro'yxatida yo'q.`;
+    openTab(`https://wa.me/${n.replace('+', '')}?text=${q(text)}`, '💬 WhatsApp ochish'); return 'WhatsApp ochilmoqda.';
+  },
   telegram: ({ who }) => { openTab(`https://t.me/${who.replace('@', '')}`); return 'Telegram ochilmoqda.'; },
   email: ({ to = '', subject = '', text = '' }) => { go(`mailto:${to}?subject=${q(subject)}&body=${q(text)}`); return 'Xat tayyor.'; },
   open_app: ({ app }) => { const u = APPS[app]; if (!u) return `Noma'lum ilova: ${app}`; go(u); return `${app} ochilmoqda.`; },
@@ -231,7 +268,11 @@ async function runAction(name, args) {
 /* ---------- Oddiy (offlayn) buyruq tahlilchisi: uz / ru / en ---------- */
 const LOCAL = [
   [/(\d+)\s*(daqiqa|soat)dan keyin\s+(.+?)\s*(deb\s+)?eslat/i, m => ['remind', { minutes: +m[1] * (/soat/i.test(m[2]) ? 60 : 1), text: m[3] }]],
-  [/^(.+?)(ga|ni|\s+ga)?\s+(qo'?ng'?iroq|qongiroq|zvonok|call|позвони|звонок)/i, m => ['call', { who: m[1].trim() }]],
+  [/(diagnostika|tizimni tekshir|mikrofonni tekshir)/i, () => ['diag', {}]],
+  [/^(salom|assalomu alaykum|assalom|привет|hello|hi)\b/i, () => ['say', { text: 'Salom, ser! Qanday yordam beray?' }]],
+  [/(rahmat|spasibo|thanks|thank you)/i, () => ['say', { text: 'Marhamat, ser.' }]],
+  [/(isming nima|kimsan|who are you)/i, () => ['say', { text: 'Men Jarvisman — shaxsiy yordamchingiz. Qo\'ng\'iroq, SMS, eslatma va boshqa ishlarni bajaraman.' }]],
+  [/^(.+?)(ga|ni|\s+ga)?\s+(qo'?ng'?iroq|qongiroq|telefon|zvonok|call|позвони|звонок)/i, m => ['call', { who: m[1].trim() }]],
   [/^(call|позвони|qo'?ng'?iroq qil)\s+(.+)/i, m => ['call', { who: m[2].trim() }]],
   [/^(.+?)(ga)?\s+(sms|смс)\s*(.*)/i, m => ['sms', { who: m[1].trim(), text: m[4] }]],
   [/(wi-?fi|bluetooth|ekran|tovush|samolyot)\s+sozlama/i, m => ['open_app', { app: { wifi: 'wifi', bluetooth: 'bluetooth', ekran: 'display', tovush: 'sound', samolyot: 'airplane' }[m[1].toLowerCase().replace('-', '')] }]],
@@ -381,7 +422,7 @@ async function claudeBrain(text, key, image) {
 }
 
 async function handle(text, image) {
-  text = (text || '').trim();
+  text = (text || '').replace(/[’ʻʼ`‘´]/g, "'").trim();
   if (!text && !image) return;
   say(text || 'Rasm yubordim', 'u', image);
   $('core').classList.add('think');
@@ -411,8 +452,42 @@ async function holdScreen(on) {
 }
 document.addEventListener('visibilitychange', () => { if (always && document.visibilityState === 'visible') holdScreen(true); });
 
-function startRec() {
-  if (!SR) { setStatus('Bu brauzer ovozni tanimaydi (Chrome ishlating). Yozib buyruq bering.'); return; }
+const inIframe = (() => { try { return self !== top; } catch { return true; } })();
+function micProblem() {
+  if (inIframe) return 'Bu oyna mikrofonni bloklaydi. Jarvis saytini brauzerda to\'g\'ridan-to\'g\'ri (alohida varaqda) oching.';
+  if (!isSecureContext) return 'Mikrofon uchun sayt https:// bilan ochilishi kerak.';
+  if (!SR) return 'Bu brauzer ovozni tanimaydi. Chrome yoki Edge ishlating, yoki yozib buyruq bering.';
+  return '';
+}
+function micDenied() {
+  always = false; micOk = false;
+  setStatus('Mikrofon bloklangan');
+  say('Mikrofonga ruxsat berilmagan. Manzil satridagi 🔒 belgisini bosing → Ruxsatlar → Mikrofon → Ruxsat berish, so\'ng sahifani yangilang. Telefonda: Sozlamalar → Ilovalar → Chrome → Ruxsatlar → Mikrofon.', 't');
+}
+async function diag() {
+  const L = [];
+  L.push('Xavfsiz ulanish (https): ' + (isSecureContext ? 'ha' : 'YO\'Q'));
+  L.push('Alohida varaq (iframe emas): ' + (inIframe ? 'YO\'Q — mikrofon bloklangan' : 'ha'));
+  L.push('Ovozni tanish: ' + (SR ? 'bor' : 'YO\'Q'));
+  try { L.push('Mikrofon ruxsati: ' + (await navigator.permissions.query({ name: 'microphone' })).state); } catch { L.push('Mikrofon ruxsati: noma\'lum'); }
+  L.push('Ovozli javob: ' + ('speechSynthesis' in window ? speechSynthesis.getVoices().length + ' ta ovoz' : 'YO\'Q'));
+  L.push('Kamera: ' + (navigator.mediaDevices?.getUserMedia ? 'bor' : 'yo\'q'));
+  L.push('Joylashuv: ' + (navigator.geolocation ? 'bor' : 'yo\'q'));
+  L.push('Bildirishnoma: ' + ('Notification' in window ? Notification.permission : 'yo\'q'));
+  L.push('Kontaktlarni tanlash: ' + (navigator.contacts?.select ? 'bor' : 'yo\'q'));
+  L.push('Qo\'ng\'iroq/SMS: ' + (/Android|iPhone|iPad/.test(navigator.userAgent) ? 'telefon — ishlaydi' : 'kompyuter — ishlamaydi'));
+  return L.join('\n');
+}
+let micOk = false, starting = false, lastProblem = '';
+async function startRec() {
+  const p = micProblem();
+  if (p) { always = false; setStatus(p); if (p !== lastProblem) { lastProblem = p; say(p, 't'); } return; }
+  if (rec || starting) return;
+  starting = true;
+  try {
+    if (!micOk) { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); micOk = true; }
+  } catch { starting = false; micDenied(); return; }
+  starting = false;
   if (rec) return;
   rec = new SR();
   rec.lang = store.get('lang', 'uz-UZ');
@@ -429,7 +504,19 @@ function startRec() {
     oneShot = false;
     handle(t);
   };
-  rec.onerror = e => { if (e.error === 'not-allowed') { always = false; setStatus('Mikrofonga ruxsat bering.'); } };
+  rec.onerror = e => {
+    const er = e.error;
+    if (er === 'no-speech' || er === 'aborted') return;
+    if (er === 'not-allowed' || er === 'service-not-allowed') { micDenied(); return; }
+    if (er === 'language-not-supported') {
+      store.set('lang', 'ru-RU');
+      say('Bu qurilma o\'zbekcha ovozni tanimaydi. Rus tiliga o\'tdim (⚙ dan o\'zgartirish mumkin). Qayta bosing.', 't');
+      return;
+    }
+    always = false;
+    const msg = er === 'network' ? 'Ovozni tanish uchun internet kerak.' : 'Mikrofon xatosi: ' + er;
+    setStatus(msg); say(msg, 't');
+  };
   rec.onend = () => {
     rec = null;
     $('core').classList.remove('listen');
@@ -467,6 +554,7 @@ $('file').onchange = async () => {
   });
 
 const cfg = $('cfg');
+$('diagBtn').onclick = async () => { cfg.close(); say(await diag(), 't'); };
 $('cfgBtn').onclick = () => {
   $('lang').value = store.get('lang', 'uz-UZ'); $('key').value = store.get('key'); $('wake').value = store.get('wake', 'jarvis');
   $('model').value = store.get('model', 'claude-sonnet-5-5'); $('web').checked = store.get('web', '1') === '1';
@@ -498,4 +586,5 @@ navigator.getBattery?.().then(b => { const u = () => ($('batt').textContent = '�
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 speechSynthesis?.getVoices();
 tickReminders();
+setStatus(micProblem() || 'Ishga tushirish uchun markazni bosing');
 say(store.get('key') ? 'Salom, ser. Jarvis xizmatingizda. Hamma tizimlar ishlayapti.' : 'Salom! Men Jarvisman. To\'liq aqlli rejim uchun sozlamalarga Claude API kalitini kiriting.');
