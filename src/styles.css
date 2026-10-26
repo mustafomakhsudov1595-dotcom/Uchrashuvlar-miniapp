@@ -922,3 +922,248 @@ textarea.input {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---------- Yangi: sarlavha, qidiruv, turkumlar, harakatlar, sevimli joylar ---------- */
+:root {
+  --cat-work: #2563eb;
+  --cat-family: #16a34a;
+  --cat-personal: #9333ea;
+  --cat-other: #ea580c;
+}
+:root[data-theme='dark'] {
+  --cat-work: #6ea0ff;
+  --cat-family: #4ade80;
+  --cat-personal: #c08cff;
+  --cat-other: #fb923c;
+}
+
+.top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filters {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 16px;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search > svg {
+  position: absolute;
+  left: 14px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search .input {
+  padding-left: 42px;
+  padding-right: 42px;
+}
+
+.search .icon-btn {
+  position: absolute;
+  right: 4px;
+}
+
+.cat-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.cat-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 99px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.cat-chip.on {
+  color: var(--text);
+  border-color: var(--control-border);
+  background: var(--surface-2);
+}
+
+.cat-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: none;
+}
+
+.cat-work .cat-dot, .cat-dot.cat-work, .cat-chip.cat-work .cat-dot { background: var(--cat-work); }
+.cat-family .cat-dot, .cat-dot.cat-family, .cat-chip.cat-family .cat-dot { background: var(--cat-family); }
+.cat-personal .cat-dot, .cat-dot.cat-personal, .cat-chip.cat-personal .cat-dot { background: var(--cat-personal); }
+.cat-other .cat-dot, .cat-dot.cat-other, .cat-chip.cat-other .cat-dot { background: var(--cat-other); }
+
+.row-name .cat-dot,
+.d-name .cat-dot {
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+.row.cancelled .row-name {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.d-cat {
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 16px;
+}
+
+.act {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 99px;
+  border: 1.5px solid var(--control-border);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.act.ok {
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.act.bad {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.act:disabled {
+  opacity: 0.55;
+}
+
+.map-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.label-like {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.star {
+  flex: none;
+  color: var(--muted);
+}
+
+.star.on {
+  color: #f5a524;
+}
+
+.star.on svg {
+  fill: currentColor;
+}
+
+.place-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.place-chip {
+  max-width: 100%;
+  padding: 7px 12px;
+  border-radius: 99px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.place-chip.fav {
+  border-color: #f5a524;
+}
+
+.seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 5px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.seg-btn {
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.seg-btn.on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.place-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.place-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.star-ico {
+  color: #f5a524;
+  fill: currentColor;
+}
+
+.bot-btn {
+  margin-top: 12px;
+  width: 100%;
+}

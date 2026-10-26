@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import MeetingList from './MeetingRow.jsx';
-import { IconChevronLeft, IconChevronRight } from './Icons.jsx';
+import { IconChevronLeft, IconChevronRight, IconSettings } from './Icons.jsx';
 import { countByDate, meetingsOn } from '../lib/meetings.js';
-import { WEEKDAYS_SHORT } from '../lib/uz.js';
+import { t } from '../lib/i18n.js';
 import { formatShort, formatWithWeekday, fromISODate, monthGrid, monthTitle, toISODate } from '../lib/dates.js';
 import { haptic } from '../lib/telegram.js';
 
-export default function CalendarView({ meetings, now, selected, onSelect, onOpen, onAdd }) {
+export default function CalendarView({ meetings, now, selected, onSelect, onOpen, onAdd, onSettings }) {
   const [cursor, setCursor] = useState(() => {
     const d = fromISODate(selected);
     return { y: d.getFullYear(), m: d.getMonth() };
@@ -47,28 +47,31 @@ export default function CalendarView({ meetings, now, selected, onSelect, onOpen
 
   return (
     <>
-      <header className="top">
-        <h1>Kalendar</h1>
+      <header className="top top-row">
+        <h1>{t('calTitle')}</h1>
+        <button type="button" className="icon-btn" onClick={onSettings} aria-label={t('sTitle')}>
+          <IconSettings width={22} height={22} />
+        </button>
       </header>
 
-      <section className="cal" aria-label="Oy kalendari">
+      <section className="cal" aria-label={t('calAria')}>
         <div className="cal-head">
           <h2 className="cal-title">{monthTitle(cursor.y, cursor.m)}</h2>
           <div className="cal-nav">
             <button type="button" className="link-btn" onClick={goToday}>
-              Bugun
+              {t('calToday')}
             </button>
-            <button type="button" className="icon-btn" onClick={() => shiftMonth(-1)} aria-label="Oldingi oy">
+            <button type="button" className="icon-btn" onClick={() => shiftMonth(-1)} aria-label={t('calPrev')}>
               <IconChevronLeft />
             </button>
-            <button type="button" className="icon-btn" onClick={() => shiftMonth(1)} aria-label="Keyingi oy">
+            <button type="button" className="icon-btn" onClick={() => shiftMonth(1)} aria-label={t('calNext')}>
               <IconChevronRight />
             </button>
           </div>
         </div>
 
         <div className="cal-week" aria-hidden="true">
-          {WEEKDAYS_SHORT.map((w) => (
+          {t('wdShort').map((w) => (
             <span key={w}>{w}</span>
           ))}
         </div>
@@ -86,7 +89,7 @@ export default function CalendarView({ meetings, now, selected, onSelect, onOpen
                 className={cls}
                 aria-pressed={c.iso === selected}
                 aria-current={c.iso === today ? 'date' : undefined}
-                aria-label={`${formatShort(c.iso)}${n ? `, ${n} ta uchrashuv` : ''}`}
+                aria-label={`${formatShort(c.iso)}${n ? t('calCount', n) : ''}`}
                 onClick={() => pick(c)}
               >
                 <span>{c.day}</span>
@@ -107,9 +110,9 @@ export default function CalendarView({ meetings, now, selected, onSelect, onOpen
           <MeetingList items={dayMeetings} onOpen={onOpen} />
         ) : (
           <div className="empty small">
-            <p>Bu kunda uchrashuv yoʻq.</p>
+            <p>{t('calNone')}</p>
             <button type="button" className="btn btn-ghost" onClick={() => onAdd(selected)}>
-              Shu kunga qoʻshish
+              {t('calAddDay')}
             </button>
           </div>
         )}

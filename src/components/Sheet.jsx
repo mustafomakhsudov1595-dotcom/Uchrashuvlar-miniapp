@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { IconClose } from './Icons.jsx';
+import { t } from '../lib/i18n.js';
 
 // Pastdan chiqadigan oyna. Yopish (Esc, orqaga tugmasi) App.jsx'da boshqariladi.
 export default function Sheet({ title, onClose, children, footer, tall = false, dismissOnOverlay = true }) {
@@ -26,7 +27,7 @@ export default function Sheet({ title, onClose, children, footer, tall = false, 
       >
         <div className="sheet-head">
           <h2 className="sheet-title">{title}</h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Yopish">
+          <button type="button" className="icon-btn" onClick={onClose} aria-label={t('close')}>
             <IconClose />
           </button>
         </div>

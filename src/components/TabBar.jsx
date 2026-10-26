@@ -1,8 +1,9 @@
 import { IconCalendar, IconList, IconPlus } from './Icons.jsx';
+import { t } from '../lib/i18n.js';
 
 export default function TabBar({ tab, onTab, onAdd }) {
   return (
-    <nav className="tabbar" aria-label="Asosiy menyu">
+    <nav className="tabbar" aria-label={t('menu')}>
       <div className="tabbar-inner">
         <button
           type="button"
@@ -11,9 +12,9 @@ export default function TabBar({ tab, onTab, onAdd }) {
           onClick={() => onTab('upcoming')}
         >
           <IconList width={24} height={24} />
-          <span>Kelgusi</span>
+          <span>{t('tabUpcoming')}</span>
         </button>
-        <button type="button" className="fab" aria-label="Uchrashuv qoʻshish" onClick={onAdd}>
+        <button type="button" className="fab" aria-label={t('tabAdd')} onClick={onAdd}>
           <IconPlus width={26} height={26} strokeWidth={2.2} />
         </button>
         <button
@@ -23,7 +24,7 @@ export default function TabBar({ tab, onTab, onAdd }) {
           onClick={() => onTab('calendar')}
         >
           <IconCalendar width={24} height={24} />
-          <span>Kalendar</span>
+          <span>{t('tabCalendar')}</span>
         </button>
       </div>
     </nav>

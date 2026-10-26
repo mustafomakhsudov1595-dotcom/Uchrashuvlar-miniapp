@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { t } from '../lib/i18n.js';
 
-export default function ConfirmDialog({ title, text, confirmLabel, cancelLabel = 'Bekor qilish', onConfirm, onCancel }) {
+export default function ConfirmDialog({ title, text, confirmLabel, cancelLabel = t('fCancel'), onConfirm, onCancel }) {
   const cancelRef = useRef(null);
   useEffect(() => {
     cancelRef.current?.focus();

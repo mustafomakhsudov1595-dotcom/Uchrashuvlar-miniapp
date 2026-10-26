@@ -1,4 +1,5 @@
 import { meetingStart } from './dates.js';
+import { t } from './i18n.js';
 
 // Uchrashuv boshlangandan keyin shuncha daqiqa u hali "kelgusi" hisoblanadi.
 export const GRACE_MIN = 60;
@@ -16,7 +17,7 @@ export function splitMeetings(list, now) {
   const upcoming = [];
   const past = [];
   for (const m of [...list].sort(byStart)) {
-    (meetingStart(m).getTime() >= cutoff ? upcoming : past).push(m);
+    (!m.status && meetingStart(m).getTime() >= cutoff ? upcoming : past).push(m);
   }
   past.reverse(); // eng yaqin o'tgani birinchi
   return { upcoming, past };
@@ -52,19 +53,19 @@ const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 // "45 daqiqadan keyin", "2 soat 15 daqiqadan keyin", "Ertaga", "3 kundan keyin"
 export function countdownText(start, now) {
   const diffMin = Math.ceil((start - now) / 60000);
-  if (diffMin <= 0) return 'Hozir boshlandi';
-  if (diffMin < 60) return `${diffMin} daqiqadan keyin`;
-  if (diffMin < 24 * 60) {
-    const h = Math.floor(diffMin / 60);
-    const m = diffMin % 60;
-    return m ? `${h} soat ${m} daqiqadan keyin` : `${h} soatdan keyin`;
-  }
+  if (diffMin <= 0) return t('cdNow');
+  if (diffMin < 60) return t('cdMin', diffMin);
+  if (diffMin < 24 * 60) return t('cdHM', Math.floor(diffMin / 60), diffMin % 60);
   const days = Math.round((startOfDay(start) - startOfDay(now)) / 86400000);
-  return days === 1 ? 'Ertaga' : `${days} kundan keyin`;
+  return days === 1 ? t('tomorrow') : t('cdDays', days);
 }
 
 export function statusText(meeting, now) {
+  if (meeting.status === 'done') return t('dStatusDone');
+  if (meeting.status === 'cancelled') return t('dStatusCancelled');
   const start = meetingStart(meeting);
   if (start >= now) return countdownText(start, now);
-  return now - start <= GRACE_MIN * 60000 ? 'Hozir boshlandi' : 'Oʻtgan';
+  return now - start <= GRACE_MIN * 60000 ? t('cdNow') : t('past');
 }
+
+export const CATS = ['work', 'family', 'personal', 'other'];

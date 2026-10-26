@@ -78,3 +78,8 @@ export function openExternal(url) {
   if (isTelegram && tg.openLink) tg.openLink(url);
   else window.open(url, '_blank', 'noopener,noreferrer');
 }
+
+export function openTelegramLink(url) {
+  if (isTelegram && tg.openTelegramLink) tg.openTelegramLink(url);
+  else window.open(url, '_blank', 'noopener,noreferrer');
+}

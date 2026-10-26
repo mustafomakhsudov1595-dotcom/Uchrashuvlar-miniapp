@@ -1,18 +1,22 @@
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
-import { IconClose } from './Icons.jsx';
+import { IconClose, IconStar } from './Icons.jsx';
+import { CATS } from '../lib/meetings.js';
+import { t } from '../lib/i18n.js';
 import { defaultTime, todayISO } from '../lib/dates.js';
 import { newId } from '../lib/meetings.js';
 import { haptic } from '../lib/telegram.js';
 
 // Yangi uchrashuv qo'shish yoki mavjudini tahrirlash formasi.
-export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
+export default function MeetingForm({ initial, presetDate, favorites = [], recent = [], onToggleFav, onSave, onClose }) {
   const uid = useId();
   const [f, setF] = useState(() => ({
     name: initial?.name ?? '',
     date: initial?.date ?? presetDate ?? todayISO(),
     time: initial?.time ?? defaultTime(),
     location: initial?.location ?? '',
+    phone: initial?.phone ?? '',
+    cat: initial?.cat ?? '',
     notes: initial?.notes ?? '',
   }));
   const [items, setItems] = useState(() => initial?.checklist ?? []);
@@ -39,9 +43,9 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
   const submit = (e) => {
     e.preventDefault();
     const errs = {};
-    if (!f.name.trim()) errs.name = 'Ismni kiriting.';
-    if (!f.date) errs.date = 'Sanani tanlang.';
-    if (!f.time) errs.time = 'Vaqtni tanlang.';
+    if (!f.name.trim()) errs.name = t('eName');
+    if (!f.date) errs.date = t('eDate');
+    if (!f.time) errs.time = t('eTime');
     setErrors(errs);
     if (Object.keys(errs).length) {
       haptic.error();
@@ -56,39 +60,44 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
       date: f.date,
       time: f.time,
       location: f.location.trim(),
+      // Joy matni o'zgarsa, botdan kelgan koordinatalar eskirgan hisoblanadi.
+      ...(f.location.trim() === (initial?.location ?? '') ? {} : { lat: null, lon: null }),
+      phone: f.phone.trim(),
+      cat: f.cat,
       notes: f.notes.trim(),
       checklist,
     });
   };
 
   const formId = `${uid}-form`;
+  const isFav = favorites.includes(f.location.trim());
 
   return (
     <Sheet
-      title={initial ? 'Uchrashuvni tahrirlash' : 'Yangi uchrashuv'}
+      title={initial ? t('fEdit') : t('fNew')}
       onClose={onClose}
       tall
       dismissOnOverlay={false}
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Bekor qilish
+            {t('fCancel')}
           </button>
           <button type="submit" form={formId} className="btn btn-primary">
-            Saqlash
+            {t('fSave')}
           </button>
         </>
       }
     >
       <form id={formId} onSubmit={submit} noValidate>
         <div className="field">
-          <label htmlFor={`${uid}-name`}>Kim bilan uchrashasiz?</label>
+          <label htmlFor={`${uid}-name`}>{t('fWho')}</label>
           <input
             id={`${uid}-name`}
             className="input"
             value={f.name}
             onChange={set('name')}
-            placeholder="Masalan, Aziz Karimov"
+            placeholder={t('fWhoPh')}
             maxLength={80}
             autoComplete="off"
             aria-invalid={Boolean(errors.name)}
@@ -103,7 +112,7 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
 
         <div className="row2">
           <div className="field">
-            <label htmlFor={`${uid}-date`}>Sana</label>
+            <label htmlFor={`${uid}-date`}>{t('fDate')}</label>
             <input
               id={`${uid}-date`}
               type="date"
@@ -115,7 +124,7 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
             {errors.date && <span className="error">{errors.date}</span>}
           </div>
           <div className="field">
-            <label htmlFor={`${uid}-time`}>Vaqt</label>
+            <label htmlFor={`${uid}-time`}>{t('fTime')}</label>
             <input
               id={`${uid}-time`}
               type="time"
@@ -129,20 +138,81 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
         </div>
 
         <div className="field">
-          <label htmlFor={`${uid}-loc`}>Joy</label>
+          <label htmlFor={`${uid}-loc`}>{t('fPlace')}</label>
+          <div className="add-row">
+            <input
+              id={`${uid}-loc`}
+              className="input"
+              value={f.location}
+              onChange={set('location')}
+              placeholder={t('fPlacePh')}
+              maxLength={120}
+              autoComplete="off"
+            />
+            {f.location.trim() && (
+              <button
+                type="button"
+                className={`icon-btn star${isFav ? ' on' : ''}`}
+                onClick={() => {
+                  haptic.select();
+                  onToggleFav?.(f.location.trim());
+                }}
+                aria-pressed={isFav}
+                aria-label={isFav ? t('fUnstar') : t('fStar')}
+                title={isFav ? t('fUnstar') : t('fStar')}
+              >
+                <IconStar width={22} height={22} />
+              </button>
+            )}
+          </div>
+          {(favorites.length > 0 || recent.length > 0) && (
+            <div className="place-chips">
+              {favorites.map((p) => (
+                <button type="button" key={`f-${p}`} className="place-chip fav" onClick={() => setF((prev) => ({ ...prev, location: p }))}>
+                  ★ {p}
+                </button>
+              ))}
+              {recent.filter((p) => !favorites.includes(p)).map((p) => (
+                <button type="button" key={`r-${p}`} className="place-chip" onClick={() => setF((prev) => ({ ...prev, location: p }))}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="field">
+          <label htmlFor={`${uid}-phone`}>{t('fPhone')}</label>
           <input
-            id={`${uid}-loc`}
+            id={`${uid}-phone`}
             className="input"
-            value={f.location}
-            onChange={set('location')}
-            placeholder="Masalan, Amir Temur xiyoboni yonidagi kafe"
-            maxLength={120}
+            type="tel"
+            inputMode="tel"
+            value={f.phone}
+            onChange={set('phone')}
+            placeholder={t('fPhonePh')}
+            maxLength={30}
             autoComplete="off"
           />
         </div>
 
         <div className="field">
-          <label htmlFor={`${uid}-draft`}>Olib borish yoki berish kerak</label>
+          <span className="label-like">{t('fCat')}</span>
+          <div className="cat-chips" role="radiogroup" aria-label={t('fCat')}>
+            <button type="button" role="radio" aria-checked={f.cat === ''} className={`cat-chip${f.cat === '' ? ' on' : ''}`} onClick={() => setF((p) => ({ ...p, cat: '' }))}>
+              {t('fNoCat')}
+            </button>
+            {CATS.map((c) => (
+              <button type="button" key={c} role="radio" aria-checked={f.cat === c} className={`cat-chip cat-${c}${f.cat === c ? ' on' : ''}`} onClick={() => { haptic.select(); setF((p) => ({ ...p, cat: c })); }}>
+                <i className="cat-dot" />
+                {t('cats')[c]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor={`${uid}-draft`}>{t('fBring')}</label>
           {items.length > 0 && (
             <ul className="check-edit">
               {items.map((i) => (
@@ -152,7 +222,7 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
                     type="button"
                     className="icon-btn"
                     onClick={() => removeItem(i.id)}
-                    aria-label={`${i.text} — olib tashlash`}
+                    aria-label={`${i.text} — ${t('fRemoveItem')}`}
                   >
                     <IconClose width={18} height={18} />
                   </button>
@@ -172,25 +242,25 @@ export default function MeetingForm({ initial, presetDate, onSave, onClose }) {
                   addItem();
                 }
               }}
-              placeholder="Masalan, shartnoma nusxasi"
+              placeholder={t('fBringPh')}
               maxLength={80}
               autoComplete="off"
               enterKeyHint="done"
             />
             <button type="button" className="btn btn-accent add-btn" onClick={addItem}>
-              Qoʻshish
+              {t('fAddItem')}
             </button>
           </div>
         </div>
 
         <div className="field">
-          <label htmlFor={`${uid}-notes`}>Izoh</label>
+          <label htmlFor={`${uid}-notes`}>{t('fNotes')}</label>
           <textarea
             id={`${uid}-notes`}
             className="input"
             value={f.notes}
             onChange={set('notes')}
-            placeholder="Mavzu, telefon raqami, muhim eslatmalar"
+            placeholder={t('fNotesPh')}
             maxLength={1000}
             rows={4}
           />

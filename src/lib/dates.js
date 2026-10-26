@@ -1,4 +1,4 @@
-import { MONTHS, WEEKDAYS } from './uz.js';
+import { t } from './i18n.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -38,12 +38,12 @@ export function defaultTime() {
 // "25-oktabr"
 export function formatShort(iso) {
   const d = fromISODate(iso);
-  return `${d.getDate()}-${MONTHS[d.getMonth()].toLowerCase()}`;
+  return t('shortDate', d.getDate(), d.getMonth());
 }
 
 // "Yakshanba, 25-oktabr"
 export function formatWithWeekday(iso) {
-  return `${WEEKDAYS[weekdayIndex(fromISODate(iso))]}, ${formatShort(iso)}`;
+  return `${t('weekdays')[weekdayIndex(fromISODate(iso))]}, ${formatShort(iso)}`;
 }
 
 // "Yakshanba, 25-oktabr 2026"
@@ -53,13 +53,13 @@ export function formatFull(iso) {
 
 // "Bugun" | "Ertaga" | "Juma, 30-oktabr"
 export function dayLabel(iso, now) {
-  if (iso === toISODate(now)) return 'Bugun';
-  if (iso === toISODate(addDays(now, 1))) return 'Ertaga';
+  if (iso === toISODate(now)) return t('today');
+  if (iso === toISODate(addDays(now, 1))) return t('tomorrow');
   return formatWithWeekday(iso);
 }
 
 export function monthTitle(year, month) {
-  return `${MONTHS[month]} ${year}`;
+  return `${t('months')[month]} ${year}`;
 }
 
 // Kalendar katakchalari: oyning to'liq haftalari (oldingi/keyingi oy kunlari bilan).
