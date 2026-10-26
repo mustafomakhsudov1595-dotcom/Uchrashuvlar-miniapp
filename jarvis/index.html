@@ -24,7 +24,10 @@
   <div id="log" aria-live="polite"></div>
 </main>
 
+<video id="cam" playsinline muted hidden></video>
+<input type="file" id="file" accept="image/*" capture="environment" hidden>
 <form id="form">
+  <button type="button" id="attach" aria-label="Rasm">📷</button>
   <input id="input" autocomplete="off" placeholder="Buyruq yozing… (masalan: Alisherga qo'ng'iroq qil)">
   <button>➤</button>
 </form>
@@ -45,6 +48,15 @@
       <input id="key" type="password" placeholder="sk-ant-…">
     </label>
     <small>Kalit faqat shu telefonda saqlanadi. Kalitsiz oddiy buyruqlar ishlaydi.</small>
+    <label>Model
+      <select id="model">
+        <option value="claude-sonnet-5-5">Sonnet 5.5 (tez, muvozanatli)</option>
+        <option value="claude-fable-5-1">Fable 5.1 (eng kuchli)</option>
+        <option value="claude-haiku-5-5">Haiku 5.5 (eng tez/arzon)</option>
+        <option value="claude-opus-5-5">Opus 5.5</option>
+      </select>
+    </label>
+    <label class="row"><input type="checkbox" id="web" checked> Internetdan qidirish (yangi ma'lumot)</label>
     <label>Chaqiruv so'zi (qo'lsiz rejim)
       <input id="wake" placeholder="jarvis">
     </label>
@@ -52,6 +64,10 @@
     <label class="row"><input type="checkbox" id="speak" checked> Ovozli javob</label>
     <label>Kontaktlar (har qatorda: ism=+998901234567)
       <textarea id="contacts" rows="4"></textarea>
+    </label>
+    <button type="button" id="pick">📇 Telefon kontaktlarini olish</button>
+    <label>Xotira — Jarvis siz haqingizda bilgan narsalar (har qatorda bittadan)
+      <textarea id="memory" rows="4"></textarea>
     </label>
     <button value="ok">Saqlash</button>
   </form>
