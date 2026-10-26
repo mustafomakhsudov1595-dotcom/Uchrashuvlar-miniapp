@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020b14">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>J.A.R.V.I.S.</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">J.A.R.V.I.S.</div>
+  <div class="hud"><span id="clock"></span><span id="batt"></span><button id="cfgBtn" aria-label="Sozlamalar">⚙</button></div>
+</header>
+
+<main>
+  <button id="core" class="core" aria-label="Gapiring">
+    <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+    <span class="dot"></span>
+  </button>
+  <div id="status">Ishga tushirish uchun markazni bosing</div>
+  <div id="log" aria-live="polite"></div>
+</main>
+
+<video id="cam" playsinline muted hidden></video>
+<input type="file" id="file" accept="image/*" capture="environment" hidden>
+<form id="form">
+  <button type="button" id="attach" aria-label="Rasm">📷</button>
+  <input id="input" autocomplete="off" placeholder="Buyruq yozing… (masalan: Alisherga qo'ng'iroq qil)">
+  <button>➤</button>
+</form>
+
+<div class="chips" id="chips"></div>
+
+<dialog id="cfg">
+  <form method="dialog">
+    <h3>Sozlamalar</h3>
+    <label>Til
+      <select id="lang">
+        <option value="uz-UZ">O'zbekcha</option>
+        <option value="ru-RU">Русский</option>
+        <option value="en-US">English</option>
+      </select>
+    </label>
+    <label>Claude API kaliti (ixtiyoriy — aqlli rejim)
+      <input id="key" type="password" placeholder="sk-ant-…">
+    </label>
+    <small>Kalit faqat shu telefonda saqlanadi. Kalitsiz oddiy buyruqlar ishlaydi.</small>
+    <label>Model
+      <select id="model">
+        <option value="claude-sonnet-5-5">Sonnet 5.5 (tez, muvozanatli)</option>
+        <option value="claude-fable-5-1">Fable 5.1 (eng kuchli)</option>
+        <option value="claude-haiku-5-5">Haiku 5.5 (eng tez/arzon)</option>
+        <option value="claude-opus-5-5">Opus 5.5</option>
+      </select>
+    </label>
+    <label class="row"><input type="checkbox" id="web" checked> Internetdan qidirish (yangi ma'lumot)</label>
+    <label>Chaqiruv so'zi (qo'lsiz rejim)
+      <input id="wake" placeholder="jarvis">
+    </label>
+    <label class="row"><input type="checkbox" id="always"> Doim tinglash (ilova ochiq turganda)</label>
+    <label class="row"><input type="checkbox" id="speak" checked> Ovozli javob</label>
+    <label>Kontaktlar (har qatorda: ism=+998901234567)
+      <textarea id="contacts" rows="4"></textarea>
+    </label>
+    <button type="button" id="pick">📇 Telefon kontaktlarini olish</button>
+    <label>Xotira — Jarvis siz haqingizda bilgan narsalar (har qatorda bittadan)
+      <textarea id="memory" rows="4"></textarea>
+    </label>
+    <button type="button" id="diagBtn">🔧 Tizimni tekshirish</button>
+    <button value="ok">Saqlash</button>
+  </form>
+</dialog>
+<script src="app.js"></script>
+</body>
+</html>

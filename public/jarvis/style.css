@@ -1,0 +1,35 @@
+:root{--c:#00e5ff;--bg:#020b14;--dim:#5aa9b8}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(circle at 50% 30%,#06223a,var(--bg) 70%);color:var(--c);font:16px/1.4 system-ui,sans-serif;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;letter-spacing:.3em;font-weight:700}
+.hud{display:flex;gap:12px;align-items:center;font-size:13px;letter-spacing:0;color:var(--dim)}
+button{font:inherit;color:var(--c);background:transparent;border:1px solid var(--c);border-radius:8px;padding:8px 12px}
+main{flex:1;display:flex;flex-direction:column;align-items:center;min-height:0}
+.core{position:relative;width:170px;height:170px;border-radius:50%;border:0;padding:0;margin:14px 0 8px;flex:none}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--c);border-top-color:transparent;animation:spin 6s linear infinite}
+.r2{inset:14px;animation-duration:4s;animation-direction:reverse;border-style:dashed}
+.r3{inset:30px;animation-duration:9s}
+.dot{position:absolute;inset:55px;border-radius:50%;background:var(--c);box-shadow:0 0 30px var(--c);animation:pulse 2.4s ease-in-out infinite}
+.core.listen .dot{animation-duration:.6s;background:#fff}
+.core.think .ring{animation-duration:1s}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(.7);opacity:.6}}
+#status{color:var(--dim);font-size:14px;min-height:20px}
+#log{flex:1;width:100%;max-width:640px;overflow:auto;padding:8px 0;display:flex;flex-direction:column;gap:8px}
+.m{padding:8px 12px;border-radius:10px;max-width:88%;border:1px solid #0a4a5c;background:#031a29;white-space:pre-wrap}
+.m.u{align-self:flex-end;color:#cfefff}
+.m.j{align-self:flex-start}
+#form{display:flex;gap:8px;max-width:640px;width:100%;margin:6px auto}
+#input,dialog input,dialog select,dialog textarea{flex:1;width:100%;background:#031a29;color:#cfefff;border:1px solid #0a4a5c;border-radius:8px;padding:10px;font:inherit}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px}
+.chips button{white-space:nowrap;font-size:13px;border-color:#0a4a5c;color:var(--dim)}
+dialog{background:var(--bg);color:var(--c);border:1px solid var(--c);border-radius:12px;max-width:92vw;width:420px}
+dialog::backdrop{background:#000a}
+dialog label{display:block;margin:10px 0 4px;font-size:14px}
+dialog .row{display:flex;gap:8px;align-items:center}
+dialog .row input{width:auto}
+dialog small{color:var(--dim)}
+#form button{flex:none}
+.m.t{align-self:center;font-size:12px;color:var(--dim);border:0;background:none;padding:0}
+.m img{max-width:100%;border-radius:8px;display:block;margin-bottom:6px}
