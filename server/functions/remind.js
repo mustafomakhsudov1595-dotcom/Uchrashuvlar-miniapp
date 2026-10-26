@@ -18,7 +18,9 @@ exports.handler = async (event) => {
       const rows = m.checklist.slice(0, 12).map((it, i) => [{ text: `${it.done ? '✅' : '⬜️'} ${it.text}`.slice(0, 60), callback_data: `ck:${m.id}:${i}` }]);
       rows.push([S.appBtn('📱 Ilovada ochish', `?edit=${m.id}`)]);
       const r = await S.tg('sendMessage', { chat_id: u.chat, text, parse_mode: 'HTML', reply_markup: { inline_keyboard: rows }, disable_web_page_preview: true });
-      m.r = u.lead; dirty = true; if (r.ok) sent += 1;
+      // Foydalanuvchi botni bloklagan bo'lsa (403/400) qayta-qayta urinmaymiz.
+      if (r.ok || r.error_code === 403 || r.error_code === 400) { m.r = u.lead; dirty = true; }
+      if (r.ok) sent += 1;
     }
     if (dirty) await S.saveUser(st, u);
   }

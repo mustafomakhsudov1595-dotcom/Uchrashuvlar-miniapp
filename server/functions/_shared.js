@@ -39,8 +39,15 @@ function checkInitData(initData, maxAgeSec = 7 * 86400) {
 
 /* ---------- saqlash (Netlify Blobs) ---------- */
 function openStore(event) {
-  try { if (event && event.blobs) connectLambda(event); } catch (e) { console.error('blobs', e.message); }
-  return getStore({ name: 'impro', consistency: 'strong' });
+  let uncached;
+  try {
+    if (event && event.blobs) {
+      connectLambda(event);
+      uncached = JSON.parse(Buffer.from(event.blobs, 'base64').toString()).url_uncached;
+    }
+  } catch (e) { console.error('blobs', e.message); }
+  // Mahalliy sinov / boshqa muhit: oddiy sozlama
+  return getStore(uncached ? { name: 'impro', consistency: 'strong', uncachedEdgeURL: uncached } : { name: 'impro' });
 }
 const userKey = (id) => `user/${id}`;
 async function getUser(st, id) {
