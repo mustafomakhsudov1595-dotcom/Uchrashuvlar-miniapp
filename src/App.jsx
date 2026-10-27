@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import HomeView from './components/HomeView.jsx';
 import CalendarView from './components/CalendarView.jsx';
 import StatsView from './components/StatsView.jsx';
+import ProjectsView from './components/ProjectsView.jsx';
+import ProjectDetail from './components/ProjectDetail.jsx';
+import ProjectForm from './components/ProjectForm.jsx';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
@@ -11,7 +14,9 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, getCalendarToken, signature,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature,
 } from './lib/storage.js';
+import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
 import { addDays, fromISODate, meetingStart, toISODate, todayISO } from './lib/dates.js';
 import { haptic, isTelegram, openExternal, openTelegramLink } from './lib/telegram.js';
@@ -34,6 +39,8 @@ export default function App() {
   const lang = useLang(); // til o'zgarsa butun ilova qayta chiziladi
   const [meetings, setMeetings] = useState(loadMeetings);
   const [places, setPlaces] = useState(() => loadPlaces());
+  const [projects, setProjects] = useState(loadProjects);
+  const [confirmPid, setConfirmPid] = useState(null);
   const [tab, setTab] = useState('home');
   const [selectedDate, setSelectedDate] = useState(todayISO);
   // sheet: null | { type: 'detail', id } | { type: 'form', id?, date?, prefill?, titleKey? } | { type: 'settings' }
@@ -50,6 +57,10 @@ export default function App() {
   meetingsRef.current = meetings;
   const placesRef = useRef(places);
   placesRef.current = places;
+  const projectsRef = useRef(projects);
+  projectsRef.current = projects;
+  const pdeletedRef = useRef(loadPDeleted());
+  const pFromServer = useRef(false);
   const deletedRef = useRef(loadDeleted());
   const fromServer = useRef(false);
   const syncing = useRef(false);
@@ -63,16 +74,25 @@ export default function App() {
     syncing.current = true;
     try {
       const sentDeleted = [...deletedRef.current];
+      const sentPDeleted = [...pdeletedRef.current];
       const remote = await syncRemote({
         meetings: meetingsRef.current,
         deleted: sentDeleted,
         lang: hasSavedLang() ? langRef.current : undefined,
         places: placesRef.current.list,
         placesAt: placesRef.current.at,
+        projects: projectsRef.current,
+        pdeleted: [...pdeletedRef.current],
       });
       if (remote) {
         deletedRef.current = deletedRef.current.filter((id) => !sentDeleted.includes(id));
         saveDeleted(deletedRef.current);
+        pdeletedRef.current = pdeletedRef.current.filter((id) => !sentPDeleted.includes(id));
+        savePDeleted(pdeletedRef.current);
+        if (projSignature(remote.projects) !== projSignature(projectsRef.current)) {
+          pFromServer.current = true;
+          setProjects(remote.projects);
+        }
         if (remote.lang && !hasSavedLang()) setLang(remote.lang, false); // botda tanlangan til
         if (remote.placesAt > placesRef.current.at) {
           const next = { list: remote.places, at: remote.placesAt };
@@ -106,6 +126,15 @@ export default function App() {
   }, [meetings, scheduleSync]);
 
   useEffect(() => {
+    saveProjects(projects);
+    if (pFromServer.current) {
+      pFromServer.current = false;
+      return;
+    }
+    scheduleSync();
+  }, [projects, scheduleSync]);
+
+  useEffect(() => {
     doSync();
     const id = setInterval(doSync, 30000);
     const onVisible = () => document.visibilityState === 'visible' && doSync();
@@ -121,6 +150,14 @@ export default function App() {
   useEffect(() => {
     const p = deepLink.current;
     if (!p) return;
+    const projId = p.get('proj');
+    if (p.get('tab') === 'projects') setTab('projects');
+    if (projId && projects.some((x) => x.id === projId)) {
+      setTab('projects');
+      setSheet({ type: 'pdetail', id: projId });
+      deepLink.current = null;
+      return;
+    }
     const editId = p.get('edit');
     if (editId && meetings.some((m) => m.id === editId)) {
       setSheet({ type: 'form', id: editId });
@@ -129,7 +166,7 @@ export default function App() {
       setSheet({ type: 'form' });
       deepLink.current = null;
     }
-  }, [meetings]);
+  }, [meetings, projects]);
 
   const showToast = useCallback((message, action) => {
     setToast({ message, action });
@@ -137,19 +174,21 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(null), action ? 5200 : 2200);
   }, []);
 
-  const current = sheet?.id ? meetings.find((m) => m.id === sheet.id) : null;
+  const current = sheet?.id && !String(sheet.type).startsWith('p') ? meetings.find((m) => m.id === sheet.id) : null;
+  const curProject = sheet?.id && String(sheet.type).startsWith('p') ? projects.find((x) => x.id === sheet.id) : null;
 
   useEffect(() => {
-    if (sheet?.id && !current) setSheet(null);
-  }, [sheet, current]);
+    if (sheet?.id && !current && !curProject) setSheet(null);
+  }, [sheet, current, curProject]);
 
   const closeTop = useCallback(() => {
-    if (confirmId) setConfirmId(null);
+    if (confirmId || confirmPid) { setConfirmId(null); setConfirmPid(null); }
+    else if (sheet?.type === 'pform' && sheet.id) setSheet({ type: 'pdetail', id: sheet.id });
     else if (sheet?.type === 'form' && sheet.id) setSheet({ type: 'detail', id: sheet.id });
     else setSheet(null);
-  }, [confirmId, sheet]);
+  }, [confirmId, confirmPid, sheet]);
 
-  const overlayOpen = Boolean(sheet || confirmId);
+  const overlayOpen = Boolean(sheet || confirmId || confirmPid);
   useBackButton(overlayOpen, closeTop);
 
   useEffect(() => {
@@ -341,20 +380,92 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
+  /* ---------- Loyihalar ---------- */
+  const touchProject = (id, fn) => setProjects((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
+  const openProject = (id) => { haptic.tap(); setSheet({ type: 'pdetail', id }); };
+  const openProjectForm = (type) => { haptic.tap(); setSheet({ type: 'pform', ptype: typeof type === 'string' ? type : undefined }); };
+
+  const saveProject = (data) => {
+    if (sheet.id) {
+      touchProject(sheet.id, () => data);
+      setSheet({ type: 'pdetail', id: sheet.id });
+    } else {
+      const today = todayISO();
+      const tasks = planTasks(data.type, today, data.date);
+      setProjects((list) => [...list, { id: newId(), status: 'new', createdAt: Date.now(), updatedAt: Date.now(), tasks, ...data }]);
+      setSheet(null);
+      setBurst((b) => b + 1);
+    }
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
+  const projStatus = (id, status) => {
+    haptic.select();
+    touchProject(id, () => ({ status }));
+    if (status === 'done') setBurst((b) => b + 1);
+  };
+  const projToggleTask = (id, taskId) => {
+    haptic.select();
+    touchProject(id, (x) => {
+      const tasks = x.tasks.map((k) => (k.id === taskId ? { ...k, done: !k.done } : k));
+      return { tasks, status: x.status === 'new' ? 'work' : x.status };
+    });
+  };
+  const projRemoveTask = (id, taskId) => touchProject(id, (x) => ({ tasks: x.tasks.filter((k) => k.id !== taskId) }));
+  const projAddTask = (id, text) => {
+    haptic.select();
+    touchProject(id, (x) => ({ tasks: [...x.tasks, { id: newId(), text, done: false, due: '' }] }));
+    showToast(t('toastTaskAdded'));
+  };
+  const projShift = (id, n) => {
+    haptic.select();
+    touchProject(id, (x) => ({ date: shiftDate(x.date < todayISO() && n > 0 ? todayISO() : x.date, n) }));
+  };
+  const removeProject = (id) => {
+    const x = projectsRef.current.find((k) => k.id === id);
+    pdeletedRef.current = [...pdeletedRef.current, id];
+    savePDeleted(pdeletedRef.current);
+    setProjects((list) => list.filter((k) => k.id !== id));
+    haptic.warning();
+    return x;
+  };
+  const swipeProjDelete = (id) => {
+    const x = removeProject(id);
+    if (!x) return;
+    showToast(t('toastDeletedUndo'), {
+      label: t('undo'),
+      fn: () => {
+        setProjects((list) => [...list, { ...x, id: newId(), updatedAt: Date.now() }]);
+        setToast(null);
+        haptic.success();
+        showToast(t('toastRestored'));
+      },
+    });
+  };
+  const handleProjDelete = () => {
+    removeProject(confirmPid);
+    setConfirmPid(null);
+    setSheet(null);
+    showToast(t('toastDeleted'));
+  };
+
   const common = { meetings, now, onOpen: openDetail, onAdd: openAdd, onSettings: openSettings };
   return (
     <div className="app" data-lang={lang || getLang()}>
       <div className="aurora" aria-hidden="true"><i /><i /><i /></div>
 
       {tab === 'home' && (
-        <HomeView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} onQuickCreate={quickCreate} onQuickForm={quickForm} />
+        <HomeView {...common} projects={projects} onOpenProject={openProject} onOpenProjects={() => changeTab('projects')} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} onQuickCreate={quickCreate} onQuickForm={quickForm} />
       )}
       {tab === 'calendar' && (
         <CalendarView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} />
       )}
+      {tab === 'projects' && (
+        <ProjectsView projects={projects} now={now} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
+      )}
       {tab === 'stats' && <StatsView meetings={meetings} now={now} onSettings={openSettings} />}
 
-      <TabBar tab={tab} onTab={changeTab} onAdd={() => openAdd(tab === 'calendar' ? selectedDate : undefined)} onSettings={openSettings} />
+      <TabBar tab={tab} onTab={changeTab} onAdd={() => (tab === 'projects' ? openProjectForm() : openAdd(tab === 'calendar' ? selectedDate : undefined))} />
 
       {sheet?.type === 'detail' && current && (
         <MeetingDetail
@@ -387,12 +498,34 @@ export default function App() {
         />
       )}
 
+      {sheet?.type === 'pdetail' && curProject && (
+        <ProjectDetail
+          project={curProject}
+          onClose={closeTop}
+          onEdit={() => setSheet({ type: 'pform', id: curProject.id })}
+          onDelete={() => setConfirmPid(curProject.id)}
+          onStatus={(st) => projStatus(curProject.id, st)}
+          onToggleTask={(tid) => projToggleTask(curProject.id, tid)}
+          onRemoveTask={(tid) => projRemoveTask(curProject.id, tid)}
+          onAddTask={(text) => projAddTask(curProject.id, text)}
+          onShift={(n) => projShift(curProject.id, n)}
+        />
+      )}
+
+      {sheet?.type === 'pform' && (sheet.id ? curProject : true) && (
+        <ProjectForm key={sheet.id ?? 'pnew'} initial={curProject} presetType={sheet.ptype} onSave={saveProject} onClose={closeTop} />
+      )}
+
       {sheet?.type === 'settings' && (
         <SettingsSheet places={places.list} onLang={changeLang} onRemovePlace={(p) => savePlacesList(places.list.filter((x) => x !== p))} onCalendarLink={calendarLink} onClose={closeTop} />
       )}
 
       {confirmId && (
         <ConfirmDialog title={t('cDelTitle')} text={t('cDelText')} confirmLabel={t('cDelYes')} onConfirm={handleDelete} onCancel={() => setConfirmId(null)} />
+      )}
+
+      {confirmPid && (
+        <ConfirmDialog title={t('pjDelTitle')} text={t('pjDelText')} confirmLabel={t('cDelYes')} onConfirm={handleProjDelete} onCancel={() => setConfirmPid(null)} />
       )}
 
       <Confetti burst={burst} />

@@ -1,6 +1,7 @@
 'use strict';
 const S = require('./_shared');
 const { STR } = require('./i18n');
+const proj = require('./proj');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -16,12 +17,12 @@ const kbFor = (T) => ({
     [{ text: T.kb.app, web_app: { url: `${S.SITE()}/` } }],
     [{ text: T.kb.add }, { text: T.kb.next }],
     [{ text: T.kb.cal }, { text: T.kb.list }],
-    [{ text: T.kb.rem }, { text: T.kb.more }],
-    [{ text: T.kb.help }],
+    [{ text: T.kb.proj }, { text: T.kb.rem }],
+    [{ text: T.kb.more }, { text: T.kb.help }],
   ],
   resize_keyboard: true, is_persistent: true,
 });
-const KEY2CMD = { add: '/yangi', next: '/kelgusi', cal: '/taqvim', list: '/royxat', rem: '/eslatma', help: '/yordam', more: '/sozlamalar' };
+const KEY2CMD = { add: '/yangi', next: '/kelgusi', cal: '/taqvim', list: '/royxat', rem: '/eslatma', help: '/yordam', more: '/sozlamalar', proj: '/loyihalar' };
 const BTN = {};
 for (const l of S.LANGS) for (const [k, cmd] of Object.entries(KEY2CMD)) BTN[STR[l].kb[k]] = cmd;
 
@@ -200,9 +201,10 @@ async function showRemind(ctx, u) {
 }
 async function showDigest(ctx, u) {
   const T = S.Tof(u), mk = (kind, vals) => vals.map((v) => ({ text: `${u.digest[kind] === v ? '✔️ ' : ''}${v}`, callback_data: `dg:${kind}:${v.replace(':', '')}` }));
-  return show(ctx, `${T.digTitle}\n\n${T.digState(u.digest.m, u.digest.e)}`, { inline_keyboard: [
+  return show(ctx, `${T.digTitle}\n\n${T.digState(u.digest.m, u.digest.e)}\n${T.p.pdigState(Boolean(u.digest.p), u.digest.p)}`, { inline_keyboard: [
     [{ text: T.digMorning, callback_data: 'noop' }, ...mk('m', ['07:00', '08:00', '09:00'])], [{ text: T.digEvening, callback_data: 'noop' }, ...mk('e', ['19:00', '20:00', '21:00'])],
-    [{ text: `🔕 ${T.digMorning} ${T.off}`, callback_data: 'dg:m:off' }, { text: `🔕 ${T.digEvening} ${T.off}`, callback_data: 'dg:e:off' }],
+    [{ text: '📁', callback_data: 'noop' }, ...mk('p', ['08:00', '09:00', '10:00'])],
+    [{ text: `🔕 ${T.digMorning} ${T.off}`, callback_data: 'dg:m:off' }, { text: `🔕 ${T.digEvening} ${T.off}`, callback_data: 'dg:e:off' }, { text: `🔕 📁`, callback_data: 'dg:p:off' }],
   ] });
 }
 const QUIET = [['22:00', '07:00'], ['23:00', '07:00'], ['21:00', '08:00'], ['00:00', '09:00']];
@@ -289,7 +291,7 @@ const e164 = (p) => { const d = p.replace(/\D/g, ''); return `+${d.length === 9 
 async function sendWelcome(chat, u, from) {
   const T = S.Tof(u);
   await send(chat, T.welcome(esc(from.first_name || '')), kbFor(T));
-  return send(chat, T.help, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
+  return send(chat, `${T.help}\n\n${T.p.helpLine}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
 }
 
 async function onMessage(st, m) {
@@ -322,12 +324,15 @@ async function onMessage(st, m) {
 
   if (cmd === '/bekor') { u.state = null; await send(chat, T.cancelled, kbFor(T)); return S.saveUser(st, u); }
   if (cmd && cmd !== '/yangi') u.state = null;
+  if (!cmd && u.state && u.state.kind === 'p' && !text) { await send(chat, T.pleaseText); return S.saveUser(st, u); }
+
+  if (await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
 
   if (cmd === '/start') {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
     else await sendWelcome(chat, u, from);
   } else if (cmd === '/yordam' || cmd === '/help') {
-    await send(chat, T.help, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
+    await send(chat, `${T.help}\n\n${T.p.helpLine}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
   } else if (cmd === '/ilova' || cmd === '/app') {
     await send(chat, T.openApp, { inline_keyboard: [[S.appBtn(T.openApp)]] });
   } else if (cmd === '/yangi') {
@@ -387,7 +392,8 @@ async function onCallback(st, q) {
   if (!u.lang) { await tg('answerCallbackQuery', { callback_query_id: q.id }); await send(chat, STR.uz.chooseLang, langKb); return; }
   const T = S.Tof(u);
 
-  if (act === 'noop') { /* sahifa raqami */ }
+  if (proj.ACTS.includes(act)) { toast = await proj.onCallback(ctx, u, act, a, b); }
+  else if (act === 'noop') { /* sahifa raqami */ }
   else if (act === 'd') await showCard(ctx, u, a);
   else if (act === 'l') await showUpcoming(ctx, u, Number(a) || 0);
   else if (act === 'cal') await showCalendar(ctx, u, a + (b ? `:${b}` : ''));

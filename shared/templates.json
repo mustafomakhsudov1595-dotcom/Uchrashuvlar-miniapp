@@ -1,0 +1,314 @@
+{
+ "site": [
+  {
+   "tx": {
+    "uz": "Brif va texnik topshiriq",
+    "ru": "Бриф и техзадание",
+    "en": "Brief and requirements"
+   },
+   "at": 0
+  },
+  {
+   "tx": {
+    "uz": "Domen va hosting",
+    "ru": "Домен и хостинг",
+    "en": "Domain and hosting"
+   },
+   "at": 0.08
+  },
+  {
+   "tx": {
+    "uz": "Struktura va kontent rejasi",
+    "ru": "Структура и план контента",
+    "en": "Structure and content plan"
+   },
+   "at": 0.15
+  },
+  {
+   "tx": {
+    "uz": "Dizayn maketi",
+    "ru": "Макет дизайна",
+    "en": "Design mockup"
+   },
+   "at": 0.3
+  },
+  {
+   "tx": {
+    "uz": "Dizaynni mijoz bilan tasdiqlash",
+    "ru": "Согласование дизайна с клиентом",
+    "en": "Design approval by client"
+   },
+   "at": 0.4
+  },
+  {
+   "tx": {
+    "uz": "Sahifalarni yigʻish",
+    "ru": "Вёрстка страниц",
+    "en": "Build the pages"
+   },
+   "at": 0.6
+  },
+  {
+   "tx": {
+    "uz": "Mobil va tezlik tekshiruvi",
+    "ru": "Проверка мобильной версии и скорости",
+    "en": "Mobile and speed check"
+   },
+   "at": 0.72
+  },
+  {
+   "tx": {
+    "uz": "SEO: sarlavhalar, tavsiflar, sitemap",
+    "ru": "SEO: заголовки, описания, sitemap",
+    "en": "SEO: titles, descriptions, sitemap"
+   },
+   "at": 0.8
+  },
+  {
+   "tx": {
+    "uz": "Google Search Console va Analytics",
+    "ru": "Google Search Console и Analytics",
+    "en": "Google Search Console and Analytics"
+   },
+   "at": 0.86
+  },
+  {
+   "tx": {
+    "uz": "Google Business Profile va xarita",
+    "ru": "Google Business Profile и карта",
+    "en": "Google Business Profile and map"
+   },
+   "at": 0.9
+  },
+  {
+   "tx": {
+    "uz": "Yakuniy test",
+    "ru": "Финальное тестирование",
+    "en": "Final testing"
+   },
+   "at": 0.94
+  },
+  {
+   "tx": {
+    "uz": "Mijozga topshirish",
+    "ru": "Передача клиенту",
+    "en": "Hand over to the client"
+   },
+   "at": 1
+  }
+ ],
+ "bot": [
+  {
+   "tx": {
+    "uz": "Brif va funksiyalar roʻyxati",
+    "ru": "Бриф и список функций",
+    "en": "Brief and feature list"
+   },
+   "at": 0
+  },
+  {
+   "tx": {
+    "uz": "BotFather: bot yaratish, nom va rasm",
+    "ru": "BotFather: создать бота, имя и аватар",
+    "en": "BotFather: create the bot, name and picture"
+   },
+   "at": 0.07
+  },
+  {
+   "tx": {
+    "uz": "Menyu va xabarlar matnlari",
+    "ru": "Меню и тексты сообщений",
+    "en": "Menu and message texts"
+   },
+   "at": 0.15
+  },
+  {
+   "tx": {
+    "uz": "Asosiy funksiyalarni yozish",
+    "ru": "Разработка основных функций",
+    "en": "Build the core features"
+   },
+   "at": 0.4
+  },
+  {
+   "tx": {
+    "uz": "Mini ilova yoki toʻlov (kerak boʻlsa)",
+    "ru": "Мини-приложение или оплата (если нужно)",
+    "en": "Mini app or payments (if needed)"
+   },
+   "at": 0.55
+  },
+  {
+   "tx": {
+    "uz": "Admin bildirishnomalari",
+    "ru": "Уведомления администратору",
+    "en": "Admin notifications"
+   },
+   "at": 0.65
+  },
+  {
+   "tx": {
+    "uz": "Serverga joylash (deploy)",
+    "ru": "Размещение на сервере (deploy)",
+    "en": "Deploy to the server"
+   },
+   "at": 0.78
+  },
+  {
+   "tx": {
+    "uz": "Sinov (test)",
+    "ru": "Тестирование",
+    "en": "Testing"
+   },
+   "at": 0.88
+  },
+  {
+   "tx": {
+    "uz": "Mijozga koʻrsatish va tuzatishlar",
+    "ru": "Показ клиенту и правки",
+    "en": "Client review and fixes"
+   },
+   "at": 0.94
+  },
+  {
+   "tx": {
+    "uz": "Topshirish va oʻrgatish",
+    "ru": "Передача и обучение",
+    "en": "Hand over and training"
+   },
+   "at": 1
+  }
+ ],
+ "video": [
+  {
+   "tx": {
+    "uz": "Brif: maqsad va auditoriya",
+    "ru": "Бриф: цель и аудитория",
+    "en": "Brief: goal and audience"
+   },
+   "at": 0
+  },
+  {
+   "tx": {
+    "uz": "Gʻoya va ssenariy",
+    "ru": "Идея и сценарий",
+    "en": "Idea and script"
+   },
+   "at": 0.1
+  },
+  {
+   "tx": {
+    "uz": "Ssenariyni mijoz bilan kelishish",
+    "ru": "Согласование сценария с клиентом",
+    "en": "Script approval by client"
+   },
+   "at": 0.18
+  },
+  {
+   "tx": {
+    "uz": "Video manbalarini yigʻish (syomka, arxiv, rasmlar)",
+    "ru": "Сбор видеоматериалов (съёмка, архив, фото)",
+    "en": "Collect video sources (footage, archive, photos)"
+   },
+   "at": 0.3
+  },
+  {
+   "tx": {
+    "uz": "Syomka",
+    "ru": "Съёмка",
+    "en": "Shooting"
+   },
+   "at": 0.42
+  },
+  {
+   "tx": {
+    "uz": "Montaj",
+    "ru": "Монтаж",
+    "en": "Editing"
+   },
+   "at": 0.58
+  },
+  {
+   "tx": {
+    "uz": "Matn, subtitr va musiqa",
+    "ru": "Текст, субтитры и музыка",
+    "en": "Text, subtitles and music"
+   },
+   "at": 0.68
+  },
+  {
+   "tx": {
+    "uz": "Formatlar: Reels 9:16, Stories, Post",
+    "ru": "Форматы: Reels 9:16, Stories, пост",
+    "en": "Formats: Reels 9:16, Stories, Post"
+   },
+   "at": 0.75
+  },
+  {
+   "tx": {
+    "uz": "Mijoz tasdigʻi",
+    "ru": "Утверждение клиентом",
+    "en": "Client approval"
+   },
+   "at": 0.82
+  },
+  {
+   "tx": {
+    "uz": "Meta Ads: auditoriya va byudjet sozlash",
+    "ru": "Meta Ads: настройка аудитории и бюджета",
+    "en": "Meta Ads: audience and budget setup"
+   },
+   "at": 0.88
+  },
+  {
+   "tx": {
+    "uz": "Reklamani ishga tushirish",
+    "ru": "Запуск рекламы",
+    "en": "Launch the ads"
+   },
+   "at": 0.94
+  },
+  {
+   "tx": {
+    "uz": "Birinchi natijalar hisoboti",
+    "ru": "Отчёт по первым результатам",
+    "en": "First results report"
+   },
+   "at": 1
+  }
+ ],
+ "other": [
+  {
+   "tx": {
+    "uz": "Boshlash va reja",
+    "ru": "Старт и план",
+    "en": "Start and plan"
+   },
+   "at": 0
+  },
+  {
+   "tx": {
+    "uz": "Asosiy ish",
+    "ru": "Основная работа",
+    "en": "Main work"
+   },
+   "at": 0.5
+  },
+  {
+   "tx": {
+    "uz": "Tekshiruv",
+    "ru": "Проверка",
+    "en": "Review"
+   },
+   "at": 0.85
+  },
+  {
+   "tx": {
+    "uz": "Topshirish",
+    "ru": "Сдача",
+    "en": "Delivery"
+   },
+   "at": 1
+  }
+ ]
+}

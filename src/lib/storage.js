@@ -56,6 +56,68 @@ export function saveMeetings(list) {
   }
 }
 
+// ---- Loyihalar ----
+const PKEY = 'uchrashuvlar:projects:v1';
+const PDEL_KEY = 'uchrashuvlar:pdeleted';
+const PTYPES = ['site', 'bot', 'video', 'other'];
+const PSTATUS = ['new', 'work', 'review', 'done', 'paused'];
+
+export function cleanProject(p) {
+  if (!p || typeof p !== 'object' || typeof p.id !== 'string' || typeof p.name !== 'string') return null;
+  if (!DATE_RE.test(p.date)) return null;
+  const n = (v) => (v === null || v === '' || v === undefined || !Number.isFinite(Number(v)) ? null : Number(v));
+  return {
+    id: p.id,
+    name: p.name,
+    client: typeof p.client === 'string' ? p.client : '',
+    contact: typeof p.contact === 'string' ? p.contact : '',
+    type: PTYPES.includes(p.type) ? p.type : 'other',
+    status: PSTATUS.includes(p.status) ? p.status : 'new',
+    date: p.date,
+    time: TIME_RE.test(p.time) ? p.time : '18:00',
+    price: n(p.price),
+    paid: n(p.paid),
+    notes: typeof p.notes === 'string' ? p.notes : '',
+    tasks: Array.isArray(p.tasks)
+      ? p.tasks.filter((t) => t && typeof t.text === 'string').map((t) => ({ id: String(t.id ?? newId()), text: t.text, done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' }))
+      : [],
+    createdAt: Number(p.createdAt) || Date.now(),
+    updatedAt: Number(p.updatedAt) || 0,
+  };
+}
+export function loadProjects() {
+  try {
+    const d = JSON.parse(localStorage.getItem(PKEY) || '[]');
+    return Array.isArray(d) ? d.map(cleanProject).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+export function saveProjects(list) {
+  try {
+    localStorage.setItem(PKEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+export function loadPDeleted() {
+  try {
+    const d = JSON.parse(localStorage.getItem(PDEL_KEY) || '[]');
+    return Array.isArray(d) ? d.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+export const savePDeleted = (ids) => {
+  try {
+    localStorage.setItem(PDEL_KEY, JSON.stringify(ids));
+  } catch {
+    /* ignore */
+  }
+};
+export const projSignature = (list) =>
+  JSON.stringify(list.map((p) => [p.id, p.updatedAt, p.name, p.status, p.date, p.time, p.price, p.paid, p.tasks.map((t) => [t.id, t.done, t.text, t.due])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+
 // ---- Server bilan sinxronlash (faqat Telegram ichida) ----
 // Uchrashuvlar serverda ham saqlanadi: shu sabab bot buyruqlari va eslatmalar ishlaydi,
 // telefon va kompyuterdagi ma'lumotlar bir xil bo'ladi.
@@ -105,17 +167,18 @@ export function savePlaces(list, at) {
 const headers = () => ({ 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData });
 
 // Serverga yuboradi, birlashtirilgan natijani qaytaradi: { meetings, lang, places, placesAt }
-export async function syncRemote({ meetings, deleted, lang, places, placesAt }) {
+export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted }) {
   if (!isTelegram) return null;
   const res = await fetch('/api/meetings', {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, tz: -new Date().getTimezoneOffset() }),
+    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, tz: -new Date().getTimezoneOffset() }),
   });
   if (!res.ok) throw new Error(`sync ${res.status}`);
   const data = await res.json();
   return {
     meetings: Array.isArray(data.meetings) ? data.meetings.map(clean).filter(Boolean) : [],
+    projects: Array.isArray(data.projects) ? data.projects.map(cleanProject).filter(Boolean) : [],
     lang: data.lang,
     places: Array.isArray(data.places) ? data.places : [],
     placesAt: Number(data.placesAt) || 0,

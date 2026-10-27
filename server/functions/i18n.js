@@ -14,7 +14,7 @@ const uz = {
   cats: { work: 'Ish', family: 'Oila', personal: 'Shaxsiy', other: 'Boshqa' },
   noMeetings: 'Uchrashuvlar yoʻq.', none: 'Yoʻq',
   /* menyu */
-  kb: { app: '📱 Ilova', add: '➕ Yangi', next: '📅 Kelgusi', cal: '🗓 Taqvim', list: '📋 Roʻyxat', rem: '⏰ Eslatma', help: 'ℹ️ Yordam', more: '⚙️ Sozlamalar' },
+  kb: { app: '📱 Ilova', add: '➕ Yangi', next: '📅 Kelgusi', cal: '🗓 Taqvim', list: '📋 Roʻyxat', rem: '⏰ Eslatma', help: 'ℹ️ Yordam', more: '⚙️ Sozlamalar', proj: '📁 Loyihalar' },
   chooseLang: '🌐 <b>Tilni tanlang</b>\n<b>Выберите язык</b>\n<b>Choose your language</b>',
   welcome: (n) => `Assalomu alaykum, <b>${n}</b>! 👋\n\nMen <b>Uchrashuvlar</b> yordamchisiman: uchrashuvlaringizni saqlayman, oldindan <b>eslataman</b>, olib borish roʻyxatini yuritaman va kunlik xulosa yuboraman.\n\n⚡ <b>Tez qoʻshish:</b> shunchaki yozing — masalan:\n<code>ertaga 15:00 Anvar bilan, Chilonzor ofis</code>`,
   help: `ℹ️ <b>Yordam</b>\n\n➕ /yangi — uchrashuv qoʻshish (yoki shunchaki yozing: <code>ertaga 15:00 Anvar bilan, ofis</code>)\n📅 /kelgusi — yaqin uchrashuvlar\n☀️ /bugun · 🌙 /ertaga\n🗓 /taqvim — oylik taqvim\n📋 /royxat — barcha kelgusi\n🔎 /qidir <i>soʻz</i> — qidiruv\n🗑 /ochirish — oʻchirish\n\n⚙️ <b>Sozlamalar</b>\n⏰ /eslatma — eslatma vaqti\n🌅 /xulosa — kunlik xulosa\n🌙 /jim — jim soatlar\n🕒 /vaqt — vaqt zonasi\n🌐 /til — til\n📊 /statistika — statistika\n📱 /ilova — mini ilova`,
@@ -82,7 +82,7 @@ const ru = {
   unitMin: (n) => `${n} ${plural(n, ['минуту', 'минуты', 'минут'])}`, unitHour: (n) => `${n} ${plural(n, ['час', 'часа', 'часов'])}`, unitDay: (n) => `${n} ${plural(n, ['день', 'дня', 'дней'])}`,
   cats: { work: 'Работа', family: 'Семья', personal: 'Личное', other: 'Другое' },
   noMeetings: 'Встреч нет.', none: 'Нет',
-  kb: { app: '📱 Приложение', add: '➕ Новая', next: '📅 Ближайшие', cal: '🗓 Календарь', list: '📋 Список', rem: '⏰ Напоминание', help: 'ℹ️ Помощь', more: '⚙️ Настройки' },
+  kb: { app: '📱 Приложение', add: '➕ Новая', next: '📅 Ближайшие', cal: '🗓 Календарь', list: '📋 Список', rem: '⏰ Напоминание', help: 'ℹ️ Помощь', more: '⚙️ Настройки', proj: '📁 Проекты' },
   welcome: (n) => `Здравствуйте, <b>${n}</b>! 👋\n\nЯ помощник <b>Встречи</b>: сохраняю встречи, <b>напоминаю</b> заранее, веду список вещей и присылаю сводку дня.\n\n⚡ <b>Быстро добавить:</b> просто напишите, например:\n<code>завтра 15:00 Анвар, офис на Чиланзаре</code>`,
   help: `ℹ️ <b>Помощь</b>\n\n➕ /yangi — добавить встречу (или просто напишите: <code>завтра 15:00 Анвар, офис</code>)\n📅 /kelgusi — ближайшие встречи\n☀️ /bugun · 🌙 /ertaga\n🗓 /taqvim — календарь\n📋 /royxat — все будущие\n🔎 /qidir <i>слово</i> — поиск\n🗑 /ochirish — удалить\n\n⚙️ <b>Настройки</b>\n⏰ /eslatma — время напоминания\n🌅 /xulosa — ежедневная сводка\n🌙 /jim — тихие часы\n🕒 /vaqt — часовой пояс\n🌐 /til — язык\n📊 /statistika — статистика\n📱 /ilova — мини-приложение`,
   openApp: '📱 Открыть приложение', openAppShort: '📱 Открыть в приложении',
@@ -136,7 +136,7 @@ const en = {
   unitMin: (n) => `${n} min`, unitHour: (n) => `${n} h`, unitDay: (n) => `${n} day${n > 1 ? 's' : ''}`,
   cats: { work: 'Work', family: 'Family', personal: 'Personal', other: 'Other' },
   noMeetings: 'No meetings.', none: 'No',
-  kb: { app: '📱 App', add: '➕ New', next: '📅 Upcoming', cal: '🗓 Calendar', list: '📋 List', rem: '⏰ Reminder', help: 'ℹ️ Help', more: '⚙️ Settings' },
+  kb: { app: '📱 App', add: '➕ New', next: '📅 Upcoming', cal: '🗓 Calendar', list: '📋 List', rem: '⏰ Reminder', help: 'ℹ️ Help', more: '⚙️ Settings', proj: '📁 Projects' },
   welcome: (n) => `Hello, <b>${n}</b>! 👋\n\nI'm <b>Meetings</b>: I keep your meetings, <b>remind</b> you in advance, track what to bring and send a daily summary.\n\n⚡ <b>Quick add:</b> just type, for example:\n<code>tomorrow 15:00 Anvar, office downtown</code>`,
   help: `ℹ️ <b>Help</b>\n\n➕ /yangi — add a meeting (or just type: <code>tomorrow 15:00 Anvar, office</code>)\n📅 /kelgusi — upcoming\n☀️ /bugun · 🌙 /ertaga\n🗓 /taqvim — calendar\n📋 /royxat — all upcoming\n🔎 /qidir <i>word</i> — search\n🗑 /ochirish — delete\n\n⚙️ <b>Settings</b>\n⏰ /eslatma — reminder time\n🌅 /xulosa — daily summary\n🌙 /jim — quiet hours\n🕒 /vaqt — time zone\n🌐 /til — language\n📊 /statistika — statistics\n📱 /ilova — mini app`,
   openApp: '📱 Open the app', openAppShort: '📱 Open in app',
@@ -178,6 +178,8 @@ const en = {
   contactSent: 'Contact sent — tap it to call.', noPhone: 'No phone number.', noLoc: 'No place set.',
 };
 
+const P = require('./i18n_p');
+uz.p = P.uz; ru.p = P.ru; en.p = P.en;
 const STR = { uz, ru, en };
 const getT = (lang) => STR[lang] || uz;
 const LANGS = ['uz', 'ru', 'en'];

@@ -151,6 +151,53 @@ Object.assign(uz, X.uz);
 Object.assign(ru, X.ru);
 Object.assign(en, X.en);
 
+
+// ---- Loyihalar bo'limi ----
+const P = {
+  uz: {
+    tabProjects: 'Loyihalar', pjTitle: 'Loyihalar', pjSub: 'Sayt · Bot · Video', pjAdd: 'Yangi loyiha', pjNone: 'Hali loyiha yoʻq', pjNoneText: 'Buyurtmani tanlang — vazifalar muddatgacha avtomatik rejalashtiriladi.',
+    pjActive: 'Faol', pjSoon: 'Yaqin muddat', pjOver: 'Kechikkan', pjAll: 'Hammasi', pjDoneList: 'Tayyor loyihalar', pjNoMatch: 'Bu filtr boʻyicha loyiha yoʻq',
+    pTypes: { site: 'Sayt (Google)', bot: 'Telegram bot', video: 'Instagram video', other: 'Boshqa' },
+    pTypeHint: { site: 'Google’da chiqadigan sayt', bot: 'Bot va mini ilova', video: 'Target reklama videosi', other: 'Boshqa ish' },
+    pStatus: { new: 'Yangi', work: 'Jarayonda', review: 'Tekshiruvda', done: 'Tayyor', paused: 'Toʻxtatilgan' },
+    pOverTag: (n) => `${n} kun kechikdi`, pLeftTag: (n) => `${n} kun qoldi`, pToday: 'Bugun muddat', pTomorrow: 'Ertaga muddat', pDoneTag: 'Tayyor',
+    lblClient: 'Mijoz', lblContact: 'Aloqa', lblDeadline: 'Muddat', lblPrice: 'Narx', lblPaid: 'Toʻlandi', lblProgress: 'Jarayon', lblTasks: 'Vazifalar', lblStatus: 'Holat', lblDue: 'Muddati',
+    pjAddTask: 'Vazifa qoʻshish', pjTaskPh: 'Masalan, logotipni tayyorlash', pjShift: (n) => `+${n} kun`, pjShiftLabel: 'Muddatni surish', pjDelTitle: 'Loyihani oʻchirasizmi?', pjDelText: 'Barcha vazifalari bilan oʻchadi. Bu amalni qaytarib boʻlmaydi.',
+    pfNew: 'Yangi loyiha', pfEdit: 'Loyihani tahrirlash', pfName: 'Loyiha nomi', pfNamePh: 'Masalan, kafe uchun sayt', pfType: 'Turi', pfClient: 'Mijoz', pfClientPh: 'Ism yoki kompaniya', pfContact: 'Mijoz aloqasi', pfContactPh: '+998 90 123 45 67 yoki @username',
+    pfDeadline: 'Tayyor boʻlish muddati', pfTime: 'Vaqt', pfPrice: 'Narxi (soʻm)', pfPaid: 'Toʻlangan (soʻm)', pfNotes: 'Izoh', pfAuto: (n) => `${n} ta vazifa muddatgacha avtomatik rejalashtiriladi`, pfAutoOff: 'Vazifalarni oʻzingiz qoʻshasiz',
+    secDeadlines: 'Yaqin muddatlar', toastTaskAdded: 'Vazifa qoʻshildi', pjTasksDone: (a, b) => `${a}/${b} vazifa`, pjOpenProj: 'Loyihalar',
+  },
+  ru: {
+    tabProjects: 'Проекты', pjTitle: 'Проекты', pjSub: 'Сайт · Бот · Видео', pjAdd: 'Новый проект', pjNone: 'Проектов пока нет', pjNoneText: 'Выберите тип заказа — задачи автоматически распределятся до срока.',
+    pjActive: 'Активные', pjSoon: 'Срок скоро', pjOver: 'Просрочены', pjAll: 'Все', pjDoneList: 'Готовые проекты', pjNoMatch: 'По этому фильтру проектов нет',
+    pTypes: { site: 'Сайт (Google)', bot: 'Telegram-бот', video: 'Instagram-видео', other: 'Другое' },
+    pTypeHint: { site: 'Сайт для выдачи в Google', bot: 'Бот и мини-приложение', video: 'Таргет-видео для рекламы', other: 'Другая работа' },
+    pStatus: { new: 'Новый', work: 'В работе', review: 'На проверке', done: 'Готов', paused: 'Пауза' },
+    pOverTag: (n) => `просрочено на ${n} ${plural(n, ['день', 'дня', 'дней'])}`, pLeftTag: (n) => `осталось ${n} ${plural(n, ['день', 'дня', 'дней'])}`, pToday: 'Срок сегодня', pTomorrow: 'Срок завтра', pDoneTag: 'Готов',
+    lblClient: 'Клиент', lblContact: 'Контакт', lblDeadline: 'Срок', lblPrice: 'Цена', lblPaid: 'Оплачено', lblProgress: 'Прогресс', lblTasks: 'Задачи', lblStatus: 'Статус', lblDue: 'Срок',
+    pjAddTask: 'Добавить задачу', pjTaskPh: 'Например, подготовить логотип', pjShift: (n) => `+${n} ${plural(n, ['день', 'дня', 'дней'])}`, pjShiftLabel: 'Сдвинуть срок', pjDelTitle: 'Удалить проект?', pjDelText: 'Удалится вместе со всеми задачами. Отменить нельзя.',
+    pfNew: 'Новый проект', pfEdit: 'Редактировать проект', pfName: 'Название проекта', pfNamePh: 'Например, сайт для кафе', pfType: 'Тип', pfClient: 'Клиент', pfClientPh: 'Имя или компания', pfContact: 'Контакт клиента', pfContactPh: '+998 90 123 45 67 или @username',
+    pfDeadline: 'Срок сдачи', pfTime: 'Время', pfPrice: 'Цена (сум)', pfPaid: 'Оплачено (сум)', pfNotes: 'Заметка', pfAuto: (n) => `${n} ${plural(n, ['задача', 'задачи', 'задач'])} автоматически распределятся до срока`, pfAutoOff: 'Задачи добавите сами',
+    secDeadlines: 'Ближайшие сроки', toastTaskAdded: 'Задача добавлена', pjTasksDone: (a, b) => `${a}/${b} задач`, pjOpenProj: 'Проекты',
+  },
+  en: {
+    tabProjects: 'Projects', pjTitle: 'Projects', pjSub: 'Site · Bot · Video', pjAdd: 'New project', pjNone: 'No projects yet', pjNoneText: 'Pick an order type — tasks are scheduled up to the deadline automatically.',
+    pjActive: 'Active', pjSoon: 'Due soon', pjOver: 'Overdue', pjAll: 'All', pjDoneList: 'Finished projects', pjNoMatch: 'No projects for this filter',
+    pTypes: { site: 'Website (Google)', bot: 'Telegram bot', video: 'Instagram video', other: 'Other' },
+    pTypeHint: { site: 'A site that ranks on Google', bot: 'Bot and mini app', video: 'Targeted ad video', other: 'Other work' },
+    pStatus: { new: 'New', work: 'In progress', review: 'In review', done: 'Done', paused: 'Paused' },
+    pOverTag: (n) => `${n} day${n > 1 ? 's' : ''} overdue`, pLeftTag: (n) => `${n} day${n > 1 ? 's' : ''} left`, pToday: 'Due today', pTomorrow: 'Due tomorrow', pDoneTag: 'Done',
+    lblClient: 'Client', lblContact: 'Contact', lblDeadline: 'Deadline', lblPrice: 'Price', lblPaid: 'Paid', lblProgress: 'Progress', lblTasks: 'Tasks', lblStatus: 'Status', lblDue: 'Due',
+    pjAddTask: 'Add a task', pjTaskPh: 'E.g. prepare the logo', pjShift: (n) => `+${n} day${n > 1 ? 's' : ''}`, pjShiftLabel: 'Move the deadline', pjDelTitle: 'Delete this project?', pjDelText: 'It will be deleted with all its tasks. This cannot be undone.',
+    pfNew: 'New project', pfEdit: 'Edit project', pfName: 'Project name', pfNamePh: 'E.g. website for a cafe', pfType: 'Type', pfClient: 'Client', pfClientPh: 'Name or company', pfContact: 'Client contact', pfContactPh: '+998 90 123 45 67 or @username',
+    pfDeadline: 'Delivery deadline', pfTime: 'Time', pfPrice: 'Price (UZS)', pfPaid: 'Paid (UZS)', pfNotes: 'Notes', pfAuto: (n) => `${n} task${n > 1 ? 's' : ''} will be scheduled up to the deadline automatically`, pfAutoOff: 'You will add tasks yourself',
+    secDeadlines: 'Upcoming deadlines', toastTaskAdded: 'Task added', pjTasksDone: (a, b) => `${a}/${b} tasks`, pjOpenProj: 'Projects',
+  },
+};
+Object.assign(uz, P.uz);
+Object.assign(ru, P.ru);
+Object.assign(en, P.en);
+
 export const DICT = { uz, ru, en };
 export const LANGS = [['uz', "O'zbekcha"], ['ru', 'Русский'], ['en', 'English']];
 const KEY = 'uchrashuvlar:lang';

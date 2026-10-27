@@ -53,14 +53,14 @@ function openStore(event) {
 const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
-  quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null }, dsent: { m: '', e: '' },
-  meetings: [], deleted: {}, places: [], placesAt: 0, state: null,
+  quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: '09:00' }, dsent: { m: '', e: '', p: '' },
+  meetings: [], deleted: {}, projects: [], pdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
   if (!u) return blankUser(id);
   const d = blankUser(id);
-  return { ...d, ...u, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
+  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
 }
 const saveUser = (st, u) => st.setJSON(userKey(u.id), u);
 const Tof = (u) => getT(u.lang);
@@ -149,6 +149,68 @@ function mergeMeetings(u, clientList, clientDeleted) {
   for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
   u.deleted = tomb;
   u.meetings = [...byId.values()];
+  return u;
+}
+
+/* ---------- loyihalar ---------- */
+const PTYPES = ['site', 'bot', 'video', 'other'];
+const PSTATUS = ['new', 'work', 'review', 'done', 'paused'];
+const PICON = { site: '🌐', bot: '🤖', video: '🎬', other: '📦' };
+const SICON = { new: '🆕', work: '🛠', review: '🔎', done: '✅', paused: '⏸' };
+const TEMPLATES = require('../../shared/templates.json');
+const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+
+function cleanProject(p) {
+  if (!p || typeof p !== 'object') return null;
+  if (typeof p.id !== 'string' || p.id.length > 64 || typeof p.name !== 'string' || !p.name.trim()) return null;
+  if (!DATE_RE.test(p.date)) return null;
+  const price = num(p.price), paid = num(p.paid);
+  return {
+    id: p.id, name: p.name.trim().slice(0, 120), client: typeof p.client === 'string' ? p.client.trim().slice(0, 100) : '', contact: typeof p.contact === 'string' ? p.contact.slice(0, 60) : '',
+    type: PTYPES.includes(p.type) ? p.type : 'other', status: PSTATUS.includes(p.status) ? p.status : 'new', date: p.date, time: TIME_RE.test(p.time) ? p.time : '18:00',
+    price: price !== null && price >= 0 ? price : null, paid: paid !== null && paid >= 0 ? paid : null, notes: typeof p.notes === 'string' ? p.notes.slice(0, 1500) : '',
+    tasks: Array.isArray(p.tasks) ? p.tasks.filter((t) => t && typeof t.text === 'string' && t.text.trim()).slice(0, 80).map((t) => ({ id: String(t.id || newId()).slice(0, 64), text: t.text.trim().slice(0, 120), done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' })) : [],
+    createdAt: Number(p.createdAt) || Date.now(), updatedAt: Number(p.updatedAt) || 0, r: p.r,
+  };
+}
+// Shablon vazifalarni bugundan muddatgacha teng taqsimlaydi
+function planTasks(type, lang, today, deadline) {
+  const days = Math.max(0, daysBetween(today, deadline));
+  return (TEMPLATES[type] || TEMPLATES.other).map((t) => ({ id: newId(), text: t.tx[lang] || t.tx.uz, done: false, due: days ? addDaysISO(today, Math.round(t.at * days)) : deadline }));
+}
+const projProgress = (p) => ({ done: p.tasks.filter((t) => t.done).length, total: p.tasks.length });
+const barText = (done, total, len = 10) => { const f = total ? Math.round((done / total) * len) : 0; return '▓'.repeat(f) + '░'.repeat(len - f); };
+function deadlineTag(p, today, T) {
+  if (p.status === 'done') return T.p.doneTag;
+  const d = daysBetween(today, p.date);
+  return d < 0 ? T.p.overdue(-d) : d === 0 ? T.p.today : d === 1 ? T.p.tomorrow : T.p.left(d);
+}
+const money = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+function projectText(p, u, now = Date.now()) {
+  const T = Tof(u), today = todayISO(u.tz, now), { done, total } = projProgress(p), pc = total ? Math.round((done / total) * 100) : 0;
+  let t = `${PICON[p.type]} <b>${esc(p.name)}</b>\n${SICON[p.status]} ${T.p.status[p.status]} · ${T.p.types[p.type]}`;
+  if (p.client) t += `\n👤 ${T.p.lblClient}: <b>${esc(p.client)}</b>`;
+  if (p.contact) t += `\n📞 ${esc(p.contact)}`;
+  t += `\n📅 ${T.p.lblDeadline}: <b>${esc(fmtWd(p.date, T))}</b> · ${deadlineTag(p, today, T)}`;
+  if (p.price !== null) t += `\n💰 ${T.p.lblPrice}: <b>${money(p.price)}</b>${p.paid !== null ? ` · ${T.p.lblPaid}: ${money(p.paid)}` : ''}`;
+  if (total) t += `\n\n${barText(done, total)} <b>${done}/${total}</b> (${pc}%)`;
+  if (p.notes) t += `\n📝 ${esc(p.notes)}`;
+  return t;
+}
+const activeProjects = (u) => u.projects.filter((p) => p.status !== 'done').sort((a, b) => (a.date + a.time < b.date + b.time ? -1 : 1));
+function mergeProjects(u, clientList, clientDeleted) {
+  const tomb = u.pdeleted || {}, now = Date.now();
+  const byId = new Map(u.projects.map((p) => [p.id, p]));
+  for (const id of clientDeleted) { byId.delete(id); tomb[id] = now; }
+  for (const raw of clientList) {
+    const c = cleanProject(raw);
+    if (!c || tomb[c.id]) continue;
+    const s = byId.get(c.id);
+    if (!s) { byId.set(c.id, { ...c, r: undefined }); continue; }
+    if (c.updatedAt >= (s.updatedAt || 0)) byId.set(c.id, { ...c, r: s.date !== c.date ? undefined : s.r });
+  }
+  for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
+  u.pdeleted = tomb; u.projects = [...byId.values()];
   return u;
 }
 
@@ -271,5 +333,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

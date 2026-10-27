@@ -93,3 +93,25 @@ export const IconSparkle = make(<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8
 export const IconBell = make(<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.500zM10 20a2 2 0 0 0 4 0" />);
 export const IconLink = make(<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />);
 export const IconUndo = make(<path d="M9 7L4.5 11.500 9 16M5 11.500h9a5 5 0 0 1 0 10h-2" />);
+export const IconGlobe = make(
+  <>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M3.5 12h17M12 3.5c2.5 2.4 3.8 5.2 3.8 8.5S14.500 18.100 12 20.500M12 3.500C9.500 5.900 8.200 8.700 8.200 12s1.300 6.100 3.800 8.500" />
+  </>,
+);
+export const IconBot = make(
+  <>
+    <rect x="5" y="8" width="14" height="10.5" rx="3.5" />
+    <path d="M12 4.5V8M9 12.500v1M15 12.500v1M8.500 18.500V20M15.500 18.500V20" />
+    <circle cx="12" cy="4" r="1" />
+  </>,
+);
+export const IconFilm = make(
+  <>
+    <rect x="3.500" y="5" width="17" height="14" rx="3" />
+    <path d="M8 5v14M16 5v14M3.500 9.500H8M3.500 14.500H8M16 9.500h4.500M16 14.500h4.500" />
+  </>,
+);
+export const IconBox = make(<path d="M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8" />);
+export const IconFolder = make(<path d="M3.500 7.500a2 2 0 0 1 2-2H10l2 2.500h6.500a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />);
+export const IconFlag = make(<path d="M5 21V4M5 4h11l-2 4 2 4H5" />);

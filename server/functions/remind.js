@@ -2,6 +2,7 @@
 // Har daqiqada ishlaydi: eslatma, takroriy eslatma (snooze) va kunlik xulosalarni yuboradi.
 const S = require('./_shared');
 const { reminderRows } = require('./bot');
+const proj = require('./proj');
 
 async function processUser(u, now) {
   const T = S.Tof(u);
@@ -41,7 +42,8 @@ async function processUser(u, now) {
     const r = await S.tg('sendMessage', { chat_id: u.chat, text: S.listText(title, items, u, now, false), parse_mode: 'HTML', reply_markup: { inline_keyboard: [...rows, [S.appBtn(T.openAppShort)]] }, disable_web_page_preview: true });
     if (r.ok) sent += 1;
   }
-  return { dirty, sent };
+  const pr = await proj.remind(u, now);
+  return { dirty: dirty || pr.dirty, sent: sent + pr.sent };
 }
 
 exports.handler = async (event) => {

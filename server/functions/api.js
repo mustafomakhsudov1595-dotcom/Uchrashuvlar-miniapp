@@ -4,7 +4,7 @@ const S = require('./_shared');
 const json = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 const view = (u) => ({
   ok: true, meetings: u.meetings.map(({ r, sn, g, ...m }) => ({ ...m, guests: g ? g.length : 0 })),
-  lang: u.lang, remind: u.remind, lead: u.lead, places: u.places || [], placesAt: u.placesAt || 0, tz: u.tz,
+  projects: (u.projects || []).map(({ r, ...p }) => p), lang: u.lang, remind: u.remind, lead: u.lead, places: u.places || [], placesAt: u.placesAt || 0, tz: u.tz,
 });
 
 exports.handler = async (event) => {
@@ -43,6 +43,7 @@ exports.handler = async (event) => {
     u.places = b.places.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, 120)).slice(0, 50);
     u.placesAt = Number(b.placesAt);
   }
+  S.mergeProjects(u, Array.isArray(b.projects) ? b.projects.slice(0, 300) : [], Array.isArray(b.pdeleted) ? b.pdeleted.filter((x) => typeof x === 'string').slice(0, 300) : []);
   S.mergeMeetings(u, Array.isArray(b.meetings) ? b.meetings.slice(0, 500) : [], Array.isArray(b.deleted) ? b.deleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
   await S.saveUser(st, u);
   return json(200, view(u));

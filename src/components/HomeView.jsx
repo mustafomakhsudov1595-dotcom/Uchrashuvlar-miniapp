@@ -4,6 +4,8 @@ import WeekStrip from './WeekStrip.jsx';
 import QuickAdd from './QuickAdd.jsx';
 import MeetingCard from './MeetingCard.jsx';
 import Illustration from './Illustration.jsx';
+import { TypeIcon, urgencyText } from './ProjectCard.jsx';
+import { byDeadline, urgency } from '../lib/projects.js';
 import { IconChevronRight, IconClose, IconSearch, IconSettings } from './Icons.jsx';
 import { byStart, CATS, splitMeetings } from '../lib/meetings.js';
 import { dayLabel, formatWithWeekday, meetingStart, toISODate } from '../lib/dates.js';
@@ -12,7 +14,7 @@ import { t } from '../lib/i18n.js';
 const greeting = (h) => (h < 5 ? t('greetNight') : h < 12 ? t('greetMorning') : h < 18 ? t('greetDay') : t('greetEvening'));
 const userName = () => window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name || '';
 
-export default function HomeView({ meetings, now, selected, onSelect, onOpen, onAdd, onDone, onDelete, onSettings, onQuickCreate, onQuickForm }) {
+export default function HomeView({ projects = [], onOpenProject, onOpenProjects, meetings, now, selected, onSelect, onOpen, onAdd, onDone, onDelete, onSettings, onQuickCreate, onQuickForm }) {
   const [searching, setSearching] = useState(false);
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
@@ -21,6 +23,7 @@ export default function HomeView({ meetings, now, selected, onSelect, onOpen, on
 
   const { upcoming, past } = useMemo(() => splitMeetings(meetings, now), [meetings, now]);
   const today = toISODate(now);
+  const deadlines = useMemo(() => projects.filter((p) => p.status !== 'done').sort(byDeadline).slice(0, 6), [projects]);
   const dayItems = useMemo(() => meetings.filter((m) => m.date === selected).sort(byStart), [meetings, selected]);
   const nextList = upcoming.filter((m) => m.date !== selected).slice(0, 6);
   const results = useMemo(
@@ -108,6 +111,27 @@ export default function HomeView({ meetings, now, selected, onSelect, onOpen, on
           <>
             <QuickAdd now={now} onCreate={onQuickCreate} onOpenForm={onQuickForm} />
             <HeroCard meeting={upcoming[0]} now={now} onOpen={onOpen} onAdd={onAdd} />
+            {deadlines.length > 0 && (
+              <section className="block rail-block">
+                <div className="block-head">
+                  <h2>{t('secDeadlines')}</h2>
+                  <button type="button" className="link-more" onClick={onOpenProjects}>{t('pjOpenProj')} →</button>
+                </div>
+                <div className="rail">
+                  {deadlines.map((p) => {
+                    const u = urgency(p, today);
+                    return (
+                      <button type="button" key={p.id} className={`rcard pt-${p.type}`} onClick={() => onOpenProject(p.id)}>
+                        <span className="ptile"><TypeIcon type={p.type} width={20} height={20} /></span>
+                        <b>{p.name}</b>
+                        <small>{p.client || t('pTypes')[p.type]}</small>
+                        <span className={`urg ${u.kind}`}>{urgencyText(u)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
             <WeekStrip selected={selected} onSelect={onSelect} meetings={meetings} now={now} />
 
             <section className="block">
