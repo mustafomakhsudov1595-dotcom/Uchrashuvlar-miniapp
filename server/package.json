@@ -2,11 +2,5 @@
   "name": "uchrashuvlar-server",
   "private": true,
   "version": "1.0.0",
-  "description": "Telegram bot + API + eslatmalar (Netlify Functions)",
-  "dependencies": {
-    "@netlify/blobs": "^11.1.6"
-  },
-  "devDependencies": {
-    "esbuild": "^0.25.0"
-  }
+  "description": "Telegram bot + API + eslatmalar (Cloudflare Worker)"
 }

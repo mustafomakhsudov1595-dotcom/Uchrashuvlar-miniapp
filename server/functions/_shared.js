@@ -1,10 +1,10 @@
 'use strict';
 const crypto = require('crypto');
-const { getStore, connectLambda } = require('@netlify/blobs');
+const { openKV } = require('../kv');
 const { getT, LANGS } = require('./i18n');
 
 const TOKEN = () => process.env.BOT_TOKEN;
-const SITE = () => (process.env.SITE_URL || 'https://impro-it-notes.netlify.app').replace(/\/$/, '');
+const SITE = () => (process.env.SITE_URL || 'https://impro-notes.uchrashuvlar-mini-app.workers.dev').replace(/\/$/, '');
 const BOT_USER = () => process.env.BOT_USERNAME || 'Improitnotes_bot';
 const DEFAULT_TZ = 300; // Toshkent, UTC+5 (daqiqada)
 const GRACE_MIN = 60;
@@ -39,17 +39,8 @@ function checkInitData(initData, maxAgeSec = 7 * 86400) {
   try { return JSON.parse(p.get('user') || 'null'); } catch { return null; }
 }
 
-/* ---------- saqlash (Netlify Blobs) ---------- */
-function openStore(event) {
-  let uncached;
-  try {
-    if (event && event.blobs) {
-      connectLambda(event);
-      uncached = JSON.parse(Buffer.from(event.blobs, 'base64').toString()).url_uncached;
-    }
-  } catch (e) { console.error('blobs', e.message); }
-  return getStore(uncached ? { name: 'impro', consistency: 'strong', uncachedEdgeURL: uncached } : { name: 'impro' });
-}
+/* ---------- saqlash (Cloudflare KV) ---------- */
+const openStore = () => openKV();
 const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
