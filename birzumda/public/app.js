@@ -1,5 +1,5 @@
 const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor('#e10600'); } catch {} }
+if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor('#FFD213'); tg.setBackgroundColor('#FFF6D6'); } catch {} }
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
