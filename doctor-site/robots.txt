@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+# Domen aniq bo'lgach quyidagini yoqing:
+# Sitemap: https://SIZNING-DOMEN.uz/sitemap.xml
