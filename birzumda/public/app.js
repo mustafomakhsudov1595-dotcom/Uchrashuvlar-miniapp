@@ -94,7 +94,7 @@ function renderCart() {
 async function applyPromo() {
   const code = $('promoIn').value.trim();
   if (!code) return;
-  const r = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+  const r = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, initData: tg?.initData || '' }) });
   const d = await r.json();
   if (r.ok) { promo = d; haptic(); renderCart(); }
   else { promo = null; renderCart(); $('promoIn').value = code; $('promoMsg').className = 'msg err'; $('promoMsg').textContent = '❌ ' + d.error; }

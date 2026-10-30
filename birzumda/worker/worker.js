@@ -148,7 +148,10 @@ async function isAdmin(env, req) {
 }
 
 const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-const okImg = (u) => { u = String(u || '').trim(); return /^(https:\/\/[^\s"'<>]{4,300}|\/img\/[\w.-]+)$/.test(u) ? u : ''; };
+const okImg = (u) => { u = String(u || '').trim(); return /^(https:\/\/[^\s"'<>]{4,300}|\/(?:img|u)\/[\w.-]+)$/.test(u) ? u : ''; };
+
+const promoUsed = async (env, code, uid) => (uid ? Number(await env.DB.get(`pu:${code}:${uid}`)) || 0 : 0);
+const limitMsg = (p) => `Bu promokodni bir kishi ${p.perUser} marta ishlatishi mumkin. Siz limitni ishlatib bo'lgansiz`;
 
 async function body(req) { try { return JSON.parse((await req.text()).slice(0, 100_000) || '{}'); } catch { return {}; } }
 
@@ -158,8 +161,11 @@ async function api(req, env, ctx, url) {
   if (p === '/api/menu' && m === 'GET') { const c = await loadCfg(env); return json(200, { menu: c.menu, settings: c.settings }); }
 
   if (p === '/api/promo' && m === 'POST') {
-    const promo = findPromo(await loadCfg(env), (await body(req)).code);
-    return promo ? json(200, { code: promo.code, percent: promo.percent }) : json(404, { error: 'Promokod topilmadi yoki faol emas' });
+    const b = await body(req); const promo = findPromo(await loadCfg(env), b.code);
+    if (!promo) return json(404, { error: 'Promokod topilmadi yoki faol emas' });
+    const user = await verifyInitData(env, b.initData);
+    if (promo.perUser > 0 && user && (await promoUsed(env, promo.code, user.id)) >= promo.perUser) return json(400, { error: limitMsg(promo) });
+    return json(200, { code: promo.code, percent: promo.percent });
   }
 
   if (p === '/api/order' && m === 'POST') {
@@ -175,10 +181,13 @@ async function api(req, env, ctx, url) {
     if (!name || phone.replace(/\D/g, '').length < 9) return json(400, { error: 'Ism va telefon raqamni to\'g\'ri kiriting' });
     if (type === 'delivery' && address.length < 3) return json(400, { error: 'Manzilni kiriting' });
     let promo = null;
-    if (b.promo) { promo = findPromo(cfg, b.promo); if (!promo) return json(400, { error: 'Promokod faol emas' }); }
+    if (b.promo) {
+      promo = findPromo(cfg, b.promo); if (!promo) return json(400, { error: 'Promokod faol emas' });
+      if (promo.perUser > 0 && (await promoUsed(env, promo.code, user.id)) >= promo.perUser) return json(400, { error: limitMsg(promo) });
+    }
     const discount = promo ? Math.round((subtotal * promo.percent) / 100 / 100) * 100 : 0; const total = subtotal - discount;
     const o = { id: ++cfg.seq, userId: user.id || null, username: user.username || null, status: 'new', createdAt: Date.now(), items, subtotal, promo: promo ? { code: promo.code, percent: promo.percent } : null, discount, total, name, phone, type, address, comment: String(b.comment || '').trim().slice(0, 300) };
-    if (promo) promo.used = (promo.used || 0) + 1;
+    if (promo) { promo.used = (promo.used || 0) + 1; await env.DB.put(`pu:${promo.code}:${user.id}`, String((await promoUsed(env, promo.code, user.id)) + 1)); }
     await saveCfg(env, cfg); await putOrder(env, o);
     ctx.waitUntil((async () => {
       for (const chat_id of cfg.adminChats) await tg(env, 'sendMessage', { chat_id, text: orderText(o), parse_mode: 'HTML', reply_markup: statusKb(o.id) });
@@ -199,6 +208,14 @@ async function api(req, env, ctx, url) {
     const cfg = await loadCfg(env);
     const tgUser = await verifyInitData(env, req.headers.get('X-Init-Data'));
     if (!(await isAdmin(env, req)) && !(tgUser && cfg.admins.some((a) => a.id === tgUser.id))) return json(401, { error: 'Kirish kerak' });
+    if (p === '/api/admin/upload' && m === 'POST') {
+      const buf = await req.arrayBuffer(); const h = new Uint8Array(buf.slice(0, 3));
+      if (buf.byteLength < 100 || buf.byteLength > 2_000_000) return json(400, { error: 'Rasm hajmi 2 MB dan oshmasin' });
+      if (!(h[0] === 0xff && h[1] === 0xd8)) return json(400, { error: 'Faqat rasm (JPEG) yuklang' });
+      const id = newId('i');
+      await env.DB.put('img:' + id, buf);
+      return json(200, { url: '/u/' + id });
+    }
     const b = m === 'GET' ? {} : await body(req);
 
     if (p === '/api/admin/state') {
@@ -211,8 +228,9 @@ async function api(req, env, ctx, url) {
       const code = normCode(b.code); const percent = Math.round(Number(b.percent));
       if (!/^[A-Z0-9_-]{2,20}$/.test(code)) return json(400, { error: 'Kod 2–20 ta lotin harf/raqam bo\'lsin' });
       if (!(percent >= 1 && percent <= 100)) return json(400, { error: 'Foiz 1 dan 100 gacha' });
+      const perUser = Math.max(0, Math.min(1000, Math.round(Number(b.perUser)) || 0)); // 0 = cheksiz
       const ex = cfg.promos.find((x) => x.code === code);
-      if (ex) { ex.percent = percent; ex.active = true; } else cfg.promos.push({ code, percent, active: true, used: 0 });
+      if (ex) { ex.percent = percent; ex.perUser = perUser; ex.active = true; } else cfg.promos.push({ code, percent, perUser, active: true, used: 0 });
       await saveCfg(env, cfg); return json(200, { promos: cfg.promos });
     }
     if (p === '/api/admin/promos/toggle') { const x = cfg.promos.find((q) => q.code === normCode(b.code)); if (x) { x.active = !x.active; await saveCfg(env, cfg); } return json(200, { promos: cfg.promos }); }
@@ -279,6 +297,10 @@ export default {
         return new Response('ok');
       }
       if (url.pathname.startsWith('/api/')) return await api(req, env, ctx, url);
+      if (url.pathname.startsWith('/u/') && req.method === 'GET') {
+        const buf = await env.DB.get('img:' + url.pathname.slice(3).replace(/[^\w]/g, ''), 'arrayBuffer');
+        return buf ? new Response(buf, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=31536000, immutable' } }) : new Response('Topilmadi', { status: 404 });
+      }
     } catch (e) { console.error(e); return json(500, { error: 'Server xatosi' }); }
     return env.ASSETS.fetch(req);
   },

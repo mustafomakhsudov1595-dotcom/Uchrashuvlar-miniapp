@@ -101,11 +101,12 @@ async function setStatus(id, status) { await call('order-status', { id, status }
 
 function promos() {
   return `<div class="card"><b>Yangi promokod</b>
-    <div class="row" style="margin-top:8px"><input id="pCode" class="grow" placeholder="Kod (BIRZUMDA10)" maxlength="20" style="text-transform:uppercase"><input id="pPct" type="number" inputmode="numeric" min="1" max="100" placeholder="Chegirma %" style="width:110px"><button class="red" onclick="addPromo()">Qo'shish</button></div>
-    <div class="muted" style="margin-top:6px">Mijoz kodni yozsa, buyurtma summasidan shu foiz avtomatik ayriladi. Mavjud kodni qayta kiritsangiz, foizi yangilanadi.</div></div>
-    ${S.promos.length ? S.promos.map((p) => `<div class="card row"><b class="grow">${esc(p.code)} — ${p.percent}%</b><span class="muted">${p.used || 0} marta</span><span class="tag ${p.active ? 'done' : 'off'}">${p.active ? 'Faol' : 'O\'chiq'}</span><button class="ghost sm" onclick="togglePromo('${esc(p.code)}')">${p.active ? 'O\'chirib qo\'yish' : 'Yoqish'}</button><button class="sm" onclick="delPromo('${esc(p.code)}')">🗑</button></div>`).join('') : '<div class="card muted">Promokod yo\'q.</div>'}`;
+    <div class="row" style="margin-top:8px"><input id="pCode" class="grow" placeholder="Kod (BIRZUMDA10)" maxlength="20" style="text-transform:uppercase"><input id="pPct" type="number" inputmode="numeric" min="1" max="100" placeholder="Chegirma %" style="width:110px"></div>
+    <div class="row" style="margin-top:8px"><span class="grow">Bir kishi necha marta ishlatadi?</span><input id="pPer" type="number" inputmode="numeric" min="0" value="1" style="width:80px"><button class="red" onclick="addPromo()">Qo'shish</button></div>
+    <div class="muted" style="margin-top:6px">Mijoz kodni yozsa, summadan shu foiz avtomatik ayriladi. Limit: 1 = bir kishi bir marta; 0 = cheklovsiz. Mavjud kodni qayta kiritsangiz, foiz va limit yangilanadi.</div></div>
+    ${S.promos.length ? S.promos.map((p) => `<div class="card row"><b class="grow">${esc(p.code)} — ${p.percent}%</b><span class="muted">${p.used || 0} marta ishlatilgan · limit: ${p.perUser > 0 ? 'kishi boshiga ' + p.perUser : 'cheksiz'}</span><span class="tag ${p.active ? 'done' : 'off'}">${p.active ? 'Faol' : 'O\'chiq'}</span><button class="ghost sm" onclick="togglePromo('${esc(p.code)}')">${p.active ? 'O\'chirib qo\'yish' : 'Yoqish'}</button><button class="sm" onclick="delPromo('${esc(p.code)}')">🗑</button></div>`).join('') : '<div class="card muted">Promokod yo\'q.</div>'}`;
 }
-async function addPromo() { await call('promos', { code: val('pCode'), percent: val('pPct') }); refresh(); }
+async function addPromo() { await call('promos', { code: val('pCode'), percent: val('pPct'), perUser: val('pPer') }); refresh(); }
 async function togglePromo(code) { await call('promos/toggle', { code }); refresh(); }
 async function delPromo(code) { if (confirm(code + ' o\'chirilsinmi?')) { await call('promos/delete', { code }); refresh(); } }
 
@@ -116,13 +117,31 @@ function menu() {
       <input value="${esc(i.name)}" onchange="saveItem('${i.id}',{name:this.value})">
       <input type="number" inputmode="numeric" value="${i.price}" onchange="saveItem('${i.id}',{price:this.value})">
       <input class="full" placeholder="Tavsif (ixtiyoriy)" value="${esc(i.desc || '')}" onchange="saveItem('${i.id}',{desc:this.value})">
-      <input class="full" placeholder="Rasm havolasi https://... (ixtiyoriy)" value="${esc(i.img || '')}" onchange="saveItem('${i.id}',{img:this.value})">
+      <div class="row full">${i.img ? `<img src="${esc(i.img)}" style="width:56px;height:56px;object-fit:cover;border-radius:10px">` : ''}<button class="sm ghost" onclick="photo(u=>saveItem('${i.id}',{img:u}))">📷 ${i.img ? 'Rasmni almashtirish' : 'Rasm yuklash'}</button>${i.img ? `<button class="sm ghost" onclick="saveItem('${i.id}',{img:''})">✖ Rasmsiz</button>` : ''}</div>
       <div class="row full"><button class="sm ${i.available ? '' : 'ghost'}" onclick="saveItem('${i.id}',{available:${!i.available}})">${i.available ? '✅ Bor' : '⛔ Tugagan'}</button><button class="sm ghost" onclick="delItem('${i.id}')">🗑 O'chirish</button></div></div>`).join('') || '<div class="muted">Mahsulot yo\'q.</div>'}
       <div class="add"><input id="n-${c.id}" placeholder="Yangi mahsulot nomi" maxlength="60"><input id="p-${c.id}" type="number" inputmode="numeric" placeholder="Narx">
-        <input id="d-${c.id}" placeholder="Tavsif (ixtiyoriy)" maxlength="120"><input id="i-${c.id}" placeholder="Rasm https://..."><button class="red" onclick="addItem('${c.id}')">+ Mahsulot qo'shish</button></div></div>`).join('');
+        <input id="d-${c.id}" placeholder="Tavsif (ixtiyoriy)" maxlength="120"><button class="ghost" id="ib-${c.id}" onclick="photo(u=>{newImg['${c.id}']=u;$('ib-${c.id}').textContent='✅ Rasm tanlandi'})">📷 Rasm yuklash</button><button class="red" onclick="addItem('${c.id}')">+ Mahsulot qo'shish</button></div></div>`).join('');
+}
+const newImg = {};
+// Rasm tanlash -> brauzerda kichraytirish (max 900px, JPEG) -> serverga yuklash
+function photo(done) {
+  const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*';
+  f.onchange = async () => {
+    const file = f.files[0]; if (!file) return;
+    try {
+      const bmp = await createImageBitmap(file); const k = Math.min(1, 900 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.82));
+      const r = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'X-Init-Data': tg?.initData || '' }, body: blob });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error);
+      done(d.url);
+    } catch (e) { (tg?.showAlert || alert)(e.message || 'Rasmni yuklab bo\'lmadi'); }
+  };
+  f.click();
 }
 async function saveItem(id, patch) { const d = await call('item', { id, ...patch }); S.menu = d.menu; render(); }
-async function addItem(cat) { const d = await call('item/add', { cat, name: val('n-' + cat), price: val('p-' + cat), desc: val('d-' + cat), img: val('i-' + cat) }); S.menu = d.menu; render(); }
+async function addItem(cat) { const d = await call('item/add', { cat, name: val('n-' + cat), price: val('p-' + cat), desc: val('d-' + cat), img: newImg[cat] || '' }); delete newImg[cat]; S.menu = d.menu; render(); }
 async function delItem(id) { if (confirm('Mahsulot o\'chirilsinmi?')) { const d = await call('item/delete', { id }); S.menu = d.menu; render(); } }
 async function addCat() { const d = await call('cat/add', { name: val('cName'), emoji: val('cEmoji') }); S.menu = d.menu; render(); }
 async function delCat(id) { if (confirm('Kategoriya va undagi barcha mahsulotlar o\'chirilsinmi?')) { const d = await call('cat/delete', { id }); S.menu = d.menu; render(); } }
