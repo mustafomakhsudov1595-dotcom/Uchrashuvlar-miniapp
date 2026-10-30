@@ -38,15 +38,16 @@ function renderMenu() {
   $('menu').innerHTML = menu.map((c) => `
     <section class="cat" id="cat-${esc(c.id)}">
       <h2>${esc(c.emoji)} ${esc(c.name)}</h2>
-      ${c.items.map(itemHtml).join('')}
+      <div class="items">${c.items.map((i) => itemHtml(i, c)).join('')}</div>
     </section>`).join('');
 }
-function itemHtml(i) {
+function itemHtml(i, cat = menu.find((c) => c.items.some((x) => x.id === i.id))) {
   const q = cart[i.id] || 0;
-  const ctrl = !i.available ? '<button class="add" disabled>Tugagan</button>'
+  const ctrl = !i.available ? '<span class="soldout">Tugagan</span>'
     : q ? `<div class="qty"><button data-dec="${i.id}">−</button><b>${q}</b><button data-inc="${i.id}">+</button></div>`
-    : `<button class="add" data-inc="${i.id}" aria-label="Qo'shish">+</button>`;
-  return `<div class="item ${i.available ? '' : 'off'}" id="it-${i.id}">${i.img ? `<img class="thumb" loading="lazy" src="${esc(i.img)}" alt="">` : ''}<div class="t"><div class="n">${esc(i.name)}</div>${i.desc ? `<div class="d">${esc(i.desc)}</div>` : ''}<div class="p">${fmt(i.price)}</div></div>${ctrl}</div>`;
+    : `<button class="add" data-inc="${i.id}">+ Qo'shish</button>`;
+  const ph = i.img ? `<img src="${esc(i.img)}" alt="${esc(i.name)}" loading="lazy">` : `<div class="noimg">${esc(cat?.emoji || '🍽')}</div>`;
+  return `<div class="item ${i.available ? '' : 'off'} ${q ? 'sel' : ''}" id="it-${i.id}"><div class="ph">${ph}${q ? `<span class="badge">${q}</span>` : ''}</div><div class="body"><div class="n">${esc(i.name)}</div>${i.desc ? `<div class="d">${esc(i.desc)}</div>` : ''}<div class="p">${fmt(i.price)}</div><div class="ctl">${ctrl}</div></div></div>`;
 }
 function refreshItem(id) { const el = $('it-' + id); if (el) el.outerHTML = itemHtml(find(id)); }
 
