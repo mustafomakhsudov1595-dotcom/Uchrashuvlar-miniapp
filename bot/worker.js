@@ -48,7 +48,7 @@ function normPhone(raw = '') {
 }
 
 const phoneKb = {
-  keyboard: [[{ text: '📱 Raqamimni yuborish', request_contact: true }]],
+  keyboard: [[{ text: '📱 Raqamimni yuborish', request_contact: true }], [{ text: '❌ Bekor qilish' }]],
   resize_keyboard: true,
   one_time_keyboard: true,
 };
@@ -60,6 +60,7 @@ const BTN = {
   contact: '📞 Aloqa',
   more: '➕ Yana',
   back: '⬅️ Orqaga',
+  cancel: '❌ Bekor qilish',
   about: '👨‍⚕️ Doktor haqida',
   myid: '🆔 Mening ID',
 };
@@ -87,11 +88,11 @@ const moreKb = {
   resize_keyboard: true,
   is_persistent: true,
 };
-const servicesKb = {
-  inline_keyboard: [
-    ...Object.entries(TOPICS).map(([k, v]) => [{ text: v, callback_data: 'a:' + k }]),
-  ],
-};
+const kbOf = (rows) => ({ keyboard: rows, resize_keyboard: true, is_persistent: true });
+const pricesKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.ask }, { text: BTN.contact }], [{ text: BTN.back }]]);
+const servicesKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.prices }, { text: BTN.ask }], [{ text: BTN.back }]]);
+const contactKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.ask }], [{ text: BTN.back }]]);
+const cancelKb = kbOf([[{ text: BTN.cancel }]]);
 const MENU_TEXT =
   '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nPastdagi menyudan tanlang:';
 const ABOUT_TEXT = '👨‍⚕️ <b>Dr. Avazxon</b>\nUrolog-androlog\nQo‘qon, VitaMed klinikasi';
@@ -100,7 +101,7 @@ const PRICES_DEFAULT =
 const SERVICES_TEXT =
   '🩺 <b>Quyidagi masalalar bo‘yicha zayafka qoldirishingiz mumkin:</b>\n\n' +
   Object.values(TOPICS).map((t) => `• ${t}`).join('\n') +
-  '\n\nMasalani tanlang, zayafka shu mavzu bilan boshlanadi.';
+  '\n\nZayafka qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
 const CONTACT_TEXT =
   '📞 <b>Aloqa</b>\nTelefon: +998 91 151 55 88\nKlinika: VitaMed, Qo‘qon\n\nZayafka qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
 const skipKb = { inline_keyboard: [[{ text: 'O‘tkazib yuborish', callback_data: 'skip' }]] };
@@ -159,8 +160,8 @@ async function beginApply(env, chat, topicKey) {
   await setState(env, chat, st);
   return say(
     env, chat,
-    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel',
-    { reply_markup: mainKb }
+    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.',
+    { reply_markup: cancelKb }
   );
 }
 
@@ -171,7 +172,7 @@ async function onMessage(env, m) {
   const text = (m.text || '').trim();
 
   if (text === '/id') return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
-  if (text === '/cancel') {
+  if (text === '/cancel' || text === BTN.cancel) {
     await clearState(env, chat);
     return say(env, chat, 'Bekor qilindi.', { reply_markup: mainKb });
   }
@@ -198,12 +199,12 @@ async function onMessage(env, m) {
   // menyu tugmalari (jarayon o‘rtasida bosilsa ham ishlaydi)
   switch (text) {
     case BTN.apply: return applyMenu(env, chat);
-    case BTN.prices: await clearState(env, chat); return say(env, chat, env.PRICES_TEXT || PRICES_DEFAULT);
+    case BTN.prices: await clearState(env, chat); return say(env, chat, env.PRICES_TEXT || PRICES_DEFAULT, { reply_markup: pricesKb });
     case BTN.services: await clearState(env, chat); return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
     case BTN.ask:
       await setState(env, chat, { step: 'ask' });
-      return say(env, chat, '💬 Doktorga savolingizni yozing. Javob shu yerga keladi.\n\nBekor qilish: /cancel');
-    case BTN.contact: await clearState(env, chat); return say(env, chat, CONTACT_TEXT);
+      return say(env, chat, '💬 Doktorga savolingizni yozing. Javob shu yerga keladi.', { reply_markup: cancelKb });
+    case BTN.contact: await clearState(env, chat); return say(env, chat, CONTACT_TEXT, { reply_markup: contactKb });
     case BTN.more: await clearState(env, chat); return say(env, chat, 'Qo‘shimcha 👇', { reply_markup: moreKb });
     case BTN.about: return say(env, chat, ABOUT_TEXT);
     case BTN.myid: return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
@@ -226,7 +227,7 @@ async function onMessage(env, m) {
     st.phone = p;
     st.step = 'comment';
     await setState(env, chat, st);
-    await say(env, chat, 'Raqam qabul qilindi ✅', { reply_markup: mainKb });
+    await say(env, chat, 'Raqam qabul qilindi ✅', { reply_markup: cancelKb });
     return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
   }
 
@@ -234,7 +235,7 @@ async function onMessage(env, m) {
     if (text.length < 3) return say(env, chat, 'Iltimos, savolingizni yozing.');
     await clearState(env, chat);
     const n = await askDoctors(env, chat, text.slice(0, 1000), m.from);
-    return say(env, chat, n ? '✅ Savolingiz doktorga yuborildi. Javob shu yerga keladi.' : '⚠️ Yuborishda xato. +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.');
+    return say(env, chat, n ? '✅ Savolingiz doktorga yuborildi. Javob shu yerga keladi.' : '⚠️ Yuborishda xato. +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.', { reply_markup: mainKb });
   }
 
   if (st.step === 'comment') {
@@ -246,7 +247,6 @@ async function onMessage(env, m) {
 async function onCallback(env, q) {
   const chat = q.message.chat.id;
   await tg(env, 'answerCallbackQuery', { callback_query_id: q.id });
-  if (q.data.startsWith('a:')) return beginApply(env, chat, q.data.slice(2));
 
   const st = await getState(env, chat);
   if (!st) return say(env, chat, 'Qabulga yozilish uchun /start bosing.');
