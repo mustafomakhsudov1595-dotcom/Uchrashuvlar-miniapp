@@ -60,22 +60,20 @@ const BTN = {
   ask: '💬 Doktordan so‘rash',
   contact: '📞 Aloqa',
   more: '➕ Yana',
-  admin: '🛠 Admin panel',
   back: '⬅️ Orqaga',
   about: '👨‍⚕️ Doktor haqida',
   myid: '🆔 Mening ID',
 };
-const mainKb = (isDoc) => ({
+const mainKb = {
   keyboard: [
     [{ text: BTN.apply }],
     [{ text: BTN.prices }, { text: BTN.services }],
     [{ text: BTN.ask }, { text: BTN.contact }],
     [{ text: BTN.more }],
-    ...(isDoc ? [[{ text: BTN.admin }]] : []),
   ],
   resize_keyboard: true,
   is_persistent: true,
-});
+};
 const moreKb = {
   keyboard: [[{ text: BTN.about }, { text: BTN.myid }], [{ text: BTN.back }]],
   resize_keyboard: true,
@@ -105,43 +103,6 @@ function tashkentNow() {
 
 const doctorIds = (env) => String(env.DOCTOR_CHAT_IDS || '').split(',').map((x) => x.trim()).filter(Boolean);
 const isDoctor = (env, chat) => doctorIds(env).includes(String(chat));
-const kb = (env, chat) => mainKb(isDoctor(env, chat));
-const fmtTs = (ts) => new Date(ts + 5 * 3600 * 1000).toISOString().replace('T', ' ').slice(5, 16);
-
-async function logApplication(env, a, src) {
-  const ts = Date.now();
-  await env.STATE.put(
-    `a:${ts}:${Math.random().toString(36).slice(2, 6)}`,
-    JSON.stringify({ name: a.name, phone: a.phone, topic: a.topic, comment: a.comment || '', src }),
-    { expirationTtl: 90 * 86400 }
-  );
-}
-
-async function adminPanel(env, chat) {
-  const keys = [];
-  let cursor;
-  do {
-    const r = await env.STATE.list({ prefix: 'a:', cursor, limit: 1000 });
-    keys.push(...r.keys.map((k) => k.name));
-    cursor = r.list_complete ? undefined : r.cursor;
-  } while (cursor);
-  keys.sort();
-  const tsOf = (k) => Number(k.split(':')[1]);
-  const dayStart = Math.floor((Date.now() + 5 * 3600 * 1000) / 86400000) * 86400000 - 5 * 3600 * 1000;
-  const today = keys.filter((k) => tsOf(k) >= dayStart).length;
-  const week = keys.filter((k) => tsOf(k) >= dayStart - 6 * 86400000).length;
-  const last = keys.slice(-5).reverse();
-  const rows = await Promise.all(last.map(async (k, i) => {
-    const v = JSON.parse((await env.STATE.get(k)) || '{}');
-    return `${i + 1}. ${fmtTs(tsOf(k))} · ${esc(v.name)} · ${esc(v.phone)} · ${esc(v.topic)}`;
-  }));
-  return say(
-    env, chat,
-    `🛠 <b>Admin panel</b>\n\n📊 Zayafkalar: bugun <b>${today}</b> · 7 kun <b>${week}</b> · jami (90 kun) <b>${keys.length}</b>\n\n` +
-      (rows.length ? `<b>Oxirgilari:</b>\n${rows.join('\n')}` : 'Hozircha zayafka yo‘q.') +
-      '\n\nSavollarga javob: savol xabariga reply qiling.'
-  );
-}
 
 async function askDoctors(env, chat, text, from) {
   const who = from && from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${chat}">profil</a>`;
@@ -156,7 +117,6 @@ async function askDoctors(env, chat, text, from) {
 
 async function notifyDoctors(env, a, from) {
   const ids = doctorIds(env);
-  await logApplication(env, a, from ? 'bot' : 'sayt');
   const who = from
     ? from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${from.id}">profil</a>`
     : 'sayt orqali';
@@ -178,7 +138,7 @@ async function finish(env, chat, st, from) {
     n
       ? '✅ <b>Zayafkangiz qabul qilindi.</b>\nShifokor yoki administrator tez orada siz bilan bog‘lanadi.\n\nShoshilinch bo‘lsa: +998 91 151 55 88\nMa’lumotlaringiz maxfiy saqlanadi.'
       : '⚠️ Zayafka qabul qilindi, lekin shifokorga yuborishda sozlama xatosi bor. Iltimos, +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.',
-    { reply_markup: kb(env, chat) }
+    { reply_markup: mainKb }
   );
 }
 
@@ -202,11 +162,11 @@ async function onMessage(env, m) {
   if (text === '/id') return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
   if (text === '/cancel') {
     await clearState(env, chat);
-    return say(env, chat, 'Bekor qilindi.', { reply_markup: kb(env, chat) });
+    return say(env, chat, 'Bekor qilindi.', { reply_markup: mainKb });
   }
   if (text === '/start' || text === '/help' || text === '/menu' || text === BTN.back) {
     await clearState(env, chat);
-    return say(env, chat, text === BTN.back ? 'Asosiy menyu 👇' : MENU_TEXT, { reply_markup: kb(env, chat) });
+    return say(env, chat, text === BTN.back ? 'Asosiy menyu 👇' : MENU_TEXT, { reply_markup: mainKb });
   }
   if (text === '/xizmatlar') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
   if (text === '/zayafka') return beginApply(env, chat);
@@ -232,9 +192,6 @@ async function onMessage(env, m) {
     case BTN.more: await clearState(env, chat); return say(env, chat, 'Qo‘shimcha 👇', { reply_markup: moreKb });
     case BTN.about: return say(env, chat, ABOUT_TEXT);
     case BTN.myid: return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
-    case BTN.admin:
-      if (!isDoctor(env, chat)) return say(env, chat, 'Bu bo‘lim faqat shifokor uchun.');
-      return adminPanel(env, chat);
   }
 
   const st = await getState(env, chat);
@@ -254,7 +211,7 @@ async function onMessage(env, m) {
     st.phone = p;
     st.step = st.topic ? 'comment' : 'topic';
     await setState(env, chat, st);
-    await say(env, chat, 'Raqam qabul qilindi ✅', { reply_markup: kb(env, chat) });
+    await say(env, chat, 'Raqam qabul qilindi ✅', { reply_markup: mainKb });
     if (st.topic) return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
     return say(env, chat, '🩺 Qaysi masala bo‘yicha murojaat qilyapsiz?', { reply_markup: topicKb });
   }
