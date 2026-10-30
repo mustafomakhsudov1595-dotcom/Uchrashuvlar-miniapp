@@ -52,6 +52,27 @@ const phoneKb = {
   resize_keyboard: true,
   one_time_keyboard: true,
 };
+const mainKb = {
+  inline_keyboard: [
+    [{ text: '📝 Qabulga yozilish', callback_data: 'm:apply' }],
+    [{ text: '🩺 Qaysi masalalar bo‘yicha yozilish mumkin', callback_data: 'm:services' }],
+    [{ text: '📞 Aloqa va manzil', callback_data: 'm:contact' }],
+  ],
+};
+const servicesKb = {
+  inline_keyboard: [
+    ...Object.entries(TOPICS).map(([k, v]) => [{ text: v, callback_data: 'a:' + k }]),
+    [{ text: '⬅️ Menyu', callback_data: 'm:menu' }],
+  ],
+};
+const MENU_TEXT =
+  '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nQuyidagi menyudan tanlang:';
+const SERVICES_TEXT =
+  '🩺 <b>Quyidagi masalalar bo‘yicha zayafka qoldirishingiz mumkin:</b>\n\n' +
+  Object.values(TOPICS).map((t) => `• ${t}`).join('\n') +
+  '\n\nMasalani tanlang, zayafka shu mavzu bilan boshlanadi.';
+const CONTACT_TEXT =
+  '📞 <b>Aloqa</b>\nTelefon: +998 91 151 55 88\nKlinika: VitaMed, Qo‘qon\n\nZayafka qoldirish uchun menyudan «Qabulga yozilish» ni bosing.';
 const skipKb = { inline_keyboard: [[{ text: 'O‘tkazib yuborish', callback_data: 'skip' }]] };
 const none = { remove_keyboard: true };
 
@@ -86,6 +107,20 @@ async function finish(env, chat, st, from) {
   );
 }
 
+async function beginApply(env, chat, topicKey) {
+  if (await env.STATE.get(`c:${chat}`)) {
+    return say(env, chat, 'Zayafkangiz hozirgina yuborilgan. Bir daqiqadan keyin qayta urinib ko‘ring.');
+  }
+  const st = { step: 'name' };
+  if (topicKey && TOPICS[topicKey]) st.topic = TOPICS[topicKey];
+  await setState(env, chat, st);
+  return say(
+    env, chat,
+    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel',
+    { reply_markup: none }
+  );
+}
+
 async function onMessage(env, m) {
   const chat = m.chat.id;
   const text = (m.text || '').trim();
@@ -95,17 +130,9 @@ async function onMessage(env, m) {
     await clearState(env, chat);
     return say(env, chat, 'Bekor qilindi. Qayta boshlash uchun /start bosing.', { reply_markup: none });
   }
-  if (text === '/start' || text === '/zayafka' || text === '/help') {
-    if (await env.STATE.get(`c:${chat}`)) {
-      return say(env, chat, 'Zayafkangiz hozirgina yuborilgan. Bir daqiqadan keyin qayta urinib ko‘ring.');
-    }
-    await setState(env, chat, { step: 'name' });
-    return say(
-      env, chat,
-      '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nZayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel',
-      { reply_markup: none }
-    );
-  }
+  if (text === '/start' || text === '/help' || text === '/menu') return say(env, chat, MENU_TEXT, { reply_markup: mainKb });
+  if (text === '/xizmatlar') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
+  if (text === '/zayafka') return beginApply(env, chat);
 
   const st = await getState(env, chat);
   if (!st) return say(env, chat, 'Qabulga yozilish uchun /start bosing.');
@@ -122,9 +149,10 @@ async function onMessage(env, m) {
     const p = normPhone(m.contact ? m.contact.phone_number : text);
     if (!p) return say(env, chat, 'Raqam noto‘g‘ri ko‘rinadi. Qaytadan yozing, masalan: 90 123 45 67');
     st.phone = p;
-    st.step = 'topic';
+    st.step = st.topic ? 'comment' : 'topic';
     await setState(env, chat, st);
     await say(env, chat, 'Qabul uchun raqam olindi ✅', { reply_markup: none });
+    if (st.topic) return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
     return say(env, chat, '🩺 Qaysi masala bo‘yicha murojaat qilyapsiz?', { reply_markup: topicKb });
   }
 
@@ -139,6 +167,12 @@ async function onMessage(env, m) {
 async function onCallback(env, q) {
   const chat = q.message.chat.id;
   await tg(env, 'answerCallbackQuery', { callback_query_id: q.id });
+  if (q.data === 'm:menu') return say(env, chat, MENU_TEXT, { reply_markup: mainKb });
+  if (q.data === 'm:services') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
+  if (q.data === 'm:contact') return say(env, chat, CONTACT_TEXT, { reply_markup: mainKb });
+  if (q.data === 'm:apply') return beginApply(env, chat);
+  if (q.data.startsWith('a:')) return beginApply(env, chat, q.data.slice(2));
+
   const st = await getState(env, chat);
   if (!st) return say(env, chat, 'Qabulga yozilish uchun /start bosing.');
 
@@ -189,7 +223,12 @@ export default {
         allowed_updates: ['message', 'callback_query'],
       });
       await tg(env, 'setMyCommands', {
-        commands: [{ command: 'start', description: 'Qabulga yozilish' }, { command: 'cancel', description: 'Bekor qilish' }],
+        commands: [
+          { command: 'menu', description: 'Menyu' },
+          { command: 'xizmatlar', description: 'Qaysi masalalar bo‘yicha yozilish mumkin' },
+          { command: 'zayafka', description: 'Qabulga yozilish' },
+          { command: 'cancel', description: 'Bekor qilish' },
+        ],
       });
       return Response.json(r);
     }
