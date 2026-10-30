@@ -8,10 +8,16 @@
 // KV Namespace binding nomi: STATE
 
 const TOPICS = {
-  p: 'Prostata',
+  p: 'Prostata (prostatit, adenoma)',
   t: 'Buyrak / siydik toshi',
-  v: 'Varikosele / bepushtlik',
+  i: 'Siydik yo‘llari yallig‘lanishi',
+  s: 'Tez-tez yoki qiyin siyish',
+  v: 'Varikosele',
+  b: 'Bepushtlik (erkaklar)',
   z: 'Jinsiy zaiflik',
+  j: 'Jinsiy yo‘l infeksiyalari',
+  f: 'Fimoz / sunnat',
+  u: 'Tekshiruv (UZI, analizlar)',
   o: 'Boshqa savol',
 };
 
@@ -41,13 +47,6 @@ function normPhone(raw = '') {
   return null;
 }
 
-const topicKb = {
-  inline_keyboard: [
-    [{ text: TOPICS.p, callback_data: 't:p' }, { text: TOPICS.t, callback_data: 't:t' }],
-    [{ text: TOPICS.v, callback_data: 't:v' }, { text: TOPICS.z, callback_data: 't:z' }],
-    [{ text: TOPICS.o, callback_data: 't:o' }],
-  ],
-};
 const phoneKb = {
   keyboard: [[{ text: '📱 Raqamimni yuborish', request_contact: true }]],
   resize_keyboard: true,
@@ -74,6 +73,15 @@ const mainKb = {
   resize_keyboard: true,
   is_persistent: true,
 };
+const applyKb = {
+  keyboard: [
+    ...Object.values(TOPICS).reduce((rows, t, i) => (i % 2 ? rows[rows.length - 1].push({ text: t }) : rows.push([{ text: t }]), rows), []),
+    [{ text: BTN.back }],
+  ],
+  resize_keyboard: true,
+  is_persistent: true,
+};
+const APPLY_TEXT = '📝 <b>Qabulga yozilish</b>\n\nQaysi masala bo‘yicha murojaat qilyapsiz? Pastdagi tugmalardan birini tanlang.';
 const moreKb = {
   keyboard: [[{ text: BTN.about }, { text: BTN.myid }], [{ text: BTN.back }]],
   resize_keyboard: true,
@@ -151,9 +159,12 @@ async function beginApply(env, chat, topicKey) {
   await setState(env, chat, st);
   return say(
     env, chat,
-    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel'
+    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel',
+    { reply_markup: mainKb }
   );
 }
+
+const applyMenu = (env, chat) => clearState(env, chat).then(() => say(env, chat, APPLY_TEXT, { reply_markup: applyKb }));
 
 async function onMessage(env, m) {
   const chat = m.chat.id;
@@ -169,7 +180,7 @@ async function onMessage(env, m) {
     return say(env, chat, text === BTN.back ? 'Asosiy menyu 👇' : MENU_TEXT, { reply_markup: mainKb });
   }
   if (text === '/xizmatlar') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
-  if (text === '/zayafka') return beginApply(env, chat);
+  if (text === '/zayafka') return applyMenu(env, chat);
 
   // doktor savolga reply qilsa, javob bemorga boradi
   if (m.reply_to_message && isDoctor(env, chat) && text) {
@@ -180,9 +191,13 @@ async function onMessage(env, m) {
     }
   }
 
+  // qabulga yozilish menyusidagi masala tugmasi
+  const topicKey = Object.keys(TOPICS).find((k) => TOPICS[k] === text);
+  if (topicKey) return beginApply(env, chat, topicKey);
+
   // menyu tugmalari (jarayon o‘rtasida bosilsa ham ishlaydi)
   switch (text) {
-    case BTN.apply: return beginApply(env, chat);
+    case BTN.apply: return applyMenu(env, chat);
     case BTN.prices: await clearState(env, chat); return say(env, chat, env.PRICES_TEXT || PRICES_DEFAULT);
     case BTN.services: await clearState(env, chat); return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
     case BTN.ask:
@@ -209,14 +224,11 @@ async function onMessage(env, m) {
     const p = normPhone(m.contact ? m.contact.phone_number : text);
     if (!p) return say(env, chat, 'Raqam noto‘g‘ri ko‘rinadi. Qaytadan yozing, masalan: 90 123 45 67');
     st.phone = p;
-    st.step = st.topic ? 'comment' : 'topic';
+    st.step = 'comment';
     await setState(env, chat, st);
     await say(env, chat, 'Raqam qabul qilindi ✅', { reply_markup: mainKb });
-    if (st.topic) return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
-    return say(env, chat, '🩺 Qaysi masala bo‘yicha murojaat qilyapsiz?', { reply_markup: topicKb });
+    return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
   }
-
-  if (st.step === 'topic') return say(env, chat, 'Iltimos, quyidagi tugmalardan birini tanlang.', { reply_markup: topicKb });
 
   if (st.step === 'ask') {
     if (text.length < 3) return say(env, chat, 'Iltimos, savolingizni yozing.');
@@ -239,12 +251,6 @@ async function onCallback(env, q) {
   const st = await getState(env, chat);
   if (!st) return say(env, chat, 'Qabulga yozilish uchun /start bosing.');
 
-  if (q.data.startsWith('t:') && st.step === 'topic') {
-    st.topic = TOPICS[q.data.slice(2)] || TOPICS.o;
-    st.step = 'comment';
-    await setState(env, chat, st);
-    return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
-  }
   if (q.data === 'skip' && st.step === 'comment') return finish(env, chat, st, q.from);
 }
 
