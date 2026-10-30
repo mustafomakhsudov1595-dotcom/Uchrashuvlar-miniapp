@@ -714,15 +714,17 @@ footer .wrap{display:grid;gap:22px}
         <div><small>Mutaxassislik</small><p>Urolog · Androlog · Endourolog</p></div>
       </div>
     </div>
-    <form class="rv" id="f" onsubmit="return false">
+    <form class="rv" id="f" novalidate>
       <h3>Tezkor so‘rov</h3>
       <label for="nm">Ismingiz<input type="text" id="nm" placeholder="Ismingizni yozing" autocomplete="name"></label>
       <label for="ph">Telefon<input type="tel" id="ph" placeholder="+998 __ ___ __ __" autocomplete="tel"></label>
       <label for="sv">Muammo turi
-        <select id="sv"><option>Prostata</option><option>Buyrak / siydik toshi</option><option>Varikosele / bepushtlik</option><option>Jinsiy zaiflik</option><option>Boshqa savol</option></select></label>
+        <select id="sv"><option>Prostata (prostatit, adenoma)</option><option>Buyrak / siydik toshi</option><option>Siydik yo‘llari yallig‘lanishi</option><option>Tez-tez yoki qiyin siyish</option><option>Varikosele</option><option>Bepushtlik (erkaklar)</option><option>Jinsiy zaiflik</option><option>Jinsiy yo‘l infeksiyalari</option><option>Fimoz / sunnat</option><option>Tekshiruv (ultratovush, tahlillar)</option><option>Boshqa savol</option></select></label>
       <label for="ms">Qisqacha izoh<textarea id="ms" placeholder="Ixtiyoriy"></textarea></label>
-      <a id="wa" class="btn btn-gold" href="#" target="_blank" rel="noopener">WhatsApp orqali yuborish</a>
-      <p class="small" style="margin:0">Tugma xabarni WhatsApp’da tayyor holda ochadi. Ma’lumotlar maxfiy.</p>
+      <input type="text" id="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0">
+      <button type="submit" id="send" class="btn btn-gold">Ariza yuborish</button>
+      <a id="wa" class="btn btn-ghost" href="#" target="_blank" rel="noopener">WhatsApp orqali yozish</a>
+      <p class="small" id="fs" role="status" aria-live="polite" style="margin:0">Ariza to‘g‘ridan-to‘g‘ri shifokorga yuboriladi. Ma’lumotlar maxfiy.</p>
     </form>
   </div>
 </section>
@@ -798,6 +800,23 @@ function buildWa(){
   wa.href='https://wa.me/998911515588?text='+t;
 }
 ['nm','ph','sv','ms'].forEach(id=>$('#'+id).addEventListener('input',buildWa));buildWa();
+/* ariza -> Telegram bot */
+const API='https://avazxon-bot.uchrashuvlar-mini-app.workers.dev/api/apply';
+$('#f').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const fs=$('#fs'),send=$('#send'),name=$('#nm').value.trim(),phone=$('#ph').value.trim();
+  if(name.length<2){fs.textContent='Iltimos, ismingizni yozing.';$('#nm').focus();return}
+  if(phone.replace(/\D/g,'').length<9){fs.textContent='Telefon raqamini to‘liq yozing.';$('#ph').focus();return}
+  send.disabled=true;send.textContent='Yuborilmoqda…';
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,phone,topic:$('#sv').value,comment:$('#ms').value.trim(),website:$('#hp').value})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){fs.textContent='✅ Arizangiz yuborildi. Shifokor yoki administrator tez orada siz bilan bog‘lanadi.';$('#f').reset();buildWa()}
+    else if(r.status===429)fs.textContent='Iltimos, bir daqiqadan keyin qayta urinib ko‘ring.';
+    else throw 0;
+  }catch(_){fs.textContent='Yuborib bo‘lmadi. Iltimos, WhatsApp orqali yozing yoki +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.'}
+  send.disabled=false;send.textContent='Ariza yuborish';
+});
 $('#cp').addEventListener('click',async()=>{const b=$('#cp');try{await navigator.clipboard.writeText('+998911515588');b.textContent='Nusxalandi ✓'}catch(e){b.textContent='+998 91 151 55 88'}setTimeout(()=>b.textContent='Raqamni nusxalash',2200)});
 </script>
 </body>

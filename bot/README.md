@@ -1,7 +1,7 @@
 # Dr. Avazxon – ariza boti (Cloudflare Worker)
 
 Bemor botga `/start` yozadi, pastdagi menyudan kerakli bo‘limni tanlaydi. Qabulga yozilganda masala, kun va soatni tanlab, ism, telefon va izohni kiritadi. Ariza shifokorning Telegramiga tushadi.
-Bot saytdan alohida ishlaydi. Keyinchalik saytdagi forma ham shu botga ulanadi (`/api/apply`).
+Saytdagi forma ham shu botga ulangan (`/api/apply`), sayt arizalari ham shifokorning Telegramiga tushadi.
 
 ## Menyu
 
@@ -55,10 +55,14 @@ Tanlangan kun va soat shifokorga arizada ko‘rinadi. Band soatlar botda hisobga
 
 `/start`, `/menu` – asosiy menyu · `/ariza` – qabulga yozilish · `/xizmatlar` – masalalar ro‘yxati · `/cancel` – bekor qilish · `/id` – chat ID
 
-## Saytni keyin ulash
-Saytdagi formadan `POST https://avazxon-bot.<akkaunt>.workers.dev/api/apply` ga JSON yuboriladi:
+## Sayt bilan bog‘lanish (ulangan)
+Saytdagi «Tezkor so‘rov» formasi (`netlify-sayt/index.html`) «Ariza yuborish» tugmasi bilan `POST https://avazxon-bot.<akkaunt>.workers.dev/api/apply` ga JSON yuboradi:
 `{"name":"Ali","phone":"901234567","topic":"Prostata","comment":"..."}`
-(`website` maydoni bo‘sh bo‘lishi kerak, bu spamdan himoya). Bir IP’dan daqiqada 1 ta.
+- Ariza shifokorning Telegramiga «veb-sayt orqali» belgisi bilan tushadi. Saytdan kelgan arizada ✅/❌ tugmalari yo‘q (bemorning Telegram chati bo‘lmagani uchun), shifokor telefon orqali bog‘lanadi.
+- `website` maydoni yashirin (spamdan himoya), bo‘sh bo‘lishi kerak. Bir IP’dan daqiqada 1 ta ariza.
+- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi sayt manzilidan o‘tadi (hozir `https://magenta-phoenix-dba70a.netlify.app`). Saytga o‘z domeningiz ulansa, `ALLOWED_ORIGIN` ni shu domenga o‘zgartiring.
+- Yuborib bo‘lmasa, forma bemorga WhatsApp yoki qo‘ng‘iroq qilishni taklif qiladi.
+- Sayt o‘zgargach, `netlify-sayt` papkasini (yoki `netlify-sayt.zip` ni) Netlify’ga qayta yuklang.
 
 ## Ma’lumotlar
 Arizalar doimiy saqlanmaydi, shifokorning Telegramiga yuboriladi. Tasdiqlash tugmalari ishlashi uchun ariza matni (ism, telefon, kun/soat) KV’da 14 kun turadi va o‘zi o‘chadi. Boshqa vaqtinchalik ma’lumotlar (suhbat bosqichi, spamdan himoya, savollarga javob uchun bog‘lanish) ham o‘zi o‘chib ketadi.
