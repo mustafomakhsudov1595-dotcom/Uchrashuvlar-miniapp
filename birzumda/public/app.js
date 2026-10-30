@@ -151,7 +151,9 @@ async function loadOrders() {
     (d.orders.length ? d.orders.map((o) => `<div class="card order"><div class="top"><span>#${o.id}</span><span class="st ${o.status}">${STATUS[o.status]}</span></div>
       <div class="date">${new Date(o.createdAt).toLocaleString('uz-UZ')}</div>
       <ul>${o.items.map((i) => `<li>${esc(i.name)} × ${i.qty}</li>`).join('')}</ul>
-      <div class="tot"><span>Jami</span><span>${fmt(o.total)}</span></div><button class="btn soft" data-repeat="${o.id}">Qayta buyurtma</button></div>`).join('')
+      <div class="tot"><span>Jami</span><span>${fmt(o.total)}</span></div>
+      ${o.status === 'new' ? `<button class="btn danger" data-cancel="${o.id}">Buyurtmani bekor qilish</button>` : ['accepted', 'delivering'].includes(o.status) ? `<div class="note">Bekor qilish uchun qo'ng'iroq qiling: <a href="tel:+998${String(settings.phone || '').replace(/\D/g, '')}">${esc(settings.phone || '')}</a></div>` : ''}
+      <button class="btn soft" data-repeat="${o.id}" style="margin-top:8px">Qayta buyurtma</button></div>`).join('')
       : `<div class="empty">${svg('orders')}<div>Hali buyurtma bermagansiz</div></div>`);
   window.__orders = d.orders; lastOrder = null;
 }
@@ -195,6 +197,14 @@ function readForm() {
   if ($('fAddr')) form.address = $('fAddr').value.trim();
   try { localStorage.setItem('bz_form', JSON.stringify({ name: form.name, phone: form.phone, address: form.address, type: form.type })); } catch {}
 }
+async function cancelOrder(id, btn) {
+  const ok = await new Promise((res) => { const m = `#${id} buyurtmani bekor qilasizmi?`; tg?.showConfirm ? tg.showConfirm(m, res) : res(window.confirm(m)); });
+  if (!ok) return;
+  btn.disabled = true;
+  const [r, d] = await post('/api/cancel-order', { initData: tg?.initData || '', id }).catch(() => [{ ok: false }, { error: 'Tarmoq xatosi' }]);
+  if (r.ok) { try { tg?.HapticFeedback?.notificationOccurred('warning'); } catch {} toast('Buyurtma bekor qilindi'); } else toast(d.error || 'Xatolik');
+  loadOrders();
+}
 async function order() {
   readForm();
   const comment = $('fComm')?.value.trim() || '';
@@ -223,6 +233,7 @@ document.addEventListener('click', (e) => {
   else if (t.id === 'promoBtn') applyPromo();
   else if (t.id === 'orderBtn') order();
   else if (t.dataset.type) { readForm(); form.type = t.dataset.type; renderCartPage(); }
+  else if (t.dataset.cancel) cancelOrder(Number(t.dataset.cancel), t);
   else if (t.dataset.repeat) {
     const o = (window.__orders || []).find((x) => x.id === Number(t.dataset.repeat)); if (!o) return;
     cart = {}; for (const i of o.items) if (find(i.id)?.available) cart[i.id] = i.qty;

@@ -209,6 +209,21 @@ async function api(req, env, ctx, url) {
     return json(200, { orders });
   }
 
+  if (p === '/api/cancel-order' && m === 'POST') {
+    const b = await body(req); const cfg = await loadCfg(env);
+    const user = await verifyInitData(env, b.initData);
+    if (!user) return json(401, { error: 'Telegram orqali oching' });
+    const o = await getOrder(env, b.id);
+    if (!o || o.userId !== user.id) return json(404, { error: 'Buyurtma topilmadi' });
+    if (o.status === 'cancelled') return json(400, { error: 'Buyurtma allaqachon bekor qilingan' });
+    if (o.status !== 'new') return json(400, { error: `Buyurtma qabul qilingan, endi ilovadan bekor qilib bo'lmaydi. Qo'ng'iroq qiling: ${cfg.settings.phone}` });
+    o.status = 'cancelled'; o.updatedAt = Date.now(); o.cancelledBy = 'customer';
+    await putOrder(env, o);
+    if (o.promo) { const k = `pu:${o.promo.code}:${user.id}`; const n = Number(await env.DB.get(k)) || 0; if (n > 0) await env.DB.put(k, String(n - 1)); } // promokod huquqi qaytadi
+    ctx.waitUntil((async () => { for (const chat_id of cfg.adminChats) await tg(env, 'sendMessage', { chat_id, parse_mode: 'HTML', text: '⚠️ <b>Mijoz buyurtmani bekor qildi</b>\n\n' + orderText(o) }); })());
+    return json(200, { ok: true });
+  }
+
   if (p === '/api/order' && m === 'POST') {
     const b = await body(req); const cfg = await loadCfg(env);
     if (!cfg.settings.open) return json(400, { error: 'Hozir buyurtma qabul qilinmayapti' });

@@ -135,3 +135,8 @@ h1, h2, h3 { margin: 0; letter-spacing: -.02em; }
 .item.sel .foot { flex-direction: column; align-items: stretch; gap: 8px; }
 .item.sel .qty { justify-content: space-between; }
 .fact b { white-space: nowrap; }
+
+.btn.danger { background: #fff; color: var(--red-d); box-shadow: inset 0 0 0 1.5px var(--red); margin-bottom: 0; }
+.order .btn.danger { padding: 11px; font-size: 14.5px; }
+.note { font-size: 13px; color: var(--muted); background: #f3efe9; border-radius: 10px; padding: 9px 12px; }
+.note a { color: var(--red-d); font-weight: 600; text-decoration: none; }
