@@ -1,6 +1,6 @@
 # Dr. Avazxon – ariza boti (Cloudflare Worker)
 
-Bemor botga `/start` yozadi, pastdagi menyudan kerakli bo‘limni tanlaydi. Qabulga yozilganda masalani tanlab, ism, telefon va izohni kiritadi. Ariza shifokorning Telegramiga tushadi.
+Bemor botga `/start` yozadi, pastdagi menyudan kerakli bo‘limni tanlaydi. Qabulga yozilganda masala, kun va soatni tanlab, ism, telefon va izohni kiritadi. Ariza shifokorning Telegramiga tushadi.
 Bot saytdan alohida ishlaydi. Keyinchalik saytdagi forma ham shu botga ulanadi (`/api/apply`).
 
 ## Menyu
@@ -9,7 +9,7 @@ Pastdagi tugmalar bosilgan bo‘limga qarab almashadi.
 
 | Tugma | Vazifasi |
 |---|---|
-| 📝 Qabulga yozilish | Masalalar ro‘yxati chiqadi, tanlangach ariza (ism, telefon, izoh) so‘raladi |
+| 📝 Qabulga yozilish | Masala → kun (bugundan keyingi 10 kun) → soat tanlanadi, so‘ng ism, telefon va izoh so‘raladi |
 | 💰 Narxlar | `PRICES_TEXT` matnini ko‘rsatadi (o‘rnatilmagan bo‘lsa umumiy matn) |
 | 🩺 Xizmatlar | Qaysi masalalar bo‘yicha murojaat qilish mumkinligi ro‘yxati |
 | 💬 Shifokordan so‘rash | Bemor savol yozadi, savol shifokorga boradi. Shifokor savol xabariga **reply** qilsa, javob bemorga yetadi |
@@ -32,13 +32,16 @@ Masalalar ro‘yxati va barcha matnlar `worker.js` boshida (`TOPICS`, `ABOUT_TEX
 | `WEBHOOK_SECRET` | Secret | o‘zingiz yozgan uzun tasodifiy matn (harf va raqam, 30+ belgi) |
 | `DOCTOR_CHAT_IDS` | Text | shifokorning chat ID’si (6-qadamga qarang) |
 | `PRICES_TEXT` | Text (ixtiyoriy) | «Narxlar» tugmasida chiqadigan matn. `<b>qalin</b>` va `<i>qiyshiq</i>` ishlaydi |
+| `SLOTS` | Text (ixtiyoriy) | qabul soatlari vergul bilan, masalan `09:00,10:00,14:00`. Bo‘sh bo‘lsa 09:00 dan 17:00 gacha har soat |
 | `ALLOWED_ORIGIN` | Text (ixtiyoriy) | sayt manzili, masalan `https://avazxon.uz` |
 
 6. **Chat ID olish**: shifokor botga kirib `/id` yozadi (yoki «Yana» → «Mening ID»), bot raqam yuboradi. Shu raqamni `DOCTOR_CHAT_IDS` ga yozing (bir nechta bo‘lsa vergul bilan: `123,456`). Shifokor avval botda `/start` bosgan bo‘lishi shart, aks holda bot unga yoza olmaydi.
 7. **Webhookni ulash**: brauzerda oching:
    `https://avazxon-bot.<akkaunt>.workers.dev/setup?key=WEBHOOK_SECRET_QIYMATI`
    Javobda `"ok":true` chiqsa, bot tayyor. Bu havola Telegramdagi buyruqlar ro‘yxatini ham yangilaydi.
-8. Botni sinab ko‘ring: `/start` → «Qabulga yozilish» → masala → ism → telefon → izoh. Shifokorga xabar kelishi kerak.
+8. Botni sinab ko‘ring: `/start` → «Qabulga yozilish» → masala → kun → soat → ism → telefon → izoh. Shifokorga xabar kelishi kerak.
+
+Tanlangan kun va soat shifokorga arizada ko‘rinadi. Band soatlar hisobga olinmaydi: bemor so‘ragan vaqtni shifokor yoki administrator tasdiqlaydi.
 
 ## Buyruqlar
 

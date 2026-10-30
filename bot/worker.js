@@ -4,6 +4,7 @@
 //   WEBHOOK_SECRET   (Secret)  o'zingiz o'ylab topgan uzun tasodifiy matn
 //   DOCTOR_CHAT_IDS  (Text)    ariza boradigan chat ID, bir nechta bo'lsa vergul bilan
 //   PRICES_TEXT      (Text, ixtiyoriy) «Narxlar» tugmasida chiqadigan matn (HTML: <b>, <i>)
+//   SLOTS            (Text, ixtiyoriy) qabul soatlari, vergul bilan. Standart: 09:00,10:00,...,17:00
 //   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, masalan https://avazxon.uz (saytni ulashda kerak)
 // KV Namespace binding nomi: STATE
 
@@ -60,6 +61,7 @@ const BTN = {
   contact: '📞 Aloqa',
   more: '➕ Yana',
   back: '⬅️ Orqaga',
+  changeDay: '📅 Boshqa kunni tanlash',
   cancel: '❌ Bekor qilish',
   about: '👨‍⚕️ Shifokor haqida',
   myid: '🆔 Mening ID',
@@ -93,6 +95,23 @@ const pricesKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.ask }, { text: BTN.co
 const servicesKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.prices }, { text: BTN.ask }], [{ text: BTN.back }]]);
 const contactKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.ask }], [{ text: BTN.back }]]);
 const cancelKb = kbOf([[{ text: BTN.cancel }]]);
+
+// ---- kun va soat tanlash ----
+const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+const WEEKDAYS = ['yakshanba', 'dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma', 'shanba'];
+const chunk = (arr, n) => arr.reduce((rows, x, i) => (i % n ? rows[rows.length - 1].push(x) : rows.push([x]), rows), []);
+
+// Toshkent vaqti bilan bugundan keyingi 10 kun
+function nextDays() {
+  return Array.from({ length: 10 }, (_, i) => {
+    const d = new Date(Date.now() + 5 * 3600 * 1000 + (i + 1) * 86400000);
+    return { iso: d.toISOString().slice(0, 10), label: `${d.getUTCDate()}-${MONTHS[d.getUTCMonth()]} (${WEEKDAYS[d.getUTCDay()]})` };
+  });
+}
+const slotsOf = (env) =>
+  (env.SLOTS ? String(env.SLOTS).split(',').map((x) => x.trim()).filter(Boolean) : Array.from({ length: 9 }, (_, i) => `${String(9 + i).padStart(2, '0')}:00`));
+const dateKb = () => kbOf([...chunk(nextDays().map((d) => ({ text: d.label })), 2), [{ text: BTN.cancel }]]);
+const timeKb = (env) => kbOf([...chunk(slotsOf(env).map((t) => ({ text: t })), 3), [{ text: BTN.changeDay }], [{ text: BTN.cancel }]]);
 const MENU_TEXT =
   '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nPastdagi menyudan tanlang:';
 const ABOUT_TEXT =
@@ -140,6 +159,7 @@ async function notifyDoctors(env, a, from) {
   const text =
     `🆕 <b>Yangi ariza</b>\n\n` +
     `👤 ${esc(a.name)}\n📞 ${esc(a.phone)}\n🩺 ${esc(a.topic)}\n` +
+    (a.when ? `📅 <b>${esc(a.when)}</b>\n` : '') +
     (a.comment ? `💬 ${esc(a.comment)}\n` : '') +
     `\n🕒 ${tashkentNow()} · ${who}`;
   await Promise.all(ids.map((id) => say(env, id, text)));
@@ -153,7 +173,7 @@ async function finish(env, chat, st, from) {
   await say(
     env, chat,
     n
-      ? '✅ <b>Arizangiz qabul qilindi.</b>\nShifokor yoki administrator tez orada siz bilan bog‘lanadi.\n\nShoshilinch bo‘lsa: +998 91 151 55 88\nMa’lumotlaringiz maxfiy saqlanadi.'
+      ? `✅ <b>Arizangiz qabul qilindi.</b>\n${st.when ? `📅 Tanlangan vaqt: <b>${esc(st.when)}</b>\n` : ''}Shifokor yoki administrator vaqtni tasdiqlash uchun siz bilan bog‘lanadi.\n\nShoshilinch bo‘lsa: +998 91 151 55 88\nMa’lumotlaringiz maxfiy saqlanadi.`
       : '⚠️ Ariza qabul qilindi, lekin shifokorga yuborishda sozlama xatosi bor. Iltimos, +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.',
     { reply_markup: mainKb }
   );
@@ -163,13 +183,13 @@ async function beginApply(env, chat, topicKey) {
   if (await env.STATE.get(`c:${chat}`)) {
     return say(env, chat, 'Arizangiz hozirgina yuborilgan. Bir daqiqadan keyin qayta urinib ko‘ring.');
   }
-  const st = { step: 'name' };
+  const st = { step: 'date' };
   if (topicKey && TOPICS[topicKey]) st.topic = TOPICS[topicKey];
   await setState(env, chat, st);
   return say(
     env, chat,
-    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Ariza qoldirish uchun <b>ismingizni</b> yozing.',
-    { reply_markup: cancelKb }
+    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + '📅 Qaysi kunga yozilmoqchisiz? Kunni tanlang.',
+    { reply_markup: dateKb() }
   );
 }
 
@@ -228,6 +248,28 @@ async function onMessage(env, m) {
 
   const st = await getState(env, chat);
   if (!st) return say(env, chat, 'Qabulga yozilish uchun /start bosing.');
+
+  if (st.step === 'date') {
+    const d = nextDays().find((x) => x.label === text);
+    if (!d) return say(env, chat, 'Iltimos, kunni pastdagi tugmalardan tanlang.', { reply_markup: dateKb() });
+    st.date = d.label;
+    st.step = 'time';
+    await setState(env, chat, st);
+    return say(env, chat, `📅 <b>${esc(d.label)}</b>\n\n🕒 Qaysi soatga yozilmoqchisiz?`, { reply_markup: timeKb(env) });
+  }
+
+  if (st.step === 'time') {
+    if (text === BTN.changeDay) {
+      st.step = 'date';
+      await setState(env, chat, st);
+      return say(env, chat, '📅 Qaysi kunga yozilmoqchisiz? Kunni tanlang.', { reply_markup: dateKb() });
+    }
+    if (!slotsOf(env).includes(text)) return say(env, chat, 'Iltimos, soatni pastdagi tugmalardan tanlang.', { reply_markup: timeKb(env) });
+    st.when = `${st.date}, ${text}`;
+    st.step = 'name';
+    await setState(env, chat, st);
+    return say(env, chat, `✅ Tanlandi: <b>${esc(st.when)}</b>\n\nAriza qoldirish uchun <b>ismingizni</b> yozing.`, { reply_markup: cancelKb });
+  }
 
   if (st.step === 'name') {
     if (text.length < 2 || text.length > 60) return say(env, chat, 'Iltimos, ismingizni yozing (2–60 belgi).');
