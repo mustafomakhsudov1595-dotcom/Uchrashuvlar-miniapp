@@ -43,3 +43,15 @@ Admin panel → 🎟 Promokodlar → kod va foiz kiriting (masalan `BIRZUMDA10` 
 4. Telegram'da botga `/start`, keyin `/admin PAROL` yozing. Admin panel: `WEBAPP_URL/admin`.
 
 Bepul rejalarda server uxlab qoladi va disk o'chib ketadi (promokod va buyurtmalar yo'qoladi), shuning uchun doimiy disk bor reja yoki VPS tavsiya etiladi.
+
+## Cloudflare Workers (hozirgi joylash)
+
+Ishlab turgan versiya: `wrangler.toml` + `worker/worker.js` (Node serveri o'rniga). Ma'lumotlar Cloudflare KV'da, bot webhook orqali ishlaydi.
+
+```bash
+npx wrangler kv namespace create birzumda-db   # id ni wrangler.toml ga yozing
+npx wrangler secret put BOT_TOKEN
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler deploy
+```
+So'ng webhook va menyu tugmasini o'rnating (`setWebhook` url=`<worker-url>/webhook`, `secret_token` = `HMAC_SHA256(key=BOT_TOKEN, "webhook")` ning dastlabki 32 belgisi hex'da).

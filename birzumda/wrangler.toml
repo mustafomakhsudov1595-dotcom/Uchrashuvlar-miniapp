@@ -1,0 +1,13 @@
+name = "birzumda-hotdog"
+main = "worker/worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/webhook"]
+
+[[kv_namespaces]]
+binding = "DB"
+id = "f51530854add4806b2febb54aaf4d8f4"
