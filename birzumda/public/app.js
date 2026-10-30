@@ -31,6 +31,26 @@ let lastOrder = null;
 let form = { name: tg?.initDataUnsafe?.user?.first_name || '', phone: '', address: '', type: 'delivery' };
 try { Object.assign(form, JSON.parse(localStorage.getItem('bz_form') || '{}')); } catch {}
 
+/* ---------- Savatni saqlash (qurilmada + Telegram bulutida) ---------- */
+const CART_KEY = 'bz_cart';
+function saveCart() {
+  const data = JSON.stringify({ cart, promo: promo?.code || '', t: Date.now() });
+  try { localStorage.setItem(CART_KEY, data); } catch {}
+  try { tg?.CloudStorage?.setItem(CART_KEY, data); } catch {}
+}
+async function restoreCart() {
+  let raw = null;
+  try { raw = localStorage.getItem(CART_KEY); } catch {}
+  if (!raw && tg?.CloudStorage?.getItem) raw = await new Promise((res) => { try { tg.CloudStorage.getItem(CART_KEY, (e, v) => res(e ? null : v)); } catch { res(null); } setTimeout(() => res(null), 1500); });
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    if (Date.now() - (d.t || 0) > 7 * 864e5) return;
+    for (const [id, n] of Object.entries(d.cart || {})) if (find(id)?.available && n > 0) cart[id] = Math.min(50, n);
+    if (d.promo) { const [r, p] = await post('/api/promo', { code: d.promo, initData: tg?.initData || '' }); if (r.ok) promo = p; }
+  } catch {}
+}
+
 const items = () => menu.flatMap((c) => c.items);
 const find = (id) => items().find((i) => i.id === id);
 const subtotal = () => Object.entries(cart).reduce((s, [id, n]) => s + (find(id)?.price || 0) * n, 0);
@@ -53,7 +73,7 @@ function card(i) {
 function change(id, d) {
   const n = Math.max(0, Math.min(50, (cart[id] || 0) + d));
   if (n) cart[id] = n; else delete cart[id];
-  haptic();
+  saveCart(); haptic();
   if (page === 'cart') { readForm(); renderCartPage(); }
   else document.querySelectorAll(`[data-card="${id}"]`).forEach((el) => { el.outerHTML = card(find(id)); });
   updateChrome();
@@ -166,8 +186,8 @@ async function applyPromo() {
   const code = $('promoIn').value.trim(); if (!code) return;
   readForm();
   const [r, d] = await post('/api/promo', { code, initData: tg?.initData || '' });
-  if (r.ok) { promo = d; haptic('medium'); renderCartPage(); updateChrome(); }
-  else { promo = null; renderCartPage(); updateChrome(); $('promoIn').value = code; $('promoMsg').className = 'msg err'; $('promoMsg').textContent = '❌ ' + d.error; }
+  if (r.ok) { promo = d; saveCart(); haptic('medium'); renderCartPage(); updateChrome(); }
+  else { promo = null; saveCart(); renderCartPage(); updateChrome(); $('promoIn').value = code; $('promoMsg').className = 'msg err'; $('promoMsg').textContent = '❌ ' + d.error; }
 }
 function readForm() {
   if (!$('fName')) return;
@@ -187,7 +207,7 @@ async function order() {
     const [r, d] = await post('/api/order', { initData: tg?.initData || '', items: Object.entries(cart).map(([id, qty]) => ({ id, qty })), promo: promo?.code || '', ...form, comment });
     if (!r.ok) throw new Error(d.error || 'Xatolik');
     try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
-    cart = {}; promo = null; lastOrder = { id: d.id }; go('orders');
+    cart = {}; promo = null; saveCart(); lastOrder = { id: d.id }; go('orders');
   } catch (e) { toast(e.message); btn.disabled = false; btn.textContent = 'Buyurtma berish'; }
 }
 
@@ -206,7 +226,7 @@ document.addEventListener('click', (e) => {
   else if (t.dataset.repeat) {
     const o = (window.__orders || []).find((x) => x.id === Number(t.dataset.repeat)); if (!o) return;
     cart = {}; for (const i of o.items) if (find(i.id)?.available) cart[i.id] = i.qty;
-    haptic('medium'); go('cart');
+    saveCart(); haptic('medium'); go('cart');
   }
 });
 document.addEventListener('input', (e) => {
@@ -216,6 +236,6 @@ document.addEventListener('input', (e) => {
 (async () => {
   try {
     const d = await (await fetch('/api/menu')).json();
-    menu = d.menu; settings = d.settings; go(page);
+    menu = d.menu; settings = d.settings; await restoreCart(); go(page);
   } catch { $('view').innerHTML = '<div class="empty">Menyuni yuklab bo\'lmadi.<br>Qayta urinib ko\'ring.</div>'; }
 })();
