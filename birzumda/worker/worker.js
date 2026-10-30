@@ -168,6 +168,15 @@ async function api(req, env, ctx, url) {
     return json(200, { code: promo.code, percent: promo.percent });
   }
 
+  if (p === '/api/my-orders' && m === 'POST') {
+    const user = await verifyInitData(env, (await body(req)).initData);
+    if (!user) return json(401, { error: 'Telegram orqali oching' });
+    const ids = (await env.DB.get('uo:' + user.id, 'json')) || [];
+    const orders = (await Promise.all(ids.map((id) => getOrder(env, id)))).filter(Boolean)
+      .map(({ id, status, createdAt, items, total, discount, promo, type }) => ({ id, status, createdAt, items, total, discount, promo, type }));
+    return json(200, { orders });
+  }
+
   if (p === '/api/order' && m === 'POST') {
     const b = await body(req); const cfg = await loadCfg(env);
     if (!cfg.settings.open) return json(400, { error: 'Hozir buyurtma qabul qilinmayapti' });
@@ -189,6 +198,7 @@ async function api(req, env, ctx, url) {
     const o = { id: ++cfg.seq, userId: user.id || null, username: user.username || null, status: 'new', createdAt: Date.now(), items, subtotal, promo: promo ? { code: promo.code, percent: promo.percent } : null, discount, total, name, phone, type, address, comment: String(b.comment || '').trim().slice(0, 300) };
     if (promo) { promo.used = (promo.used || 0) + 1; await env.DB.put(`pu:${promo.code}:${user.id}`, String((await promoUsed(env, promo.code, user.id)) + 1)); }
     await saveCfg(env, cfg); await putOrder(env, o);
+    if (o.userId) { const k = 'uo:' + o.userId; const ids = (await env.DB.get(k, 'json')) || []; ids.unshift(o.id); await env.DB.put(k, JSON.stringify(ids.slice(0, 20))); }
     ctx.waitUntil((async () => {
       for (const chat_id of cfg.adminChats) await tg(env, 'sendMessage', { chat_id, text: orderText(o), parse_mode: 'HTML', reply_markup: statusKb(o.id) });
       if (o.userId) await tg(env, 'sendMessage', { chat_id: o.userId, parse_mode: 'HTML', text: `✅ <b>Buyurtmangiz qabul qilindi!</b>\n\n${orderText(o).split('\n').slice(1).join('\n')}\n\nTez orada bog'lanamiz.` });
