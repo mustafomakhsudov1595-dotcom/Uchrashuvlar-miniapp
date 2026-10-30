@@ -284,6 +284,38 @@ footer .wrap{display:grid;gap:22px}
 .src a{color:#8aa093;border-bottom:1px solid rgba(255,255,255,.15)}
 .src a:hover{color:var(--gold2)}
 
+
+/* DISEASES */
+.dtools{display:grid;gap:18px;margin-bottom:34px}
+.dtools input{width:100%;padding:18px 22px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);font:500 1rem var(--sans)}
+.dtools input:focus{outline:2px solid var(--gold);border-color:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{padding:10px 20px;border-radius:99px;border:1px solid var(--line);font-size:.86rem;font-weight:700;color:var(--mute);transition:.25s}
+.chip:hover{border-color:var(--gold);color:var(--gold2)}
+.chip.on{background:linear-gradient(120deg,var(--gold2),var(--gold));color:#08150f;border-color:transparent}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+.dz{padding:30px;border-radius:var(--r);border:1px solid var(--line);background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01));transition:.3s}
+.dz:hover{border-color:rgba(217,180,106,.45)}
+.dz .tag{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--leaf);font-weight:800}
+.dz h3{font-size:1.55rem;margin:10px 0}
+.dz>p{color:var(--mute);font-size:.9rem}
+.dz-red{border-color:rgba(224,115,95,.5);background:linear-gradient(160deg,rgba(224,115,95,.1),rgba(255,255,255,.01))}
+.dz-red .tag{color:var(--red)}
+.dz details{margin-top:16px}
+.dz summary{cursor:pointer;list-style:none;color:var(--gold);font-weight:700;font-size:.88rem}
+.dz summary::-webkit-details-marker{display:none}
+.dz summary::after{content:" →"}
+.dz details[open] summary::after{content:" ↑"}
+.dzb{margin-top:16px}
+.dzb h4{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:16px 0 8px;font-weight:800}
+.dzb ul{list-style:none;display:grid;gap:7px;font-size:.88rem;color:#cfdad2}
+.dzb li{padding-left:18px;position:relative}
+.dzb li::before{content:"";position:absolute;left:0;top:.65em;width:8px;height:1px;background:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.dzb .fact{font-size:.84rem}
+.none{text-align:center;color:var(--mute);padding:40px 0}
+@media(max-width:980px){.dgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.dgrid{grid-template-columns:1fr}}
+
 .callbar{display:none}
 
 .rv{opacity:0;transform:translateY(34px);transition:1s cubic-bezier(.2,.7,.2,1)}
@@ -330,6 +362,7 @@ footer .wrap{display:grid;gap:22px}
     <nav class="menu" aria-label="Asosiy menyu">
       <a href="#xizmatlar">Xizmatlar</a>
       <a href="#tekshiruv">Alomatlar</a>
+      <a href="#kasalliklar">Kasalliklar</a>
       <a href="#yol">Davolash yo‘li</a>
       <a href="#haqida">Shifokor</a>
       <a href="#maqolalar">Maqolalar</a>
@@ -504,6 +537,53 @@ footer .wrap{display:grid;gap:22px}
   </div>
 </section>
 
+<!-- DISEASES -->
+<section id="kasalliklar">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Kasalliklar ma’lumotnomasi</span>
+      <h2>Urologik kasalliklar <span class="gold">haqida bilib oling</span></h2>
+      <p>13 ta keng tarqalgan kasallik: alomatlari, sabablari va davolash usullari. Qidiring yoki toifani tanlang.</p>
+    </div>
+    <div class="dtools rv">
+      <input type="text" id="dq" placeholder="Kasallik yoki alomat bo‘yicha qidirish..." aria-label="Qidirish">
+      <div class="chips" id="chips">
+        <button class="chip on" data-f="all">Hammasi</button><button class="chip" data-f="p">Prostata</button><button class="chip" data-f="t">Buyrak va siydik yo‘li</button><button class="chip" data-f="m">Erkaklar salomatligi</button><button class="chip" data-f="s">Shoshilinch</button>
+      </div>
+    </div>
+    <div class="dgrid" id="dgrid">
+<article class="dz" data-c="p" data-k="prostata adenomasi (bph) 50 yoshdan keyin erkaklarda prostata bezining yaxshi sifatli kattalashishi. siydik yo‘lini siqib, siydik chiqarishni qiyinlashtiradi. siydik oqimi zaif, uzilib-uzilib chiqadi tunda 2 va undan ko‘p marta turish siydik chiqarishni boshlash qiyin qovuq to‘liq bo‘shamagandek hissi"><span class="tag">Prostata</span><h3>Prostata adenomasi (BPH)</h3><p>50 yoshdan keyin erkaklarda prostata bezining yaxshi sifatli kattalashishi. Siydik yo‘lini siqib, siydik chiqarishni qiyinlashtiradi.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Siydik oqimi zaif, uzilib-uzilib chiqadi</li><li>Tunda 2 va undan ko‘p marta turish</li><li>Siydik chiqarishni boshlash qiyin</li><li>Qovuq to‘liq bo‘shamagandek hissi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Yosh va gormonal o‘zgarishlar</li><li>Irsiyat</li><li>Harakatsiz hayot, ortiqcha vazn</li></ul><h4>Tashxis va davolash</h4><ul><li>Dastlabki bosqichda dori va kuzatuv</li><li>Dori yordam bermasa yoki asorat bo‘lsa lazerli jarrohlik</li><li>Usul prostata hajmiga qarab tanlanadi</li></ul><div class="fact">Siydik umuman chiqmasa, qonli siydik yoki isitma bo‘lsa shoshiling.</div></div></details></article>
+<article class="dz" data-c="p" data-k="prostatit prostata bezi yallig‘lanishi. o‘tkir bakterial, surunkali bakterial va surunkali og‘riq sindromi (cp/cpps) turlari bor. surunkali prostatitlarning 90 foizdan ko‘pi cp/cpps. chov, oraliq yoki beldagi og‘riq tez-tez va og‘riqli siydik chiqarish jinsiy faoliyatda og‘riq yoki susayish o‘tkir shaklda isitma va titroq"><span class="tag">Prostata</span><h3>Prostatit</h3><p>Prostata bezi yallig‘lanishi. O‘tkir bakterial, surunkali bakterial va surunkali og‘riq sindromi (CP/CPPS) turlari bor. Surunkali prostatitlarning 90 foizdan ko‘pi CP/CPPS.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Chov, oraliq yoki beldagi og‘riq</li><li>Tez-tez va og‘riqli siydik chiqarish</li><li>Jinsiy faoliyatda og‘riq yoki susayish</li><li>O‘tkir shaklda isitma va titroq</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Infeksiya (bakterial shakl)</li><li>CP/CPPS sababi to‘liq aniqlanmagan: tos tubi mushaklari, asab va yallig‘lanish omillari</li><li>Sovqotish, kam harakat, stress</li></ul><h4>Tashxis va davolash</h4><ul><li>Bakterial shaklda antibiotiklar (haftalar davomida)</li><li>Alfa-blokatorlar, og‘riq qoldiruvchilar</li><li>CP/CPPS da davo individual, antibiotiklar dalili kuchsiz</li><li>Tos tubi mashqlari va stressni boshqarish</li></ul><div class="fact">O‘tkir prostatitda isitma, kuchli og‘riq yoki siydik ushlanib qolsa darhol murojaat qiling.</div></div></details></article>
+<article class="dz" data-c="p" data-k="prostata saratoni va psa testi erkaklarda eng ko‘p uchraydigan saraton turlaridan biri. boshlang‘ich bosqichda deyarli alomat bermaydi, shuning uchun skrining muhim. erta bosqichda odatda alomat yo‘q siydik oqimi zaifligi, tez-tez siydik keyingi bosqichda siydik yoki spermada qon suyaklarda og‘riq (kechki bosqich)"><span class="tag">Prostata</span><h3>Prostata saratoni va PSA testi</h3><p>Erkaklarda eng ko‘p uchraydigan saraton turlaridan biri. Boshlang‘ich bosqichda deyarli alomat bermaydi, shuning uchun skrining muhim.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Erta bosqichda odatda alomat yo‘q</li><li>Siydik oqimi zaifligi, tez-tez siydik</li><li>Keyingi bosqichda siydik yoki spermada qon</li><li>Suyaklarda og‘riq (kechki bosqich)</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Yosh: holatlarning 63% ga yaqini 65 yoshdan keyin</li><li>Yaqin qarindoshda prostata saratoni</li><li>BRCA1/BRCA2 mutatsiyalari</li></ul><h4>Tashxis va davolash</h4><ul><li>PSA qon tahlili va urolog ko‘rigi</li><li>PSA yolg‘iz tashxis qo‘ymaydi, kerak bo‘lsa MRT va biopsiya</li><li>Davolash bosqichga qarab: kuzatuv, operatsiya, nur terapiyasi, gormon terapiyasi</li></ul><div class="fact">AUA tavsiyasiga ko‘ra eng foydali yosh oralig‘i 55–69. Xavf guruhida skrining ertaroq muhokama qilinadi. Qaror shifokor bilan qabul qilinadi.</div></div></details></article>
+<article class="dz" data-c="t" data-k="buyrak-siydik tosh kasalligi buyrak va siydik yo‘llarida tuzlardan tosh hosil bo‘lishi. tez-tez qaytalanadi, shuning uchun davo bilan birga profilaktika ham kerak. bel yoki yon tomonda keskin, to‘lqinsimon og‘riq siydikda qon ko‘ngil aynishi, qusish siydik chiqarishda og‘riq"><span class="tag">Buyrak va siydik yo‘li</span><h3>Buyrak-siydik tosh kasalligi</h3><p>Buyrak va siydik yo‘llarida tuzlardan tosh hosil bo‘lishi. Tez-tez qaytalanadi, shuning uchun davo bilan birga profilaktika ham kerak.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Bel yoki yon tomonda keskin, to‘lqinsimon og‘riq</li><li>Siydikda qon</li><li>Ko‘ngil aynishi, qusish</li><li>Siydik chiqarishda og‘riq</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Kam suv ichish</li><li>Ko‘p tuz va hayvon oqsili</li><li>Moddalar almashinuvi buzilishi, irsiyat, infeksiyalar</li></ul><h4>Tashxis va davolash</h4><ul><li>Kichik toshlar o‘zi tushishi mumkin</li><li>Katta yoki to‘siq hosil qilgan toshlarda lazerli endourologiya (RIRS)</li><li>Profilaktika: kuniga kamida 2–2,5 litr siydik hajmi uchun yetarli suv, tuzni cheklash, kaltsiyni kamaytirmaslik</li></ul><div class="fact">Kuchli og‘riq bilan isitma, titroq yoki siydik chiqmasligi shoshilinch holat.</div></div></details></article>
+<article class="dz" data-c="t" data-k="sistit va siydik yo‘li infeksiyasi qovuq yallig‘lanishi, odatda ichak bakteriyasi (e. coli) sabab. ayollarda ko‘p, erkaklarda kamroq, lekin erkaklarda doim tekshiruv talab qiladi. siydik chiqarishda achishish va og‘riq tez-tez va shoshilib siydikka borish loyqa yoki qonli siydik buyrakka o‘tganda: isitma, bel og‘rig‘i, qusish"><span class="tag">Buyrak va siydik yo‘li</span><h3>Sistit va siydik yo‘li infeksiyasi</h3><p>Qovuq yallig‘lanishi, odatda ichak bakteriyasi (E. coli) sabab. Ayollarda ko‘p, erkaklarda kamroq, lekin erkaklarda doim tekshiruv talab qiladi.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Siydik chiqarishda achishish va og‘riq</li><li>Tez-tez va shoshilib siydikka borish</li><li>Loyqa yoki qonli siydik</li><li>Buyrakka o‘tganda: isitma, bel og‘rig‘i, qusish</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Anatomiya (ayollarda uretra qisqa)</li><li>Toshlar, prostata muammolari</li><li>Immunitet pasayishi, gormonal o‘zgarishlar</li></ul><h4>Tashxis va davolash</h4><ul><li>Odatda antibiotiklar, tanlash tahlilga bog‘liq</li><li>Yil davomida 3 va undan ko‘p marta yoki 6 oyda 2 marta qaytalansa sababi qidiriladi</li><li>Ko‘p suyuqlik va gigiyena</li></ul><div class="fact">Erkaklarda yoki alomatlar 3 kundan ortiq davom etsa, shifokorga ko‘rining.</div></div></details></article>
+<article class="dz" data-c="t" data-k="uretra torayishi (striktura) siydik chiqarish kanali torayib qolishi. jarohat, yallig‘lanish yoki avvalgi muolajalardan keyin paydo bo‘ladi. siydik oqimi ingichka yoki sachrab chiqadi kuchanib siydik chiqarish tomchilab oqish, qovuq bo‘shamasligi qaytalanuvchi infeksiyalar"><span class="tag">Buyrak va siydik yo‘li</span><h3>Uretra torayishi (striktura)</h3><p>Siydik chiqarish kanali torayib qolishi. Jarohat, yallig‘lanish yoki avvalgi muolajalardan keyin paydo bo‘ladi.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Siydik oqimi ingichka yoki sachrab chiqadi</li><li>Kuchanib siydik chiqarish</li><li>Tomchilab oqish, qovuq bo‘shamasligi</li><li>Qaytalanuvchi infeksiyalar</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Jarohat va yallig‘lanish</li><li>Kateter yoki endoskopik muolajalar</li><li>Infeksiyalar</li></ul><h4>Tashxis va davolash</h4><ul><li>Uretrografiya va uretroskopiya orqali tashxis</li><li>Endoskopik kengaytirish yoki rekonstruktiv jarrohlik, torayish uzunligiga qarab</li></ul><div class="fact">Siydik umuman chiqmay qolsa shoshilinch yordam kerak.</div></div></details></article>
+<article class="dz" data-c="m" data-k="varikosele moyak va urug‘ tizimchasidagi venalar kengayishi. erkaklar bepushtligining eng ko‘p uchraydigan tuzatiladigan sababi. moyakda og‘irlik, tortishuvchi og‘riq ko‘rinib turadigan kengaygan tomirlar moyak o‘lchamlari farqi ko‘pincha alomatsiz, bepushtlikda aniqlanadi"><span class="tag">Erkaklar salomatligi</span><h3>Varikosele</h3><p>Moyak va urug‘ tizimchasidagi venalar kengayishi. Erkaklar bepushtligining eng ko‘p uchraydigan tuzatiladigan sababi.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Moyakda og‘irlik, tortishuvchi og‘riq</li><li>Ko‘rinib turadigan kengaygan tomirlar</li><li>Moyak o‘lchamlari farqi</li><li>Ko‘pincha alomatsiz, bepushtlikda aniqlanadi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Vena qopqoqlarining yetishmovchiligi</li><li>Chap tomonda ko‘proq uchraydi</li></ul><h4>Tashxis va davolash</h4><ul><li>Spermogramma va UZI (doppler)</li><li>Mikroxirurgik subinguinal varikoselektomiya</li><li>Tadqiqotlarda sperma soni taxminan 70% erkaklarda yaxshilangan, natija 3 oydan keyin ko‘rina boshlaydi</li></ul><div class="fact">Farzand ko‘rmaslik 1 yildan oshsa, erkak tekshiruvini kechiktirmang.</div></div></details></article>
+<article class="dz" data-c="m" data-k="gidrotsele moyak atrofida suyuqlik to‘planishi. ko‘pincha og‘riqsiz shishish bo‘ladi. moyak xaltasining og‘riqsiz kattalashishi og‘irlik hissi kechga kelib shishning ortishi"><span class="tag">Erkaklar salomatligi</span><h3>Gidrotsele</h3><p>Moyak atrofida suyuqlik to‘planishi. Ko‘pincha og‘riqsiz shishish bo‘ladi.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Moyak xaltasining og‘riqsiz kattalashishi</li><li>Og‘irlik hissi</li><li>Kechga kelib shishning ortishi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Tug‘ma va keyinchalik orttirilgan sabablar</li><li>Yallig‘lanish, jarohat</li></ul><h4>Tashxis va davolash</h4><ul><li>Kichik va alomatsiz bo‘lsa kuzatuv</li><li>Katta yoki bezovta qilsa jarrohlik yo‘li bilan olib tashlash</li><li>UZI orqali boshqa kasalliklardan farqlanadi</li></ul><div class="fact">Og‘riq bilan to‘satdan shish bo‘lsa, boshqa sabablarni istisno qilish uchun shoshiling.</div></div></details></article>
+<article class="dz" data-c="m" data-k="fimoz jinsiy olat boshchasi terisi ochilmay qolishi. yallig‘lanish va siydik chiqarish qiyinligiga olib kelishi mumkin. teri boshchani ochmaydi yoki og‘riqli ochiladi qizarish, achishish, yallig‘lanish siydik oqimi ingichka jinsiy aloqada og‘riq"><span class="tag">Erkaklar salomatligi</span><h3>Fimoz</h3><p>Jinsiy olat boshchasi terisi ochilmay qolishi. Yallig‘lanish va siydik chiqarish qiyinligiga olib kelishi mumkin.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Teri boshchani ochmaydi yoki og‘riqli ochiladi</li><li>Qizarish, achishish, yallig‘lanish</li><li>Siydik oqimi ingichka</li><li>Jinsiy aloqada og‘riq</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Tug‘ma holat</li><li>Takroriy yallig‘lanishlar va chandiqlar</li></ul><h4>Tashxis va davolash</h4><ul><li>Gigiyena va mahalliy davolash (yengil holatlarda)</li><li>Sunnat qilish (sirkumsiziya) asosiy usul</li></ul><div class="fact">Siydik ushlanib qolsa yoki teri boshchani siqib qolsa, darhol murojaat qiling.</div></div></details></article>
+<article class="dz dz-red" data-c="s" data-k="moyak buralishi moyakning o‘z o‘qi atrofida buralib, qon bilan ta’minlanishi to‘xtashi. bu shoshilinch jarrohlik holati. to‘satdan kuchli bir tomonlama moyak og‘rig‘i moyak yuqoriga tortilishi, shishish ko‘ngil aynishi, qusish yosh o‘smirlarda ko‘proq uchraydi"><span class="tag">Shoshilinch</span><h3>Moyak buralishi</h3><p>Moyakning o‘z o‘qi atrofida buralib, qon bilan ta’minlanishi to‘xtashi. Bu shoshilinch jarrohlik holati.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>To‘satdan kuchli bir tomonlama moyak og‘rig‘i</li><li>Moyak yuqoriga tortilishi, shishish</li><li>Ko‘ngil aynishi, qusish</li><li>Yosh o‘smirlarda ko‘proq uchraydi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Anatomik moyillik</li><li>Tunda yoki jarohatdan keyin boshlanishi mumkin</li></ul><h4>Tashxis va davolash</h4><ul><li>Darhol jarrohlik (detorsiya)</li><li>Dastlabki 6 soatda moyakni saqlab qolish ehtimoli 90–100% ga yaqin, 24 soatdan keyin keskin kamayadi</li></ul><div class="fact">Kutmang. Kuchli og‘riq paydo bo‘lishi bilan zudlik bilan shifoxonaga boring.</div></div></details></article>
+<article class="dz" data-c="m" data-k="erektil disfunksiya erektsiya yetarli darajada bo‘lmasligi yoki saqlanmasligi. ko‘pincha yurak-qon tomir kasalliklari va qandli diabet bilan bog‘liq. erektsiya yetarli emas yoki tez susayadi jinsiy xohishning pasayishi boshqa kasalliklar belgilari bilan birga kelishi"><span class="tag">Erkaklar salomatligi</span><h3>Erektil disfunksiya</h3><p>Erektsiya yetarli darajada bo‘lmasligi yoki saqlanmasligi. Ko‘pincha yurak-qon tomir kasalliklari va qandli diabet bilan bog‘liq.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Erektsiya yetarli emas yoki tez susayadi</li><li>Jinsiy xohishning pasayishi</li><li>Boshqa kasalliklar belgilari bilan birga kelishi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Qandli diabet, gipertoniya, semizlik</li><li>Past testosteron</li><li>Stress, chekish, dorilar</li></ul><h4>Tashxis va davolash</h4><ul><li>Sabablarni aniqlash: qand, gormon, qon tomir tekshiruvi</li><li>Dori va hayot tarzini o‘zgartirish</li><li>Og‘ir holatlarda olat protezlash, qoniqish tadqiqotlarda taxminan 77–96%</li></ul><div class="fact">ED ba’zan yurak kasalligining erta belgisi bo‘ladi, shuning uchun tekshiruvdan o‘tish foydali.</div></div></details></article>
+<article class="dz" data-c="m" data-k="erkaklar bepushtligi juft 1 yil himoyasiz jinsiy hayot kechirib ham homilador bo‘la olmasa, tekshiruv kerak. sabablar orasida erkak omili ham katta ulushga ega. spermogramma ko‘rsatkichlari past odatda boshqa alomat bo‘lmaydi varikosele, gormonal buzilishlar ko‘p uchraydi"><span class="tag">Erkaklar salomatligi</span><h3>Erkaklar bepushtligi</h3><p>Juft 1 yil himoyasiz jinsiy hayot kechirib ham homilador bo‘la olmasa, tekshiruv kerak. Sabablar orasida erkak omili ham katta ulushga ega.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Spermogramma ko‘rsatkichlari past</li><li>Odatda boshqa alomat bo‘lmaydi</li><li>Varikosele, gormonal buzilishlar ko‘p uchraydi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Varikosele</li><li>Gormonal buzilishlar</li><li>Infeksiyalar, chekish, qizdiruvchi omillar, stress</li></ul><h4>Tashxis va davolash</h4><ul><li>Spermogramma, gormon tahlili, UZI</li><li>Sababga qarab: varikosele operatsiyasi, dori davosi</li><li>Zarur bo‘lganda yordamchi reproduktiv usullar</li></ul><div class="fact">Erkak tekshiruvini erta o‘tkazish vaqtni tejaydi.</div></div></details></article>
+<article class="dz" data-c="m" data-k="past testosteron (gipogonadizm) erkaklik gormoni yetishmovchiligi. ko‘pincha semizlik, qandli diabet va metabolik sindrom bilan birga uchraydi. jinsiy xohish va erektsiya pasayishi charchoq, kuch-quvvat yo‘qolishi mushak massasi kamayishi, qorin yog‘i ortishi kayfiyat o‘zgarishi"><span class="tag">Erkaklar salomatligi</span><h3>Past testosteron (gipogonadizm)</h3><p>Erkaklik gormoni yetishmovchiligi. Ko‘pincha semizlik, qandli diabet va metabolik sindrom bilan birga uchraydi.</p>
+<details><summary>Batafsil</summary><div class="dzb"><h4>Alomatlar</h4><ul><li>Jinsiy xohish va erektsiya pasayishi</li><li>Charchoq, kuch-quvvat yo‘qolishi</li><li>Mushak massasi kamayishi, qorin yog‘i ortishi</li><li>Kayfiyat o‘zgarishi</li></ul><h4>Sabablar va xavf omillari</h4><ul><li>Semizlik va insulin qarshiligi</li><li>Qandli diabet</li><li>Yosh, moyak kasalliklari</li></ul><h4>Tashxis va davolash</h4><ul><li>Qonda testosteron tahlili (ertalab)</li><li>Sababni va qo‘shimcha kasalliklarni davolash</li><li>Gormon terapiyasi faqat ko‘rsatma bo‘lganda</li></ul><div class="fact">Gormon dorilarini shifokor nazoratisiz ichmang.</div></div></details></article>
+    </div>
+    <p class="none" id="none" hidden>Hech narsa topilmadi. Boshqa so‘z bilan qidiring yoki qo‘ng‘iroq qilib so‘rang.</p>
+    <p class="small" style="text-align:center;margin-top:28px">Ma’lumotlar umumiy ma’lumot uchun va tashxis o‘rnini bosmaydi.</p>
+  </div>
+</section>
+
 <!-- COMPARE -->
 <section id="lazer">
   <div class="wrap">
@@ -637,6 +717,10 @@ footer .wrap{display:grid;gap:22px}
     <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5934280" rel="noopener">Mikroxirurgik varikoselektomiya</a>
     <a href="https://link.springer.com/10.1007/s00345-023-04363-6" rel="noopener">RIRS natijalari</a>
     <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4548368/" rel="noopener">Olat protezi qoniqishi</a>
+    <a href="https://www.bashh.org/_userfiles/pages/files/resources/bju_prostatitis_2015.pdf" rel="noopener">Prostatit (BJU)</a>
+    <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9410446/" rel="noopener">Toshlar profilaktikasi</a>
+    <a href="https://ncbi.nlm.nih.gov/books/NBK279403" rel="noopener">Sistit (NIH)</a>
+    <a href="https://mayoclinichealthsystem.org/hometown-health/speaking-of-health/5-facts-about-prostate-specific-antigen-psa-tests" rel="noopener">PSA testi</a>
   </div>
 </div></footer>
 
@@ -679,6 +763,15 @@ $$('#opts input').forEach(c=>c.addEventListener('change',calc));calc();
 
 /* myths */
 $$('.myth button').forEach(b=>b.addEventListener('click',()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true')));
+
+
+/* diseases filter */
+(function(){const cards=$$('.dz');let f='all';
+ function run(){const q=$('#dq').value.trim().toLowerCase();let n=0;
+  cards.forEach(c=>{const ok=(f==='all'||c.dataset.c===f)&&(!q||c.dataset.k.includes(q));c.hidden=!ok;if(ok)n++});
+  $('#none').hidden=n>0}
+ $$('.chip').forEach(b=>b.addEventListener('click',()=>{f=b.dataset.f;$$('.chip').forEach(x=>x.classList.toggle('on',x===b));run()}));
+ $('#dq').addEventListener('input',run)})();
 
 /* contact */
 const wa=$('#wa');
