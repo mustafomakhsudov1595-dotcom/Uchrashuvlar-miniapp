@@ -1,8 +1,8 @@
-// Dr. Avazxon uchun Telegram zayafka boti (Cloudflare Worker)
+// Dr. Avazxon uchun Telegram ariza boti (Cloudflare Worker)
 // Kerakli sozlamalar (Settings -> Variables and Secrets):
 //   BOT_TOKEN        (Secret)  BotFather bergan token
 //   WEBHOOK_SECRET   (Secret)  o'zingiz o'ylab topgan uzun tasodifiy matn
-//   DOCTOR_CHAT_IDS  (Text)    zayafka boradigan chat ID, bir nechta bo'lsa vergul bilan
+//   DOCTOR_CHAT_IDS  (Text)    ariza boradigan chat ID, bir nechta bo'lsa vergul bilan
 //   PRICES_TEXT      (Text, ixtiyoriy) «Narxlar» tugmasida chiqadigan matn (HTML: <b>, <i>)
 //   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, masalan https://avazxon.uz (saytni ulashda kerak)
 // KV Namespace binding nomi: STATE
@@ -17,7 +17,7 @@ const TOPICS = {
   z: 'Jinsiy zaiflik',
   j: 'Jinsiy yo‘l infeksiyalari',
   f: 'Fimoz / sunnat',
-  u: 'Tekshiruv (UZI, analizlar)',
+  u: 'Tekshiruv (ultratovush, tahlillar)',
   o: 'Boshqa savol',
 };
 
@@ -56,12 +56,12 @@ const BTN = {
   apply: '📝 Qabulga yozilish',
   prices: '💰 Narxlar',
   services: '🩺 Xizmatlar',
-  ask: '💬 Doktordan so‘rash',
+  ask: '💬 Shifokordan so‘rash',
   contact: '📞 Aloqa',
   more: '➕ Yana',
   back: '⬅️ Orqaga',
   cancel: '❌ Bekor qilish',
-  about: '👨‍⚕️ Doktor haqida',
+  about: '👨‍⚕️ Shifokor haqida',
   myid: '🆔 Mening ID',
 };
 const mainKb = {
@@ -107,11 +107,11 @@ const ABOUT_TEXT =
 const PRICES_DEFAULT =
   '💰 <b>Narxlar</b>\nAniq narx ko‘rik va tekshiruv turiga bog‘liq. Narxni bilish uchun qabulga yoziling yoki +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.';
 const SERVICES_TEXT =
-  '🩺 <b>Quyidagi masalalar bo‘yicha zayafka qoldirishingiz mumkin:</b>\n\n' +
+  '🩺 <b>Quyidagi masalalar bo‘yicha ariza qoldirishingiz mumkin:</b>\n\n' +
   Object.values(TOPICS).map((t) => `• ${t}`).join('\n') +
-  '\n\nZayafka qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
+  '\n\nAriza qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
 const CONTACT_TEXT =
-  '📞 <b>Aloqa</b>\nTelefon: +998 91 151 55 88\nKlinika: VitaMed, Qo‘qon\n\nZayafka qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
+  '📞 <b>Aloqa</b>\nTelefon: +998 91 151 55 88\nKlinika: VitaMed, Qo‘qon\n\nAriza qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
 const skipKb = { inline_keyboard: [[{ text: 'O‘tkazib yuborish', callback_data: 'skip' }]] };
 
 function tashkentNow() {
@@ -136,9 +136,9 @@ async function notifyDoctors(env, a, from) {
   const ids = doctorIds(env);
   const who = from
     ? from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${from.id}">profil</a>`
-    : 'sayt orqali';
+    : 'veb-sayt orqali';
   const text =
-    `🆕 <b>Yangi zayafka</b>\n\n` +
+    `🆕 <b>Yangi ariza</b>\n\n` +
     `👤 ${esc(a.name)}\n📞 ${esc(a.phone)}\n🩺 ${esc(a.topic)}\n` +
     (a.comment ? `💬 ${esc(a.comment)}\n` : '') +
     `\n🕒 ${tashkentNow()} · ${who}`;
@@ -153,22 +153,22 @@ async function finish(env, chat, st, from) {
   await say(
     env, chat,
     n
-      ? '✅ <b>Zayafkangiz qabul qilindi.</b>\nShifokor yoki administrator tez orada siz bilan bog‘lanadi.\n\nShoshilinch bo‘lsa: +998 91 151 55 88\nMa’lumotlaringiz maxfiy saqlanadi.'
-      : '⚠️ Zayafka qabul qilindi, lekin shifokorga yuborishda sozlama xatosi bor. Iltimos, +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.',
+      ? '✅ <b>Arizangiz qabul qilindi.</b>\nShifokor yoki administrator tez orada siz bilan bog‘lanadi.\n\nShoshilinch bo‘lsa: +998 91 151 55 88\nMa’lumotlaringiz maxfiy saqlanadi.'
+      : '⚠️ Ariza qabul qilindi, lekin shifokorga yuborishda sozlama xatosi bor. Iltimos, +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.',
     { reply_markup: mainKb }
   );
 }
 
 async function beginApply(env, chat, topicKey) {
   if (await env.STATE.get(`c:${chat}`)) {
-    return say(env, chat, 'Zayafkangiz hozirgina yuborilgan. Bir daqiqadan keyin qayta urinib ko‘ring.');
+    return say(env, chat, 'Arizangiz hozirgina yuborilgan. Bir daqiqadan keyin qayta urinib ko‘ring.');
   }
   const st = { step: 'name' };
   if (topicKey && TOPICS[topicKey]) st.topic = TOPICS[topicKey];
   await setState(env, chat, st);
   return say(
     env, chat,
-    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.',
+    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Ariza qoldirish uchun <b>ismingizni</b> yozing.',
     { reply_markup: cancelKb }
   );
 }
@@ -177,7 +177,15 @@ const applyMenu = (env, chat) => clearState(env, chat).then(() => say(env, chat,
 
 async function onMessage(env, m) {
   const chat = m.chat.id;
-  const text = (m.text || '').trim();
+  // eski klaviaturada qolgan yozuvlar va buyruqlar ham ishlasin
+  const LEGACY = {
+    '💬 Doktordan so‘rash': BTN.ask,
+    '👨‍⚕️ Doktor haqida': BTN.about,
+    'Tekshiruv (UZI, analizlar)': TOPICS.u,
+    '/zayafka': '/ariza',
+  };
+  const raw = (m.text || '').trim();
+  const text = LEGACY[raw] || raw;
 
   if (text === '/id') return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
   if (text === '/cancel' || text === BTN.cancel) {
@@ -189,13 +197,13 @@ async function onMessage(env, m) {
     return say(env, chat, text === BTN.back ? 'Asosiy menyu 👇' : MENU_TEXT, { reply_markup: mainKb });
   }
   if (text === '/xizmatlar') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
-  if (text === '/zayafka') return applyMenu(env, chat);
+  if (text === '/ariza') return applyMenu(env, chat);
 
-  // doktor savolga reply qilsa, javob bemorga boradi
+  // shifokor savolga reply qilsa, javob bemorga boradi
   if (m.reply_to_message && isDoctor(env, chat) && text) {
     const target = await env.STATE.get(`q:${chat}:${m.reply_to_message.message_id}`);
     if (target) {
-      await say(env, target, `👨‍⚕️ <b>Doktor javobi:</b>\n\n${esc(text)}`);
+      await say(env, target, `👨‍⚕️ <b>Shifokor javobi:</b>\n\n${esc(text)}`);
       return say(env, chat, '✅ Javob bemorga yuborildi.');
     }
   }
@@ -211,7 +219,7 @@ async function onMessage(env, m) {
     case BTN.services: await clearState(env, chat); return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
     case BTN.ask:
       await setState(env, chat, { step: 'ask' });
-      return say(env, chat, '💬 Doktorga savolingizni yozing. Javob shu yerga keladi.', { reply_markup: cancelKb });
+      return say(env, chat, '💬 Shifokorga savolingizni yozing. Javob shu yerga keladi.', { reply_markup: cancelKb });
     case BTN.contact: await clearState(env, chat); return say(env, chat, CONTACT_TEXT, { reply_markup: contactKb });
     case BTN.more: await clearState(env, chat); return say(env, chat, 'Qo‘shimcha 👇', { reply_markup: moreKb });
     case BTN.about: return say(env, chat, ABOUT_TEXT);
@@ -243,7 +251,7 @@ async function onMessage(env, m) {
     if (text.length < 3) return say(env, chat, 'Iltimos, savolingizni yozing.');
     await clearState(env, chat);
     const n = await askDoctors(env, chat, text.slice(0, 1000), m.from);
-    return say(env, chat, n ? '✅ Savolingiz doktorga yuborildi. Javob shu yerga keladi.' : '⚠️ Yuborishda xato. +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.', { reply_markup: mainKb });
+    return say(env, chat, n ? '✅ Savolingiz shifokorga yuborildi. Javob shu yerga keladi.' : '⚠️ Yuborishda xato. +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.', { reply_markup: mainKb });
   }
 
   if (st.step === 'comment') {
@@ -262,7 +270,7 @@ async function onCallback(env, q) {
   if (q.data === 'skip' && st.step === 'comment') return finish(env, chat, st, q.from);
 }
 
-// Saytdan zayafka olish (keyinchalik saytni ulash uchun)
+// Saytdan ariza olish (keyinchalik saytni ulash uchun)
 async function apply(env, request) {
   const origin = env.ALLOWED_ORIGIN || '*';
   const cors = {
@@ -303,7 +311,7 @@ export default {
         commands: [
           { command: 'menu', description: 'Asosiy menyu' },
           { command: 'xizmatlar', description: 'Qaysi masalalar bo‘yicha yozilish mumkin' },
-          { command: 'zayafka', description: 'Qabulga yozilish' },
+          { command: 'ariza', description: 'Qabulga yozilish' },
           { command: 'cancel', description: 'Bekor qilish' },
         ],
       });
