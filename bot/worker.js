@@ -95,7 +95,15 @@ const contactKb = kbOf([[{ text: BTN.apply }], [{ text: BTN.ask }], [{ text: BTN
 const cancelKb = kbOf([[{ text: BTN.cancel }]]);
 const MENU_TEXT =
   '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nPastdagi menyudan tanlang:';
-const ABOUT_TEXT = '👨‍⚕️ <b>Dr. Avazxon</b>\nUrolog-androlog\nQo‘qon, VitaMed klinikasi';
+const ABOUT_TEXT =
+  '👨‍⚕️ <b>Dr. Avazxon</b>\nUrolog, endourolog\nQo‘qon, VitaMed klinikasi\n\n' +
+  '🎓 <b>Ma’lumoti</b>\n• 2020 — Andijon davlat tibbiyot instituti\n• 2022 — Urologiya bo‘yicha mutaxassislik\n• 2025 — Endourolog qayta tayyorlov kursi\n\n' +
+  '🏥 <b>Tajriba</b>\n2021-yildan buyon Qo‘qon shahrida urolog vrach. 1000 dan ortiq yuqori texnologik operatsiyalarni muvaffaqiyatli bajargan.\n\n' +
+  '🔹 <b>Asosiy yo‘nalishlar</b>\n' +
+  '• Prostata bezini lazerli davolash\n' +
+  '• Siydik tosh kasalligida toshlarni lazer bilan olib tashlash\n' +
+  '• Varikosele (erkaklar bepushtligining eng ko‘p sababi) — zamonaviy mikroxirurgik operatsiyalar\n' +
+  '• Jinsiy zaiflikda konservativ davolash, og‘ir turlarida jinsiy olatni protezlash';
 const PRICES_DEFAULT =
   '💰 <b>Narxlar</b>\nAniq narx ko‘rik va tekshiruv turiga bog‘liq. Narxni bilish uchun qabulga yoziling yoki +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.';
 const SERVICES_TEXT =
