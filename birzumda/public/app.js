@@ -38,7 +38,6 @@ function renderMenu() {
   $('menu').innerHTML = menu.map((c) => `
     <section class="cat" id="cat-${esc(c.id)}">
       <h2>${esc(c.emoji)} ${esc(c.name)}</h2>
-      ${c.img ? `<img class="cat-img" loading="lazy" src="${esc(c.img)}" alt="">` : ''}
       ${c.items.map(itemHtml).join('')}
     </section>`).join('');
 }
