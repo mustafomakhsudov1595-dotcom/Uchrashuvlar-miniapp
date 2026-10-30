@@ -47,7 +47,7 @@ function itemHtml(i) {
   const ctrl = !i.available ? '<button class="add" disabled>Tugagan</button>'
     : q ? `<div class="qty"><button data-dec="${i.id}">−</button><b>${q}</b><button data-inc="${i.id}">+</button></div>`
     : `<button class="add" data-inc="${i.id}" aria-label="Qo'shish">+</button>`;
-  return `<div class="item ${i.available ? '' : 'off'}" id="it-${i.id}"><div class="t"><div class="n">${esc(i.name)}</div>${i.desc ? `<div class="d">${esc(i.desc)}</div>` : ''}<div class="p">${fmt(i.price)}</div></div>${ctrl}</div>`;
+  return `<div class="item ${i.available ? '' : 'off'}" id="it-${i.id}">${i.img ? `<img class="thumb" loading="lazy" src="${esc(i.img)}" alt="">` : ''}<div class="t"><div class="n">${esc(i.name)}</div>${i.desc ? `<div class="d">${esc(i.desc)}</div>` : ''}<div class="p">${fmt(i.price)}</div></div>${ctrl}</div>`;
 }
 function refreshItem(id) { const el = $('it-' + id); if (el) el.outerHTML = itemHtml(find(id)); }
 

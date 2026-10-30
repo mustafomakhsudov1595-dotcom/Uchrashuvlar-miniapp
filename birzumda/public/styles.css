@@ -72,3 +72,4 @@ input:focus, textarea:focus { outline: none; border-color: var(--red); }
 .done .big { font-size: 56px; }
 .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; z-index: 30; max-width: 90%; text-align: center; }
 .toast[hidden] { display: none; }
+.thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; flex: none; }

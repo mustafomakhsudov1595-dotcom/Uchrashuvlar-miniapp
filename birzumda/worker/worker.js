@@ -21,7 +21,8 @@ const STATUS = { new: '🆕 Yangi', accepted: '👨‍🍳 Qabul qilindi', deliv
 // ---- Ma'lumotlar ----
 async function loadCfg(env) {
   const c = await env.DB.get('cfg', 'json');
-  return c || { menu: defaultMenu, promos: [], adminChats: [], seq: 0, settings: { open: true, minOrder: 0, phone: '90 149 44 45', address: 'Andijon, Gulshan Idora', hours: '09:00 – 00:00' } };
+  if (c) { c.admins ||= []; return c; }
+  return { menu: defaultMenu, promos: [], adminChats: [], admins: [], seq: 0, settings: { open: true, minOrder: 0, phone: '90 149 44 45', address: 'Andijon, Gulshan Idora', hours: '09:00 – 00:00' } };
 }
 const saveCfg = (env, cfg) => env.DB.put('cfg', JSON.stringify(cfg));
 const getOrder = (env, id) => env.DB.get('order:' + String(id).padStart(8, '0'), 'json');
@@ -92,13 +93,23 @@ async function handleUpdate(env, u, origin) {
         text: `Assalomu alaykum! 👋\n<b>Birzumda Hotdog</b> — mazali fast food.\nBuyurtma berish uchun pastdagi tugmani bosing. Yetkazib berish bepul! 🛵\n📞 ${cfg.settings.phone}`,
       });
     } else if (text.startsWith('/adminoff')) {
-      cfg.adminChats = cfg.adminChats.filter((c) => c !== chat); await saveCfg(env, cfg);
-      await tg(env, 'sendMessage', { chat_id: chat, text: 'Endi buyurtma xabarlari kelmaydi.' });
+      cfg.adminChats = cfg.adminChats.filter((c) => c !== chat);
+      cfg.admins = cfg.admins.filter((a) => a.id !== u.message.from.id);
+      await saveCfg(env, cfg);
+      await tg(env, 'setChatMenuButton', { chat_id: chat, menu_button: { type: 'web_app', text: 'Buyurtma 🍔', web_app: { url: env.WEBAPP_URL || origin } } });
+      await tg(env, 'sendMessage', { chat_id: chat, text: 'Admin huquqi olib tashlandi.' });
     } else if (text.startsWith('/admin')) {
-      if (safeEq(text.split(/\s+/)[1] || '', env.ADMIN_PASSWORD)) {
-        if (!cfg.adminChats.includes(chat)) { cfg.adminChats.push(chat); await saveCfg(env, cfg); }
-        await tg(env, 'sendMessage', { chat_id: chat, text: '✅ Siz admin sifatida ulandingiz. Yangi buyurtmalar shu yerga keladi.\nChiqish: /adminoff' });
-      } else await tg(env, 'sendMessage', { chat_id: chat, text: 'Parol noto\'g\'ri.' });
+      const from = u.message.from; const pw = text.split(/\s+/)[1] || '';
+      const known = cfg.admins.some((a) => a.id === from.id);
+      if (known || (pw && safeEq(pw, env.ADMIN_PASSWORD))) {
+        if (!known) cfg.admins.push({ id: from.id, name: [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id) });
+        if (!cfg.adminChats.includes(chat)) cfg.adminChats.push(chat);
+        await saveCfg(env, cfg);
+        if (pw) await tg(env, 'deleteMessage', { chat_id: chat, message_id: u.message.message_id }); // parol chatda qolmasin
+        const url = (env.WEBAPP_URL || origin) + '/admin';
+        await tg(env, 'setChatMenuButton', { chat_id: chat, menu_button: { type: 'web_app', text: 'Admin ⚙️', web_app: { url } } });
+        await tg(env, 'sendMessage', { chat_id: chat, text: '✅ Siz adminsiz. Yangi buyurtmalar shu yerga keladi.\nChiqish: /adminoff', reply_markup: { inline_keyboard: [[{ text: '⚙️ Admin panelni ochish', web_app: { url } }]] } });
+      } else await tg(env, 'sendMessage', { chat_id: chat, text: pw ? 'Parol noto\'g\'ri.' : 'Siz admin emassiz.' });
     }
   }
   if (u.callback_query) {
@@ -135,6 +146,9 @@ async function isAdmin(env, req) {
   if (!exp || !sig || Number(exp) < Date.now()) return false;
   return safeEq(sig, hex(await hmac(env.ADMIN_PASSWORD, 'admin:' + exp)));
 }
+
+const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const okImg = (u) => { u = String(u || '').trim(); return /^(https:\/\/[^\s"'<>]{4,300}|\/img\/[\w.-]+)$/.test(u) ? u : ''; };
 
 async function body(req) { try { return JSON.parse((await req.text()).slice(0, 100_000) || '{}'); } catch { return {}; } }
 
@@ -182,14 +196,16 @@ async function api(req, env, ctx, url) {
   }
 
   if (p.startsWith('/api/admin/')) {
-    if (!(await isAdmin(env, req))) return json(401, { error: 'Kirish kerak' });
-    const b = m === 'GET' ? {} : await body(req); const cfg = await loadCfg(env);
+    const cfg = await loadCfg(env);
+    const tgUser = await verifyInitData(env, req.headers.get('X-Init-Data'));
+    if (!(await isAdmin(env, req)) && !(tgUser && cfg.admins.some((a) => a.id === tgUser.id))) return json(401, { error: 'Kirish kerak' });
+    const b = m === 'GET' ? {} : await body(req);
 
     if (p === '/api/admin/state') {
       const list = await env.DB.list({ prefix: 'order:' });
       const keys = list.keys.map((k) => k.name).sort().reverse().slice(0, 200);
       const orders = (await Promise.all(keys.map((k) => env.DB.get(k, 'json')))).filter(Boolean);
-      return json(200, { menu: cfg.menu, promos: cfg.promos, orders, settings: cfg.settings, adminChats: cfg.adminChats.length });
+      return json(200, { menu: cfg.menu, promos: cfg.promos, orders, settings: cfg.settings, admins: cfg.admins, adminChats: cfg.adminChats.length });
     }
     if (p === '/api/admin/promos' && m === 'POST') {
       const code = normCode(b.code); const percent = Math.round(Number(b.percent));
@@ -207,8 +223,34 @@ async function api(req, env, ctx, url) {
         if (b.price !== undefined) { const n = Math.round(Number(b.price)); if (n > 0 && n < 10_000_000) it.price = n; }
         if (typeof b.name === 'string' && b.name.trim()) it.name = b.name.trim().slice(0, 60);
         if (typeof b.available === 'boolean') it.available = b.available;
+        if (typeof b.desc === 'string') it.desc = b.desc.trim().slice(0, 120);
+        if (typeof b.img === 'string') it.img = okImg(b.img);
       }
       await saveCfg(env, cfg); return json(200, { menu: cfg.menu });
+    }
+    if (p === '/api/admin/item/add') {
+      const cat = cfg.menu.find((c) => c.id === b.cat); const name = String(b.name || '').trim().slice(0, 60); const price = Math.round(Number(b.price));
+      if (!cat || !name || !(price > 0 && price < 10_000_000)) return json(400, { error: 'Nom va narxni to\'g\'ri kiriting' });
+      cat.items.push({ id: newId('p'), name, price, desc: String(b.desc || '').trim().slice(0, 120), img: okImg(b.img), available: true });
+      await saveCfg(env, cfg); return json(200, { menu: cfg.menu });
+    }
+    if (p === '/api/admin/item/delete') {
+      for (const cat of cfg.menu) cat.items = cat.items.filter((i) => i.id !== b.id);
+      await saveCfg(env, cfg); return json(200, { menu: cfg.menu });
+    }
+    if (p === '/api/admin/cat/add') {
+      const name = String(b.name || '').trim().slice(0, 40);
+      if (!name) return json(400, { error: 'Kategoriya nomini kiriting' });
+      cfg.menu.push({ id: newId('c'), name, emoji: String(b.emoji || '🍽').trim().slice(0, 4) || '🍽', img: okImg(b.img), items: [] });
+      await saveCfg(env, cfg); return json(200, { menu: cfg.menu });
+    }
+    if (p === '/api/admin/cat/delete') {
+      cfg.menu = cfg.menu.filter((c) => c.id !== b.id);
+      await saveCfg(env, cfg); return json(200, { menu: cfg.menu });
+    }
+    if (p === '/api/admin/admins/remove') {
+      cfg.admins = cfg.admins.filter((a) => a.id !== Number(b.id)); cfg.adminChats = cfg.adminChats.filter((c) => c !== Number(b.id));
+      await saveCfg(env, cfg); return json(200, { admins: cfg.admins });
     }
     if (p === '/api/admin/settings') {
       const s = cfg.settings;
