@@ -81,23 +81,55 @@ async function setStatus(env, cfg, o, status) {
   if (o.userId && msgs[status]) await tg(env, 'sendMessage', { chat_id: o.userId, text: msgs[status] });
 }
 
+// ---- Bot menyusi (pastdagi tugmalar paneli) ----
+const BTN = { order: '🍔 Buyurtma berish', prices: '💰 Narxlar', menu: '📋 Menyu', contact: '📞 Aloqa', addr: '📍 Manzil', orders: '📦 Buyurtmalarim', more: '➕ Yana', admin: '🛠 Admin panel' };
+function mainKb(base, isAdmin) {
+  const rows = [
+    [{ text: BTN.order, web_app: { url: base } }],
+    [{ text: BTN.prices }, { text: BTN.menu }],
+    [{ text: BTN.contact }, { text: BTN.addr }],
+    [{ text: BTN.orders, web_app: { url: base + '#orders' } }],
+    [{ text: BTN.more }],
+  ];
+  if (isAdmin) rows.push([{ text: BTN.admin, web_app: { url: base + '/admin' } }]);
+  return { keyboard: rows, resize_keyboard: true, is_persistent: true, input_field_placeholder: 'Birzumda Xot Dog' };
+}
+const telLink = (p) => '+998 ' + String(p || '').replace(/\D/g, '').replace(/^998/, '').replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+function pricesText(cfg) {
+  return cfg.menu.map((c) => {
+    const list = c.items.filter((i) => i.available);
+    return list.length ? `<b>${esc(c.emoji)} ${esc(c.name)}</b>\n` + list.map((i) => `• ${esc(i.name)} — <b>${fmt(i.price)}</b> so'm`).join('\n') : '';
+  }).filter(Boolean).join('\n\n') + '\n\n🛵 Yetkazib berish: <b>bepul</b>';
+}
+
 // ---- Bot (webhook) ----
 async function handleUpdate(env, u, origin) {
   const cfg = await loadCfg(env);
   if (u.message?.text) {
     const chat = u.message.chat.id; const text = u.message.text.trim();
+    const base = env.WEBAPP_URL || origin;
+    const isAdm = cfg.admins.some((a) => a.id === u.message.from.id);
     if (text.startsWith('/start')) {
-      const url = env.WEBAPP_URL || origin;
       await tg(env, 'sendMessage', {
-        chat_id: chat, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: '🍔 Buyurtma berish', web_app: { url } }]] },
-        text: `Assalomu alaykum! 👋\n<b>Birzumda Hotdog</b> — mazali fast food.\nBuyurtma berish uchun pastdagi tugmani bosing. Yetkazib berish bepul! 🛵\n📞 ${cfg.settings.phone}`,
+        chat_id: chat, parse_mode: 'HTML', reply_markup: mainKb(base, isAdm),
+        text: `Assalomu alaykum! 👋\n<b>Birzumda Xot Dog</b> — mazali fast food.\nBuyurtma berish uchun pastdagi <b>🍔 Buyurtma berish</b> tugmasini bosing. Yetkazib berish bepul! 🛵\n📞 ${cfg.settings.phone}`,
       });
+    } else if (text === BTN.prices) {
+      await tg(env, 'sendMessage', { chat_id: chat, parse_mode: 'HTML', text: '💰 <b>Narxlar</b>\n\n' + pricesText(cfg) });
+    } else if (text === BTN.menu) {
+      await tg(env, 'sendPhoto', { chat_id: chat, photo: base + '/img/menu.jpg', caption: '📋 Birzumda Xot Dog menyusi\n📞 ' + cfg.settings.phone });
+    } else if (text === BTN.contact) {
+      await tg(env, 'sendMessage', { chat_id: chat, parse_mode: 'HTML', text: `📞 <b>Aloqa</b>\n${telLink(cfg.settings.phone)}\n\n🕘 ${esc(cfg.settings.hours)}\n🛵 Dostavka bepul` });
+    } else if (text === BTN.addr) {
+      await tg(env, 'sendMessage', { chat_id: chat, parse_mode: 'HTML', text: `📍 <b>Manzil</b>\n${esc(cfg.settings.address)}\n\n🕘 ${esc(cfg.settings.hours)}` });
+    } else if (text === BTN.more) {
+      await tg(env, 'sendMessage', { chat_id: chat, text: 'Yana nimalar bor:', reply_markup: { inline_keyboard: [[{ text: '📸 Instagram', url: 'https://instagram.com/birzumdaxotdog_n1' }], [{ text: '🍔 Buyurtma berish', web_app: { url: base } }]] } });
     } else if (text.startsWith('/adminoff')) {
       cfg.adminChats = cfg.adminChats.filter((c) => c !== chat);
       cfg.admins = cfg.admins.filter((a) => a.id !== u.message.from.id);
       await saveCfg(env, cfg);
       await tg(env, 'setChatMenuButton', { chat_id: chat, menu_button: { type: 'web_app', text: 'Buyurtma 🍔', web_app: { url: env.WEBAPP_URL || origin } } });
-      await tg(env, 'sendMessage', { chat_id: chat, text: 'Admin huquqi olib tashlandi.' });
+      await tg(env, 'sendMessage', { chat_id: chat, text: 'Admin huquqi olib tashlandi.', reply_markup: mainKb(base, false) });
     } else if (text.startsWith('/admin')) {
       const from = u.message.from; const pw = text.split(/\s+/)[1] || '';
       const known = cfg.admins.some((a) => a.id === from.id);
@@ -108,7 +140,7 @@ async function handleUpdate(env, u, origin) {
         if (pw) await tg(env, 'deleteMessage', { chat_id: chat, message_id: u.message.message_id }); // parol chatda qolmasin
         const url = (env.WEBAPP_URL || origin) + '/admin';
         await tg(env, 'setChatMenuButton', { chat_id: chat, menu_button: { type: 'web_app', text: 'Admin ⚙️', web_app: { url } } });
-        await tg(env, 'sendMessage', { chat_id: chat, text: '✅ Siz adminsiz. Yangi buyurtmalar shu yerga keladi.\nChiqish: /adminoff', reply_markup: { inline_keyboard: [[{ text: '⚙️ Admin panelni ochish', web_app: { url } }]] } });
+        await tg(env, 'sendMessage', { chat_id: chat, text: '✅ Siz adminsiz. Yangi buyurtmalar shu yerga keladi.\nPastdagi menyuda "🛠 Admin panel" tugmasi paydo bo\'ldi.\nChiqish: /adminoff', reply_markup: mainKb(base, true) });
       } else await tg(env, 'sendMessage', { chat_id: chat, text: pw ? 'Parol noto\'g\'ri.' : 'Siz admin emassiz.' });
     }
   }
