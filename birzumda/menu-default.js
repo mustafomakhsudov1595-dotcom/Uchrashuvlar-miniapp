@@ -1,5 +1,5 @@
 // Boshlang'ich menyu (rasmdagi menyudan). Narxlarni admin paneldan o'zgartirish mumkin.
-const IMG = {"hd1": "u-hotdog", "hd2": "u-hotdog2", "hd3": "hotdog", "hd4": "p-triple", "nb1": "u-nonburger1", "nb2": "u-nonburger2", "nb3": "u-nonburger3", "nb4": "u-nonburger4", "xd1": "u-xaggi2", "xd2": "p-xaggi", "dn1": "u-xaggi1", "dn2": "u-donar2", "lv1": "u-lavash1", "lv2": "u-lavash2", "lv3": "u-lavash3", "lv4": "u-lavash4", "gb1": "u-burger1", "gb2": "u-burger2", "kf1": "u-kfc", "kc1": "coffee-black", "kc2": "coffee-latte", "kc3": "coffee-espresso"};
+const IMG = {"hd1": "u-hotdog", "hd2": "u-hotdog2", "hd3": "hotdog", "hd4": "p-triple", "nb1": "u-nonburger1", "nb2": "u-nonburger2", "nb3": "u-nonburger3", "nb4": "u-nonburger4", "xd1": "u-xaggi2", "xd2": "p-xaggi", "dn1": "u-donar1", "dn2": "u-lavash2", "lv1": "u-lavash1", "lv2": "u-lavash3", "lv3": "u-lavash5", "lv4": "v-lavash-big", "gb1": "u-burger1", "gb2": "u-burger2", "kf1": "u-kfc", "kc1": "coffee-black", "kc2": "coffee-latte", "kc3": "coffee-espresso"};
 const it = (id, name, price, desc = '') => ({ id, name, price, desc, img: IMG[id] ? `/img/${IMG[id]}.jpg` : '', available: true });
 
 export const defaultMenu = [
@@ -14,7 +14,7 @@ export const defaultMenu = [
   { id: 'xaggi', name: 'Xaggi donar', emoji: '🌯', img: '/img/u-xaggi2.jpg', items: [
     it('xd1', 'Xaggi oddiy', 30000), it('xd2', 'Xaggi go\'shtli', 35000),
   ] },
-  { id: 'donar', name: 'Donar', emoji: '🥩', img: '/img/u-xaggi1.jpg', items: [
+  { id: 'donar', name: 'Donar', emoji: '🥩', img: '/img/u-donar1.jpg', items: [
     it('dn1', 'Donar oddiy', 30000), it('dn2', 'Donar pishloqli', 40000),
   ] },
   { id: 'lavash', name: 'Lavash', emoji: '🌯', img: '/img/u-lavash1.jpg', items: [
