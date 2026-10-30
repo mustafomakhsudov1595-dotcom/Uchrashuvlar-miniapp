@@ -42,10 +42,6 @@ img { display: block; max-width: 100%; }
 .qty button { width: 32px; height: 32px; border-radius: 50%; background: var(--yellow); font-size: 18px; color: var(--ink); }
 .qty b { min-width: 18px; text-align: center; }
 
-.gallery { padding: 22px 16px 0; }
-.gallery h2 { margin: 0 0 10px; font-size: 20px; color: var(--red); font-weight: 900; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
 footer { padding: 20px 16px; text-align: center; color: var(--muted); font-size: 13px; }
 
 .cart-bar span:last-child { color: var(--yellow); }

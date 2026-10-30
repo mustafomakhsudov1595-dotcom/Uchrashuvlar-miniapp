@@ -1,5 +1,5 @@
 // Boshlang'ich menyu (rasmdagi menyudan). Narxlarni admin paneldan o'zgartirish mumkin.
-const IMG = {"hd1": "p-hotdog", "hd2": "p-hotdog", "hd3": "hotdog", "hd4": "p-triple", "nb1": "p-nonburger", "nb2": "p-nonburger", "nb3": "p-nonburger", "nb4": "p-nonburger", "xd1": "p-xaggi", "xd2": "p-xaggi", "dn1": "p-donar", "dn2": "p-donar", "lv1": "p-lavash", "lv2": "p-lavash", "lv3": "p-lavash", "lv4": "p-lavash", "gb1": "p-burger", "gb2": "p-burger", "kf1": "p-kfc", "kc1": "p-coffee", "kc2": "p-coffee", "kc3": "p-coffee"};
+const IMG = {"hd1": "p-hotdog", "hd2": "v-hotdog2", "hd3": "hotdog", "hd4": "p-triple", "nb1": "p-nonburger", "nb2": "v-nonburger2", "nb3": "p-nonburger", "nb4": "v-nonburger2", "xd1": "p-xaggi", "xd2": "v-xaggi2", "dn1": "p-donar", "dn2": "v-lavash1", "lv1": "v-lavash1", "lv2": "v-lavash2", "lv3": "v-lavash3", "lv4": "v-lavash4", "gb1": "p-burger", "gb2": "v-burger2", "kf1": "p-kfc", "kc1": "v-coffee-black", "kc2": "v-coffee-latte", "kc3": "v-coffee-sobo"};
 const it = (id, name, price, desc = '') => ({ id, name, price, desc, img: IMG[id] ? `/img/${IMG[id]}.jpg` : '', available: true });
 
 export const defaultMenu = [
@@ -17,7 +17,7 @@ export const defaultMenu = [
   { id: 'donar', name: 'Donar', emoji: '🥩', img: '/img/p-donar.jpg', items: [
     it('dn1', 'Donar oddiy', 30000), it('dn2', 'Donar pishloqli', 40000),
   ] },
-  { id: 'lavash', name: 'Lavash', emoji: '🌯', img: '/img/p-lavash.jpg', items: [
+  { id: 'lavash', name: 'Lavash', emoji: '🌯', img: '/img/v-lavash2.jpg', items: [
     it('lv1', 'Lavash oddiy', 30000), it('lv2', 'Lavash "Birzumda"', 35000),
     it('lv3', 'Lavash katta', 40000), it('lv4', 'Lavash katta (maxsus)', 50000),
   ] },
@@ -27,7 +27,7 @@ export const defaultMenu = [
   { id: 'kfc', name: 'KFC strips qarsildoq', emoji: '🍗', img: '/img/p-kfc.jpg', items: [
     it('kf1', 'KFC strips 1 kg', 90000, 'Qarsildoq, shirali'),
   ] },
-  { id: 'kofe', name: 'Kofe', emoji: '☕', img: '/img/p-coffee.jpg', items: [
+  { id: 'kofe', name: 'Kofe', emoji: '☕', img: '/img/v-coffee-latte.jpg', items: [
     it('kc1', 'Qora kofe', 8000), it('kc2', 'Sutli kofe', 8000), it('kc3', 'Kofe "Sobo"', 10000),
   ] },
 ];
