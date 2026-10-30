@@ -316,6 +316,13 @@ footer .wrap{display:grid;gap:22px}
 @media(max-width:980px){.dgrid{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.dgrid{grid-template-columns:1fr}}
 
+.mapbox{margin:14px 0;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#0c1d15}
+.mapbox iframe{display:block;width:100%;height:240px;border:0;filter:grayscale(.25) contrast(1.05)}
+.navs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.navs a{padding:12px 14px;border-radius:12px;border:1px solid rgba(217,180,106,.35);background:rgba(217,180,106,.08);font-size:.84rem;font-weight:700;text-align:center;transition:.25s}
+.navs a:hover{background:rgba(217,180,106,.2);border-color:var(--gold)}
+.navs a:last-child{grid-column:1/-1;background:linear-gradient(120deg,var(--gold2),var(--gold));color:#08150f;border-color:transparent}
+@media(max-width:620px){.navs a{padding:12px 8px;font-size:.78rem}}
 .callbar{display:none}
 
 .rv{opacity:0;transform:translateY(34px);transition:1s cubic-bezier(.2,.7,.2,1)}
@@ -689,10 +696,20 @@ footer .wrap{display:grid;gap:22px}
       <div class="cta">
         <a href="tel:+998911515588" class="btn btn-gold">📞 Qo‘ng‘iroq</a>
         <a href="https://t.me/+998911515588" class="btn btn-ghost" rel="noopener">✈️ Telegram</a>
-        <a href="https://www.google.com/maps/search/VitaMed+klinika+Qo'qon" class="btn btn-ghost" rel="noopener" target="_blank">📍 Xarita</a>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query=VitaMed+klinika+Qo%27qon" class="btn btn-ghost" rel="noopener" target="_blank">📍 Xarita</a>
       </div>
       <div class="info">
-        <div><small>Manzil</small><p>Qo‘qon shahri, VitaMed klinikasi</p></div>
+        <div><small>Manzil</small><p>Qo‘qon shahri, VitaMed klinikasi</p>
+          <!--MAP--><div class="mapbox"><iframe title="VitaMed klinikasi xaritada" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=VitaMed+klinika+Qo%27qon&amp;output=embed"></iframe></div><!--/MAP-->
+          <div class="navs">
+            <a href="https://www.google.com/maps/search/?api=1&amp;query=VitaMed+klinika+Qo%27qon" target="_blank" rel="noopener">📍 Google Maps</a>
+            <a href="https://yandex.com/maps/?text=VitaMed%20klinika%20Qo%27qon" target="_blank" rel="noopener">🗺️ Yandex Xarita</a>
+            <a href="yandexnavi://map_search?text=VitaMed%20klinika%20Qo%27qon">🧭 Yandex Navigator</a>
+            <a href="https://2gis.uz/search/VitaMed%20Qo%27qon" target="_blank" rel="noopener">🔎 2GIS</a>
+            <a href="https://maps.apple.com/?q=VitaMed%20klinika%20Qo%27qon" target="_blank" rel="noopener">🍎 Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&amp;destination=VitaMed+klinika+Qo%27qon" target="_blank" rel="noopener">➜ Yo‘l ko‘rsatish</a>
+          </div>
+        </div>
         <div><small>Mutaxassislik</small><p>Urolog · Androlog · Endourolog</p></div>
       </div>
     </div>
