@@ -41,7 +41,15 @@ Masalalar ro‘yxati va barcha matnlar `worker.js` boshida (`TOPICS`, `ABOUT_TEX
    Javobda `"ok":true` chiqsa, bot tayyor. Bu havola Telegramdagi buyruqlar ro‘yxatini ham yangilaydi.
 8. Botni sinab ko‘ring: `/start` → «Qabulga yozilish» → masala → kun → soat → ism → telefon → izoh. Shifokorga xabar kelishi kerak.
 
-Tanlangan kun va soat shifokorga arizada ko‘rinadi. Band soatlar hisobga olinmaydi: bemor so‘ragan vaqtni shifokor yoki administrator tasdiqlaydi.
+Tanlangan kun va soat shifokorga arizada ko‘rinadi. Band soatlar botda hisobga olinmaydi: bemor so‘ragan vaqtni shifokor tasdiqlaydi yoki rad etadi.
+
+## Arizani tasdiqlash (shifokor / admin)
+`DOCTOR_CHAT_IDS` dagi har bir chatga kelgan arizada **✅ Tasdiqlash** va **❌ Rad etish** tugmalari bor (faqat bot orqali kelgan arizalarda).
+- ✅ bosilsa, bemorga «Qabulingiz tasdiqlandi» va kun/soat yuboriladi.
+- ❌ bosilsa, bemorga «tanlangan vaqt band, boshqa vaqtni tanlang» xabari boradi.
+- Qaror qabul qilingach, tugmalar o‘chadi va arizada natija hamda kim bosgani ko‘rinadi. Bir nechta shifokor bo‘lsa, birinchi bosgan qarorni belgilaydi.
+- Tugmalarni faqat `DOCTOR_CHAT_IDS` dagi chatlar bosa oladi. Admin qo‘shish uchun uning chat ID’sini shu o‘zgaruvchiga vergul bilan qo‘shing.
+
 
 ## Buyruqlar
 
@@ -53,7 +61,7 @@ Saytdagi formadan `POST https://avazxon-bot.<akkaunt>.workers.dev/api/apply` ga 
 (`website` maydoni bo‘sh bo‘lishi kerak, bu spamdan himoya). Bir IP’dan daqiqada 1 ta.
 
 ## Ma’lumotlar
-Arizalar botda saqlanmaydi, faqat shifokorning Telegramiga yuboriladi. KV’da faqat vaqtinchalik holat (suhbat bosqichi, spamdan himoya va savollarga javob uchun bog‘lanish) turadi va o‘zi o‘chib ketadi.
+Arizalar doimiy saqlanmaydi, shifokorning Telegramiga yuboriladi. Tasdiqlash tugmalari ishlashi uchun ariza matni (ism, telefon, kun/soat) KV’da 14 kun turadi va o‘zi o‘chadi. Boshqa vaqtinchalik ma’lumotlar (suhbat bosqichi, spamdan himoya, savollarga javob uchun bog‘lanish) ham o‘zi o‘chib ketadi.
 
 ## Xavfsizlik
 - Tokenni hech qachon kodga yoki GitHub’ga yozmang, faqat Secret sifatida.

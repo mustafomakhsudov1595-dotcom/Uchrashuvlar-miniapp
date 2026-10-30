@@ -154,7 +154,7 @@ async function askDoctors(env, chat, text, from) {
   return ids.length;
 }
 
-async function notifyDoctors(env, a, from) {
+async function notifyDoctors(env, a, from, patientChat) {
   const ids = doctorIds(env);
   const who = from
     ? from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${from.id}">profil</a>`
@@ -165,12 +165,48 @@ async function notifyDoctors(env, a, from) {
     (a.when ? `📅 <b>${esc(a.when)}</b>\n` : '') +
     (a.comment ? `💬 ${esc(a.comment)}\n` : '') +
     `\n🕒 ${tashkentNow()} · ${who}`;
-  await Promise.all(ids.map((id) => say(env, id, text)));
+  // bot orqali kelgan arizada tasdiqlash/rad etish tugmalari (bemorga xabar yuborish uchun chat kerak)
+  const appId = Math.random().toString(36).slice(2, 10);
+  const extra = patientChat
+    ? { reply_markup: { inline_keyboard: [[{ text: '✅ Tasdiqlash', callback_data: `ap:ok:${appId}` }, { text: '❌ Rad etish', callback_data: `ap:no:${appId}` }]] } }
+    : {};
+  const rec = { chat: patientChat || null, when: a.when || '', text, msgs: [], status: null };
+  if (patientChat) await env.STATE.put(`ap:${appId}`, JSON.stringify(rec), { expirationTtl: 14 * 86400 });
+  await Promise.all(ids.map(async (id) => {
+    const r = await say(env, id, text, extra);
+    if (r.ok) rec.msgs.push({ chat: id, id: r.result.message_id });
+  }));
+  if (patientChat) await env.STATE.put(`ap:${appId}`, JSON.stringify(rec), { expirationTtl: 14 * 86400 });
   return ids.length;
 }
 
+async function decide(env, q) {
+  const [, act, appId] = q.data.split(':');
+  const answer = (text) => tg(env, 'answerCallbackQuery', { callback_query_id: q.id, text, show_alert: false });
+  if (!isDoctor(env, q.message.chat.id)) return answer('Bu tugma faqat shifokor uchun.');
+  const rec = JSON.parse((await env.STATE.get(`ap:${appId}`)) || 'null');
+  if (!rec) return answer('Ariza eskirgan.');
+  if (rec.status) return answer(`Allaqachon: ${rec.status}`);
+  const ok = act === 'ok';
+  rec.status = ok ? '✅ Tasdiqlandi' : '❌ Rad etildi';
+  await env.STATE.put(`ap:${appId}`, JSON.stringify(rec), { expirationTtl: 14 * 86400 });
+
+  const when = rec.when ? ` (${esc(rec.when)})` : '';
+  const r = await say(
+    env, rec.chat,
+    ok
+      ? `✅ <b>Qabulingiz tasdiqlandi.</b>${rec.when ? `\n📅 ${esc(rec.when)}` : ''}\n\nVitaMed klinikasi, Qo‘qon. Sizni kutamiz!\nSavollar bo‘lsa: +998 91 151 55 88`
+      : `❌ <b>Afsuski, tanlangan vaqt${when} band.</b>\nIltimos, boshqa kun yoki soatni tanlab «Qabulga yozilish» orqali qayta ariza qoldiring yoki +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.`
+  );
+  const by = q.from.username ? `@${esc(q.from.username)}` : `id ${q.from.id}`;
+  await Promise.all((rec.msgs || []).map((m) =>
+    tg(env, 'editMessageText', { chat_id: m.chat, message_id: m.id, parse_mode: 'HTML', text: `${rec.text}\n\n<b>${rec.status}</b> · ${by}` })
+  ));
+  return answer(r.ok ? rec.status : `${rec.status}. Lekin bemorga xabar yetmadi, o‘zingiz bog‘laning.`);
+}
+
 async function finish(env, chat, st, from) {
-  const n = await notifyDoctors(env, st, from);
+  const n = await notifyDoctors(env, st, from, chat);
   await clearState(env, chat);
   await env.STATE.put(`c:${chat}`, '1', { expirationTtl: 60 });
   await say(
@@ -306,6 +342,7 @@ async function onMessage(env, m) {
 }
 
 async function onCallback(env, q) {
+  if (q.data && q.data.startsWith('ap:')) return decide(env, q);
   const chat = q.message.chat.id;
   await tg(env, 'answerCallbackQuery', { callback_query_id: q.id });
 
