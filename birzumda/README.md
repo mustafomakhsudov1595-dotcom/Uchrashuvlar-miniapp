@@ -34,3 +34,12 @@ Admin panel → 🎟 Promokodlar → kod va foiz kiriting (masalan `BIRZUMDA10` 
 ## Sinash uchun
 
 `DEV_MODE=1` imzo tekshiruvini o'chiradi (faqat lokal test, productionda **qo'ymang**).
+
+## Hostingga joylash (Render misolida)
+
+1. render.com'da ro'yxatdan o'ting → **New → Blueprint** → shu GitHub repozitoriyni tanlang (`birzumda/render.yaml` o'qiladi).
+2. `BOT_TOKEN` va `ADMIN_PASSWORD` ni kiriting. `WEBAPP_URL` ni keyinroq to'ldiring.
+3. Deploy tugagach Render bergan `https://....onrender.com` manzilni `WEBAPP_URL` ga yozib, qayta ishga tushiring.
+4. Telegram'da botga `/start`, keyin `/admin PAROL` yozing. Admin panel: `WEBAPP_URL/admin`.
+
+Bepul rejalarda server uxlab qoladi va disk o'chib ketadi (promokod va buyurtmalar yo'qoladi), shuning uchun doimiy disk bor reja yoki VPS tavsiya etiladi.

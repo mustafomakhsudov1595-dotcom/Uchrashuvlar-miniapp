@@ -1,0 +1,15 @@
+# Render.com: "New → Blueprint" orqali shu repozitoriyni ulang.
+services:
+  - type: web
+    name: birzumda-hotdog
+    runtime: docker
+    rootDir: birzumda
+    plan: starter          # doimiy disk va uxlamaslik uchun pullik reja kerak
+    disk: { name: data, mountPath: /data, sizeGB: 1 }
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: WEBAPP_URL
+        sync: false
