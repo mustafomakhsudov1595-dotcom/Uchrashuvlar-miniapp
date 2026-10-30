@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Admin — Birzumda Hotdog</title>
+<style>
+  :root { --red:#e10600; --yellow:#ffc400; --ink:#1c1210; --bg:#f6f1ea; --line:#e8dccb; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:var(--ink); color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+  header b { color:var(--yellow); }
+  main { max-width:900px; margin:0 auto; padding:14px; }
+  button { font:inherit; cursor:pointer; border:0; border-radius:10px; padding:9px 14px; background:var(--ink); color:#fff; }
+  button.red { background:var(--red); } button.ghost { background:#e8dccb; color:var(--ink); } button.sm { padding:6px 10px; font-size:13px; }
+  input, select { font:inherit; padding:9px 11px; border:1.5px solid var(--line); border-radius:10px; background:#fff; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .tabs button { background:#e8dccb; color:var(--ink); } .tabs button.on { background:var(--red); color:#fff; }
+  .card { background:#fff; border-radius:14px; padding:14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.07); }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .grow { flex:1; min-width:120px; }
+  .muted { color:#7a6a60; font-size:13px; }
+  .tag { display:inline-block; padding:2px 9px; border-radius:99px; background:#eee; font-size:12px; font-weight:600; }
+  .tag.new { background:#ffe3e0; color:var(--red); } .tag.done { background:#dff5e3; color:#1b8a3a; } .tag.off { background:#ddd; }
+  .login { max-width:340px; margin:80px auto; text-align:center; } .login input { width:100%; margin:12px 0; }
+  .err { color:var(--red); min-height:20px; }
+  h3 { margin:18px 0 8px; } table { width:100%; border-collapse:collapse; }
+  td { padding:6px 4px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  td input { width:100%; }
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <h2>🍔 Birzumda Admin</h2>
+  <input id="pw" type="password" placeholder="Parol" autocomplete="current-password" />
+  <div class="err" id="err"></div>
+  <button class="red" id="loginBtn" style="width:100%">Kirish</button>
+</div>
+<div id="panel" hidden>
+  <header><span>🍔 <b>Birzumda</b> admin</span><button class="ghost sm" id="logout">Chiqish</button></header>
+  <main>
+    <div class="tabs" id="tabs"></div>
+    <div id="view"></div>
+  </main>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const STATUS = { new:'🆕 Yangi', accepted:'👨‍🍳 Qabul', delivering:'🛵 Yo\'lda', done:'✅ Yetkazildi', cancelled:'❌ Bekor' };
+let token = sessionStorage.getItem('bz_admin') || '', S = null, tab = 'orders';
+
+async function call(path, body) {
+  const r = await fetch('/api/admin/' + path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type':'application/json', Authorization:'Bearer ' + token }, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json();
+  if (r.status === 401) { sessionStorage.removeItem('bz_admin'); token = ''; show(); throw new Error(d.error); }
+  if (!r.ok) { alert(d.error || 'Xatolik'); throw new Error(d.error); }
+  return d;
+}
+function show() { $('login').hidden = !!token; $('panel').hidden = !token; if (token) refresh(); }
+async function refresh() { S = await call('state'); render(); }
+
+$('loginBtn').onclick = async () => {
+  const r = await fetch('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: $('pw').value }) });
+  const d = await r.json();
+  if (!r.ok) { $('err').textContent = d.error; return; }
+  token = d.token; sessionStorage.setItem('bz_admin', token); $('pw').value = ''; show();
+};
+$('pw').onkeydown = (e) => { if (e.key === 'Enter') $('loginBtn').click(); };
+$('logout').onclick = () => { sessionStorage.removeItem('bz_admin'); token = ''; show(); };
+
+const TABS = { orders:'📦 Buyurtmalar', promos:'🎟 Promokodlar', menu:'🍽 Menyu', settings:'⚙️ Sozlamalar' };
+function render() {
+  $('tabs').innerHTML = Object.entries(TABS).map(([k, v]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${v}</button>`).join('');
+  $('view').innerHTML = { orders, promos, menu, settings }[tab]();
+}
+$('tabs').onclick = (e) => { const t = e.target.dataset.tab; if (t) { tab = t; render(); } };
+
+function orders() {
+  if (!S.orders.length) return '<div class="card muted">Hozircha buyurtma yo\'q.</div>';
+  return `<div class="row" style="margin-bottom:10px"><button class="ghost sm" onclick="refresh()">↻ Yangilash</button></div>` + S.orders.map((o) => `
+    <div class="card"><div class="row"><b class="grow">#${o.id} · ${esc(o.name)}</b><span class="tag ${o.status === 'new' ? 'new' : o.status === 'done' ? 'done' : ''}">${STATUS[o.status]}</span></div>
+    <div class="muted">${new Date(o.createdAt).toLocaleString('uz-UZ')} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · ${o.type === 'delivery' ? '🛵 ' + esc(o.address) : '🏃 Olib ketish'}</div>
+    <div style="margin:8px 0">${o.items.map((i) => `${esc(i.name)} × ${i.qty}`).join('<br>')}</div>
+    ${o.comment ? `<div class="muted">💬 ${esc(o.comment)}</div>` : ''}
+    <div><b>${fmt(o.total)} so'm</b>${o.promo ? ` <span class="muted">(${esc(o.promo.code)} −${o.promo.percent}% = −${fmt(o.discount)})</span>` : ''}</div>
+    <div class="row" style="margin-top:8px">${Object.entries(STATUS).filter(([k]) => k !== 'new' && k !== o.status).map(([k, v]) => `<button class="sm ${k === 'cancelled' ? 'ghost' : ''}" onclick="setStatus(${o.id},'${k}')">${v}</button>`).join('')}</div></div>`).join('');
+}
+async function setStatus(id, status) { await call('order-status', { id, status }); refresh(); }
+
+function promos() {
+  return `<div class="card"><b>Yangi promokod</b>
+    <div class="row" style="margin-top:8px"><input id="pCode" class="grow" placeholder="Kod (masalan: BIRZUMDA10)" maxlength="20" style="text-transform:uppercase"><input id="pPct" type="number" min="1" max="100" placeholder="Chegirma %" style="width:120px"><button class="red" onclick="addPromo()">Qo'shish</button></div>
+    <div class="muted" style="margin-top:6px">Mijoz kodni yozsa, buyurtma summasidan shu foiz avtomatik ayriladi. Mavjud kodni qayta kiritsangiz, foizi yangilanadi.</div></div>
+    ${S.promos.length ? S.promos.map((p) => `<div class="card row"><b class="grow">${esc(p.code)} — ${p.percent}%</b><span class="muted">${p.used || 0} marta ishlatilgan</span><span class="tag ${p.active ? 'done' : 'off'}">${p.active ? 'Faol' : 'O\'chiq'}</span><button class="ghost sm" onclick="togglePromo('${esc(p.code)}')">${p.active ? 'O\'chirib qo\'yish' : 'Yoqish'}</button><button class="sm" onclick="delPromo('${esc(p.code)}')">🗑</button></div>`).join('') : '<div class="card muted">Promokod yo\'q.</div>'}`;
+}
+async function addPromo() { await call('promos', { code: $('pCode').value, percent: $('pPct').value }); refresh(); }
+async function togglePromo(code) { await call('promos/toggle', { code }); refresh(); }
+async function delPromo(code) { if (confirm(code + ' o\'chirilsinmi?')) { await call('promos/delete', { code }); refresh(); } }
+
+function menu() {
+  return S.menu.map((c) => `<h3>${esc(c.emoji)} ${esc(c.name)}</h3><div class="card"><table>${c.items.map((i) => `<tr>
+    <td><input value="${esc(i.name)}" onchange="saveItem('${i.id}',{name:this.value})"></td>
+    <td style="width:120px"><input type="number" value="${i.price}" onchange="saveItem('${i.id}',{price:this.value})"></td>
+    <td style="width:110px"><button class="sm ${i.available ? '' : 'ghost'}" onclick="saveItem('${i.id}',{available:${!i.available}})">${i.available ? '✅ Bor' : '⛔ Tugagan'}</button></td></tr>`).join('')}</table></div>`).join('');
+}
+async function saveItem(id, patch) { const d = await call('item', { id, ...patch }); S.menu = d.menu; render(); }
+
+function settings() {
+  const s = S.settings;
+  return `<div class="card"><div class="row"><label class="grow"><b>Buyurtma qabul qilish</b></label><button class="sm ${s.open ? '' : 'ghost'}" onclick="saveSettings({open:${!s.open}})">${s.open ? '🟢 Ochiq' : '🔴 Yopiq'}</button></div></div>
+  <div class="card">${[['phone','Telefon'],['address','Manzil'],['hours','Ish vaqti']].map(([k, l]) => `<div class="row" style="margin-bottom:8px"><span style="width:90px">${l}</span><input class="grow" value="${esc(s[k])}" onchange="saveSettings({${k}:this.value})"></div>`).join('')}
+    <div class="row"><span style="width:90px">Min. summa</span><input class="grow" type="number" value="${s.minOrder}" onchange="saveSettings({minOrder:this.value})"></div></div>
+  <div class="card muted">Telegram'da buyurtma xabarlarini olish uchun botga <b>/admin PAROL</b> deb yozing. Hozir ulangan chatlar: <b>${S.adminChats}</b>.</div>`;
+}
+async function saveSettings(patch) { const d = await call('settings', patch); S.settings = d.settings; render(); }
+
+setInterval(() => { if (token && tab === 'orders' && !document.hidden) refresh().catch(() => {}); }, 20000);
+show();
+</script>
+</body>
+</html>
