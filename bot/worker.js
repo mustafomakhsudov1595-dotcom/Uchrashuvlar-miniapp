@@ -4,7 +4,7 @@
 //   WEBHOOK_SECRET   (Secret)  o'zingiz o'ylab topgan uzun tasodifiy matn
 //   DOCTOR_CHAT_IDS  (Text)    ariza boradigan chat ID, bir nechta bo'lsa vergul bilan
 //   PRICES_TEXT      (Text, ixtiyoriy) «Narxlar» tugmasida chiqadigan matn (HTML: <b>, <i>)
-//   SLOTS            (Text, ixtiyoriy) qabul soatlari, vergul bilan. Standart: 09:00,10:00,...,17:00
+//   SLOTS            (Text, ixtiyoriy) qabul soatlari, vergul bilan. Standart: 09:00,10:00,...,18:00
 //   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, masalan https://avazxon.uz (saytni ulashda kerak)
 // KV Namespace binding nomi: STATE
 
@@ -101,15 +101,18 @@ const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avg
 const WEEKDAYS = ['yakshanba', 'dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma', 'shanba'];
 const chunk = (arr, n) => arr.reduce((rows, x, i) => (i % n ? rows[rows.length - 1].push(x) : rows.push([x]), rows), []);
 
-// Toshkent vaqti bilan bugundan keyingi 10 kun
+// Toshkent vaqti bilan bugundan keyingi 10 ta ish kuni (yakshanba chiqarilmaydi)
 function nextDays() {
-  return Array.from({ length: 10 }, (_, i) => {
-    const d = new Date(Date.now() + 5 * 3600 * 1000 + (i + 1) * 86400000);
-    return { iso: d.toISOString().slice(0, 10), label: `${d.getUTCDate()}-${MONTHS[d.getUTCMonth()]} (${WEEKDAYS[d.getUTCDay()]})` };
-  });
+  const days = [];
+  for (let i = 1; days.length < 10; i++) {
+    const d = new Date(Date.now() + 5 * 3600 * 1000 + i * 86400000);
+    if (d.getUTCDay() === 0) continue;
+    days.push({ iso: d.toISOString().slice(0, 10), label: `${d.getUTCDate()}-${MONTHS[d.getUTCMonth()]} (${WEEKDAYS[d.getUTCDay()]})` });
+  }
+  return days;
 }
 const slotsOf = (env) =>
-  (env.SLOTS ? String(env.SLOTS).split(',').map((x) => x.trim()).filter(Boolean) : Array.from({ length: 9 }, (_, i) => `${String(9 + i).padStart(2, '0')}:00`));
+  (env.SLOTS ? String(env.SLOTS).split(',').map((x) => x.trim()).filter(Boolean) : Array.from({ length: 10 }, (_, i) => `${String(9 + i).padStart(2, '0')}:00`));
 const dateKb = () => kbOf([...chunk(nextDays().map((d) => ({ text: d.label })), 2), [{ text: BTN.cancel }]]);
 const timeKb = (env) => kbOf([...chunk(slotsOf(env).map((t) => ({ text: t })), 3), [{ text: BTN.changeDay }], [{ text: BTN.cancel }]]);
 const MENU_TEXT =

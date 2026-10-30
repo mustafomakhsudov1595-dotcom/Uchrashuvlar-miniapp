@@ -9,7 +9,7 @@ Pastdagi tugmalar bosilgan bo‘limga qarab almashadi.
 
 | Tugma | Vazifasi |
 |---|---|
-| 📝 Qabulga yozilish | Masala → kun (bugundan keyingi 10 kun) → soat tanlanadi, so‘ng ism, telefon va izoh so‘raladi |
+| 📝 Qabulga yozilish | Masala → kun (bugundan keyingi 10 ish kuni, yakshanbasiz) → soat tanlanadi, so‘ng ism, telefon va izoh so‘raladi |
 | 💰 Narxlar | `PRICES_TEXT` matnini ko‘rsatadi (o‘rnatilmagan bo‘lsa umumiy matn) |
 | 🩺 Xizmatlar | Qaysi masalalar bo‘yicha murojaat qilish mumkinligi ro‘yxati |
 | 💬 Shifokordan so‘rash | Bemor savol yozadi, savol shifokorga boradi. Shifokor savol xabariga **reply** qilsa, javob bemorga yetadi |
@@ -32,7 +32,7 @@ Masalalar ro‘yxati va barcha matnlar `worker.js` boshida (`TOPICS`, `ABOUT_TEX
 | `WEBHOOK_SECRET` | Secret | o‘zingiz yozgan uzun tasodifiy matn (harf va raqam, 30+ belgi) |
 | `DOCTOR_CHAT_IDS` | Text | shifokorning chat ID’si (6-qadamga qarang) |
 | `PRICES_TEXT` | Text (ixtiyoriy) | «Narxlar» tugmasida chiqadigan matn. `<b>qalin</b>` va `<i>qiyshiq</i>` ishlaydi |
-| `SLOTS` | Text (ixtiyoriy) | qabul soatlari vergul bilan, masalan `09:00,10:00,14:00`. Bo‘sh bo‘lsa 09:00 dan 17:00 gacha har soat |
+| `SLOTS` | Text (ixtiyoriy) | qabul soatlari vergul bilan, masalan `09:00,10:00,14:00`. Bo‘sh bo‘lsa 09:00 dan 18:00 gacha har soat |
 | `ALLOWED_ORIGIN` | Text (ixtiyoriy) | sayt manzili, masalan `https://avazxon.uz` |
 
 6. **Chat ID olish**: shifokor botga kirib `/id` yozadi (yoki «Yana» → «Mening ID»), bot raqam yuboradi. Shu raqamni `DOCTOR_CHAT_IDS` ga yozing (bir nechta bo‘lsa vergul bilan: `123,456`). Shifokor avval botda `/start` bosgan bo‘lishi shart, aks holda bot unga yoza olmaydi.
