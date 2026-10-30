@@ -3,6 +3,7 @@
 //   BOT_TOKEN        (Secret)  BotFather bergan token
 //   WEBHOOK_SECRET   (Secret)  o'zingiz o'ylab topgan uzun tasodifiy matn
 //   DOCTOR_CHAT_IDS  (Text)    zayafka boradigan chat ID, bir nechta bo'lsa vergul bilan
+//   PRICES_TEXT      (Text, ixtiyoriy) «Narxlar» tugmasida chiqadigan matn (HTML: <b>, <i>)
 //   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, masalan https://avazxon.uz (saytni ulashda kerak)
 // KV Namespace binding nomi: STATE
 
@@ -52,36 +53,110 @@ const phoneKb = {
   resize_keyboard: true,
   one_time_keyboard: true,
 };
-const mainKb = {
-  inline_keyboard: [
-    [{ text: '📝 Qabulga yozilish', callback_data: 'm:apply' }],
-    [{ text: '🩺 Qaysi masalalar bo‘yicha yozilish mumkin', callback_data: 'm:services' }],
-    [{ text: '📞 Aloqa va manzil', callback_data: 'm:contact' }],
+const BTN = {
+  apply: '📝 Qabulga yozilish',
+  prices: '💰 Narxlar',
+  services: '🩺 Xizmatlar',
+  ask: '💬 Doktordan so‘rash',
+  contact: '📞 Aloqa',
+  more: '➕ Yana',
+  admin: '🛠 Admin panel',
+  back: '⬅️ Orqaga',
+  about: '👨‍⚕️ Doktor haqida',
+  myid: '🆔 Mening ID',
+};
+const mainKb = (isDoc) => ({
+  keyboard: [
+    [{ text: BTN.apply }],
+    [{ text: BTN.prices }, { text: BTN.services }],
+    [{ text: BTN.ask }, { text: BTN.contact }],
+    [{ text: BTN.more }],
+    ...(isDoc ? [[{ text: BTN.admin }]] : []),
   ],
+  resize_keyboard: true,
+  is_persistent: true,
+});
+const moreKb = {
+  keyboard: [[{ text: BTN.about }, { text: BTN.myid }], [{ text: BTN.back }]],
+  resize_keyboard: true,
+  is_persistent: true,
 };
 const servicesKb = {
   inline_keyboard: [
     ...Object.entries(TOPICS).map(([k, v]) => [{ text: v, callback_data: 'a:' + k }]),
-    [{ text: '⬅️ Menyu', callback_data: 'm:menu' }],
   ],
 };
 const MENU_TEXT =
-  '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nQuyidagi menyudan tanlang:';
+  '👋 Assalomu alaykum! Bu <b>Dr. Avazxon</b> (urolog-androlog, Qo‘qon, VitaMed klinikasi) qabuliga yozilish boti.\n\nPastdagi menyudan tanlang:';
+const ABOUT_TEXT = '👨‍⚕️ <b>Dr. Avazxon</b>\nUrolog-androlog\nQo‘qon, VitaMed klinikasi';
+const PRICES_DEFAULT =
+  '💰 <b>Narxlar</b>\nAniq narx ko‘rik va tekshiruv turiga bog‘liq. Narxni bilish uchun qabulga yoziling yoki +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.';
 const SERVICES_TEXT =
   '🩺 <b>Quyidagi masalalar bo‘yicha zayafka qoldirishingiz mumkin:</b>\n\n' +
   Object.values(TOPICS).map((t) => `• ${t}`).join('\n') +
   '\n\nMasalani tanlang, zayafka shu mavzu bilan boshlanadi.';
 const CONTACT_TEXT =
-  '📞 <b>Aloqa</b>\nTelefon: +998 91 151 55 88\nKlinika: VitaMed, Qo‘qon\n\nZayafka qoldirish uchun menyudan «Qabulga yozilish» ni bosing.';
+  '📞 <b>Aloqa</b>\nTelefon: +998 91 151 55 88\nKlinika: VitaMed, Qo‘qon\n\nZayafka qoldirish uchun «Qabulga yozilish» tugmasini bosing.';
 const skipKb = { inline_keyboard: [[{ text: 'O‘tkazib yuborish', callback_data: 'skip' }]] };
-const none = { remove_keyboard: true };
 
 function tashkentNow() {
   return new Date(Date.now() + 5 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 16);
 }
 
+const doctorIds = (env) => String(env.DOCTOR_CHAT_IDS || '').split(',').map((x) => x.trim()).filter(Boolean);
+const isDoctor = (env, chat) => doctorIds(env).includes(String(chat));
+const kb = (env, chat) => mainKb(isDoctor(env, chat));
+const fmtTs = (ts) => new Date(ts + 5 * 3600 * 1000).toISOString().replace('T', ' ').slice(5, 16);
+
+async function logApplication(env, a, src) {
+  const ts = Date.now();
+  await env.STATE.put(
+    `a:${ts}:${Math.random().toString(36).slice(2, 6)}`,
+    JSON.stringify({ name: a.name, phone: a.phone, topic: a.topic, comment: a.comment || '', src }),
+    { expirationTtl: 90 * 86400 }
+  );
+}
+
+async function adminPanel(env, chat) {
+  const keys = [];
+  let cursor;
+  do {
+    const r = await env.STATE.list({ prefix: 'a:', cursor, limit: 1000 });
+    keys.push(...r.keys.map((k) => k.name));
+    cursor = r.list_complete ? undefined : r.cursor;
+  } while (cursor);
+  keys.sort();
+  const tsOf = (k) => Number(k.split(':')[1]);
+  const dayStart = Math.floor((Date.now() + 5 * 3600 * 1000) / 86400000) * 86400000 - 5 * 3600 * 1000;
+  const today = keys.filter((k) => tsOf(k) >= dayStart).length;
+  const week = keys.filter((k) => tsOf(k) >= dayStart - 6 * 86400000).length;
+  const last = keys.slice(-5).reverse();
+  const rows = await Promise.all(last.map(async (k, i) => {
+    const v = JSON.parse((await env.STATE.get(k)) || '{}');
+    return `${i + 1}. ${fmtTs(tsOf(k))} · ${esc(v.name)} · ${esc(v.phone)} · ${esc(v.topic)}`;
+  }));
+  return say(
+    env, chat,
+    `🛠 <b>Admin panel</b>\n\n📊 Zayafkalar: bugun <b>${today}</b> · 7 kun <b>${week}</b> · jami (90 kun) <b>${keys.length}</b>\n\n` +
+      (rows.length ? `<b>Oxirgilari:</b>\n${rows.join('\n')}` : 'Hozircha zayafka yo‘q.') +
+      '\n\nSavollarga javob: savol xabariga reply qiling.'
+  );
+}
+
+async function askDoctors(env, chat, text, from) {
+  const who = from && from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${chat}">profil</a>`;
+  const body = `❓ <b>Bemor savoli</b>\n\n${esc(text)}\n\n👤 ${who} · ${tashkentNow()}\n↩️ Javob berish uchun shu xabarga reply qiling.`;
+  const ids = doctorIds(env);
+  await Promise.all(ids.map(async (id) => {
+    const r = await say(env, id, body);
+    if (r.ok) await env.STATE.put(`q:${id}:${r.result.message_id}`, String(chat), { expirationTtl: 7 * 86400 });
+  }));
+  return ids.length;
+}
+
 async function notifyDoctors(env, a, from) {
-  const ids = String(env.DOCTOR_CHAT_IDS || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const ids = doctorIds(env);
+  await logApplication(env, a, from ? 'bot' : 'sayt');
   const who = from
     ? from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${from.id}">profil</a>`
     : 'sayt orqali';
@@ -103,7 +178,7 @@ async function finish(env, chat, st, from) {
     n
       ? '✅ <b>Zayafkangiz qabul qilindi.</b>\nShifokor yoki administrator tez orada siz bilan bog‘lanadi.\n\nShoshilinch bo‘lsa: +998 91 151 55 88\nMa’lumotlaringiz maxfiy saqlanadi.'
       : '⚠️ Zayafka qabul qilindi, lekin shifokorga yuborishda sozlama xatosi bor. Iltimos, +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.',
-    { reply_markup: none }
+    { reply_markup: kb(env, chat) }
   );
 }
 
@@ -116,8 +191,7 @@ async function beginApply(env, chat, topicKey) {
   await setState(env, chat, st);
   return say(
     env, chat,
-    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel',
-    { reply_markup: none }
+    (st.topic ? `Tanlangan masala: <b>${esc(st.topic)}</b>\n\n` : '') + 'Zayafka qoldirish uchun <b>ismingizni</b> yozing.\n\nBekor qilish: /cancel'
   );
 }
 
@@ -128,11 +202,40 @@ async function onMessage(env, m) {
   if (text === '/id') return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
   if (text === '/cancel') {
     await clearState(env, chat);
-    return say(env, chat, 'Bekor qilindi. Qayta boshlash uchun /start bosing.', { reply_markup: none });
+    return say(env, chat, 'Bekor qilindi.', { reply_markup: kb(env, chat) });
   }
-  if (text === '/start' || text === '/help' || text === '/menu') return say(env, chat, MENU_TEXT, { reply_markup: mainKb });
+  if (text === '/start' || text === '/help' || text === '/menu' || text === BTN.back) {
+    await clearState(env, chat);
+    return say(env, chat, text === BTN.back ? 'Asosiy menyu 👇' : MENU_TEXT, { reply_markup: kb(env, chat) });
+  }
   if (text === '/xizmatlar') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
   if (text === '/zayafka') return beginApply(env, chat);
+
+  // doktor savolga reply qilsa, javob bemorga boradi
+  if (m.reply_to_message && isDoctor(env, chat) && text) {
+    const target = await env.STATE.get(`q:${chat}:${m.reply_to_message.message_id}`);
+    if (target) {
+      await say(env, target, `👨‍⚕️ <b>Doktor javobi:</b>\n\n${esc(text)}`);
+      return say(env, chat, '✅ Javob bemorga yuborildi.');
+    }
+  }
+
+  // menyu tugmalari (jarayon o‘rtasida bosilsa ham ishlaydi)
+  switch (text) {
+    case BTN.apply: return beginApply(env, chat);
+    case BTN.prices: await clearState(env, chat); return say(env, chat, env.PRICES_TEXT || PRICES_DEFAULT);
+    case BTN.services: await clearState(env, chat); return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
+    case BTN.ask:
+      await setState(env, chat, { step: 'ask' });
+      return say(env, chat, '💬 Doktorga savolingizni yozing. Javob shu yerga keladi.\n\nBekor qilish: /cancel');
+    case BTN.contact: await clearState(env, chat); return say(env, chat, CONTACT_TEXT);
+    case BTN.more: await clearState(env, chat); return say(env, chat, 'Qo‘shimcha 👇', { reply_markup: moreKb });
+    case BTN.about: return say(env, chat, ABOUT_TEXT);
+    case BTN.myid: return say(env, chat, `Sizning chat ID: <code>${chat}</code>`);
+    case BTN.admin:
+      if (!isDoctor(env, chat)) return say(env, chat, 'Bu bo‘lim faqat shifokor uchun.');
+      return adminPanel(env, chat);
+  }
 
   const st = await getState(env, chat);
   if (!st) return say(env, chat, 'Qabulga yozilish uchun /start bosing.');
@@ -151,12 +254,19 @@ async function onMessage(env, m) {
     st.phone = p;
     st.step = st.topic ? 'comment' : 'topic';
     await setState(env, chat, st);
-    await say(env, chat, 'Qabul uchun raqam olindi ✅', { reply_markup: none });
+    await say(env, chat, 'Raqam qabul qilindi ✅', { reply_markup: kb(env, chat) });
     if (st.topic) return say(env, chat, '💬 Qisqacha izoh yozing (ixtiyoriy). Yoki o‘tkazib yuboring.', { reply_markup: skipKb });
     return say(env, chat, '🩺 Qaysi masala bo‘yicha murojaat qilyapsiz?', { reply_markup: topicKb });
   }
 
   if (st.step === 'topic') return say(env, chat, 'Iltimos, quyidagi tugmalardan birini tanlang.', { reply_markup: topicKb });
+
+  if (st.step === 'ask') {
+    if (text.length < 3) return say(env, chat, 'Iltimos, savolingizni yozing.');
+    await clearState(env, chat);
+    const n = await askDoctors(env, chat, text.slice(0, 1000), m.from);
+    return say(env, chat, n ? '✅ Savolingiz doktorga yuborildi. Javob shu yerga keladi.' : '⚠️ Yuborishda xato. +998 91 151 55 88 raqamiga qo‘ng‘iroq qiling.');
+  }
 
   if (st.step === 'comment') {
     st.comment = text.slice(0, 500);
@@ -167,10 +277,6 @@ async function onMessage(env, m) {
 async function onCallback(env, q) {
   const chat = q.message.chat.id;
   await tg(env, 'answerCallbackQuery', { callback_query_id: q.id });
-  if (q.data === 'm:menu') return say(env, chat, MENU_TEXT, { reply_markup: mainKb });
-  if (q.data === 'm:services') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
-  if (q.data === 'm:contact') return say(env, chat, CONTACT_TEXT, { reply_markup: mainKb });
-  if (q.data === 'm:apply') return beginApply(env, chat);
   if (q.data.startsWith('a:')) return beginApply(env, chat, q.data.slice(2));
 
   const st = await getState(env, chat);
@@ -224,7 +330,7 @@ export default {
       });
       await tg(env, 'setMyCommands', {
         commands: [
-          { command: 'menu', description: 'Menyu' },
+          { command: 'menu', description: 'Asosiy menyu' },
           { command: 'xizmatlar', description: 'Qaysi masalalar bo‘yicha yozilish mumkin' },
           { command: 'zayafka', description: 'Qabulga yozilish' },
           { command: 'cancel', description: 'Bekor qilish' },
