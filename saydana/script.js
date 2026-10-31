@@ -241,6 +241,17 @@
     });
   })();
 
+  // "Statsionarga yozilish" kabi tugmalar: formani to'ldirib, ariza bo'limiga olib boradi
+  Array.prototype.forEach.call(document.querySelectorAll('[data-apply]'), function (b) {
+    b.addEventListener('click', function () {
+      var sel = document.getElementById('f-svc'), note = document.getElementById('f-note');
+      Array.prototype.forEach.call(sel.options, function (o) { if (o.text === b.dataset.apply) sel.value = o.value || o.text; });
+      if (b.dataset.note && !note.value.trim()) note.value = b.dataset.note;
+      document.getElementById('ariza').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      setTimeout(function () { document.getElementById('f-name').focus({ preventScroll: true }); }, reduce ? 0 : 500);
+    });
+  });
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -259,7 +270,7 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.rating,.fact,.dept,.statement,.doc').forEach(function (el) {
+    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.rating,.fact,.dept,.statement,.doc,.amen-i,.dirs li,.ip-nums>div').forEach(function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.07 + 's');
       el.classList.add('reveal'); io.observe(el);
