@@ -21,6 +21,8 @@
   <symbol id="logo-mark" viewBox="0 0 48 40"><path d="M24 34C13 27 6 21 6 14.5 6 9.8 9.7 6 14.3 6c3.6 0 7 2.2 9.7 6 2.7-3.8 6.1-6 9.7-6C38.3 6 42 9.8 42 14.5 42 21 35 27 24 34z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></symbol>
 </svg>
 
+<div class="progress" id="progress" aria-hidden="true"></div>
+
 <header class="header" id="top">
   <div class="container nav">
     <a href="#top" class="logo" aria-label="Saydana — bosh sahifa">
@@ -44,31 +46,63 @@
 <main>
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-bg" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="dots"></i></div>
   <div class="container hero-grid">
     <div class="hero-copy">
       <span class="status" id="status"><i></i><span>Yuklanmoqda…</span></span>
-      <h1>Sog'ligingiz — <em>bizning</em> g'amxo'rligimiz</h1>
-      <p class="lead">Saydana — Namangan shahridagi tibbiyot va diagnostika markazi: MRT, MSKT, rentgen, UZI, EKG, laboratoriya va mutaxassis shifokorlar maslahati bir joyda.</p>
+      <h1>Aniq tashxis — <em>to'g'ri davolash</em> boshlanishi</h1>
+      <p class="lead">Saydana — Namangan shahridagi tibbiyot va diagnostika markazi. MRT, MSKT, rentgen, UZI, EKG va laboratoriya bir joyda, mutaxassis shifokorlar maslahati bilan.</p>
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-10-10</a>
         <a class="btn btn-ghost btn-lg" href="#aloqa"><svg class="ic"><use href="#i-pin"/></svg>Manzilni ko'rish</a>
       </div>
-      <ul class="hero-facts">
-        <li><b>8 ta</b><span>diagnostika xizmati</span></li>
-        <li><b>6 kun</b><span>haftada ochiq</span></li>
-        <li><b>7 ta</b><span>tibbiy yo'nalish</span></li>
+      <ul class="checks">
+        <li><svg class="ic"><use href="#i-check"/></svg>MRT va MSKT</li>
+        <li><svg class="ic"><use href="#i-check"/></svg>Laboratoriya</li>
+        <li><svg class="ic"><use href="#i-check"/></svg>Mutaxassislar qabuli</li>
       </ul>
     </div>
+
     <div class="hero-visual" aria-hidden="true">
-      <div class="blob b1"></div><div class="blob b2"></div>
-      <div class="ring"></div>
-      <div class="card-float cf1"><svg class="ic"><use href="#i-heart"/></svg><div><b>Yurak sog'ligi</b><small>EKG va exokardiografiya</small></div></div>
-      <div class="card-float cf2"><svg class="ic"><use href="#i-pulse"/></svg><div><b>Aniq tashxis</b><small>MRT, MSKT, UZI</small></div></div>
-      <div class="pill-shape"></div>
-      <svg class="hero-mark"><use href="#logo-mark"/></svg>
+      <svg class="scanner" viewBox="0 0 400 400">
+        <defs>
+          <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F70D45"/><stop offset="1" stop-color="#FF6A8D"/></linearGradient>
+          <radialGradient id="gB" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9C0A33"/><stop offset="1" stop-color="#4A0519"/></radialGradient>
+          <clipPath id="bore"><circle cx="200" cy="186" r="82"/></clipPath>
+        </defs>
+        <rect width="400" height="400" rx="52" fill="url(#gA)"/>
+        <circle cx="400" cy="0" r="190" fill="#fff" opacity=".09"/>
+        <circle cx="0" cy="400" r="140" fill="#fff" opacity=".09"/>
+        <circle cx="200" cy="186" r="128" fill="#fff"/>
+        <circle class="spin" cx="200" cy="186" r="108" fill="none" stroke="#F70D45" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 15"/>
+        <circle cx="200" cy="186" r="90" fill="#FFE3EA"/>
+        <circle cx="200" cy="186" r="82" fill="url(#gB)"/>
+        <g clip-path="url(#bore)">
+          <path class="ecg" d="M110 190h50l12-34 18 70 16-52 10 16h74" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" pathLength="100"/>
+          <rect class="scan" x="196" y="100" width="8" height="172" fill="#fff" opacity=".18"/>
+        </g>
+        <rect x="64" y="318" width="272" height="24" rx="12" fill="#fff"/>
+        <rect x="110" y="306" width="180" height="14" rx="7" fill="#FFE3EA"/>
+        <rect x="128" y="342" width="144" height="12" rx="6" fill="#fff" opacity=".55"/>
+        <circle cx="86" cy="60" r="6" fill="#fff" opacity=".7"/><circle cx="108" cy="60" r="6" fill="#fff" opacity=".4"/><circle cx="130" cy="60" r="6" fill="#fff" opacity=".2"/>
+      </svg>
+      <div class="card-float cf1"><span class="dot-live"></span><div><b>MRT · MSKT · UZI</b><small>Zamonaviy diagnostika</small></div></div>
+      <div class="card-float cf2">
+        <svg class="ic"><use href="#i-pulse"/></svg>
+        <div><b>Yurak: EKG va exoKG</b><small>Tez va aniq natija</small></div>
+      </div>
+      <div class="card-float cf3"><svg class="ic"><use href="#i-flask"/></svg><div><b>Laboratoriya</b><small>Qon tahlili</small></div></div>
     </div>
   </div>
 </section>
+
+<!-- LENTA -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>MRT</span><span>MSKT</span><span>Rentgen</span><span>UZI</span><span>EKG</span><span>Exokardiografiya</span><span>FGDS</span><span>Laboratoriya</span>
+    <span>MRT</span><span>MSKT</span><span>Rentgen</span><span>UZI</span><span>EKG</span><span>Exokardiografiya</span><span>FGDS</span><span>Laboratoriya</span>
+  </div>
+</div>
 
 <!-- XIZMATLAR -->
 <section class="section" id="xizmatlar">
@@ -78,37 +112,64 @@
       <h2>Diagnostika va tekshiruvlar</h2>
       <p>Ro'yxat ochiq manbalar asosida tuzilgan. Narxlar va tekshiruvga tayyorgarlik bo'yicha markazga qo'ng'iroq qilib aniqlashtiring.</p>
     </div>
-    <div class="grid services">
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div><h3>MRT</h3><p>Magnit-rezonans tomografiya — bosh miya, umurtqa, bo'g'imlar va ichki a'zolarni batafsil tekshirish.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-ring"/></svg></div><h3>MSKT</h3><p>Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-xray"/></svg></div><h3>Rentgen</h3><p>Ko'krak qafasi va suyak-bo'g'im tizimi rentgenografiyasi.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Exokardiografiya</h3><p>Yurak UZI tekshiruvi — yurak kameralari va qopqoqlari holati.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-pulse"/></svg></div><h3>EKG</h3><p>Elektrokardiografiya — yurak ritmi va o'tkazuvchanligini baholash.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-wave"/></svg></div><h3>UZI</h3><p>Ultratovush tekshiruvi — qorin bo'shlig'i, kichik chanoq va boshqa a'zolar.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>FGDS</h3><p>Fibrogastroduodenoskopiya — qizilo'ngach, oshqozon va o'n ikki barmoqli ichak tekshiruvi.</p></article>
-      <article class="card svc"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
+
+    <div class="bento">
+      <article class="b b-mri spot">
+        <svg class="b-art" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="86" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="22"/><circle cx="100" cy="100" r="52" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-dasharray="3 10" stroke-linecap="round"/><circle cx="100" cy="100" r="30" fill="#fff" fill-opacity=".18"/></svg>
+        <div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div>
+        <h3>MRT</h3>
+        <p>Magnit-rezonans tomografiya — bosh miya, umurtqa, bo'g'imlar va ichki a'zolarni batafsil, nurlanishsiz tekshirish.</p>
+        <span class="tag">Asosiy xizmat</span>
+      </article>
+      <article class="b b-ct spot">
+        <svg class="b-art" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="80" fill="none" stroke="#F70D45" stroke-opacity=".55" stroke-width="3"/><circle cx="100" cy="100" r="58" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/><circle cx="100" cy="100" r="34" fill="#F70D45" fill-opacity=".35"/></svg>
+        <div class="ico"><svg class="ic"><use href="#i-ring"/></svg></div>
+        <h3>MSKT</h3>
+        <p>Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.</p>
+      </article>
+      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-xray"/></svg></div><h3>Rentgen</h3><p>Ko'krak qafasi va suyak-bo'g'im tizimi rentgenografiyasi.</p></article>
+      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-wave"/></svg></div><h3>UZI</h3><p>Qorin bo'shlig'i, kichik chanoq va boshqa a'zolarning ultratovush tekshiruvi.</p></article>
+      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Exokardiografiya</h3><p>Yurak UZI tekshiruvi — kameralar va qopqoqlar holati.</p></article>
+      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-pulse"/></svg></div><h3>EKG</h3><p>Yurak ritmi va o'tkazuvchanligini baholash.</p></article>
+      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>FGDS</h3><p>Qizilo'ngach, oshqozon va o'n ikki barmoqli ichak endoskopiyasi.</p></article>
+      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
     </div>
+
     <div class="areas">
       <h3>Tibbiy yo'nalishlar</h3>
-      <ul class="chips"><li>Radiologiya</li><li>Kardiologiya</li><li>Nevrologiya</li><li>Neyroxirurgiya</li><li>Gastroenterologiya</li><li>Urologiya</li><li>Ginekologiya</li></ul>
+      <ul class="chips">
+        <li><svg class="ic"><use href="#i-scan"/></svg>Radiologiya</li>
+        <li><svg class="ic"><use href="#i-heart"/></svg>Kardiologiya</li>
+        <li><svg class="ic"><use href="#i-pulse"/></svg>Nevrologiya</li>
+        <li><svg class="ic"><use href="#i-cross"/></svg>Neyroxirurgiya</li>
+        <li><svg class="ic"><use href="#i-tube"/></svg>Gastroenterologiya</li>
+        <li><svg class="ic"><use href="#i-flask"/></svg>Urologiya</li>
+        <li><svg class="ic"><use href="#i-stetho"/></svg>Ginekologiya</li>
+      </ul>
     </div>
   </div>
 </section>
 
 <!-- AFZALLIKLAR -->
-<section class="section alt" id="afzalliklar">
+<section class="section dark" id="afzalliklar">
+  <div class="dark-glow" aria-hidden="true"></div>
   <div class="container why">
     <div class="why-intro">
       <span class="eyebrow">Nega Saydana</span>
       <h2>Ishonch, qulaylik va e'tibor</h2>
       <p>Biz tibbiy xizmatni insoniy munosabat bilan uyg'unlashtiramiz — har bir bemor o'zini qulay va xavfsiz his qilishi uchun.</p>
-      <a class="btn btn-primary" href="#aloqa">Bog'lanish</a>
+      <ul class="stats">
+        <li><b data-count="8">8</b><span>diagnostika xizmati</span></li>
+        <li><b data-count="7">7</b><span>tibbiy yo'nalish</span></li>
+        <li><b data-count="6">6</b><span>kun ochiq</span></li>
+      </ul>
+      <a class="btn btn-white" href="#aloqa">Bog'lanish</a>
     </div>
     <div class="why-list">
-      <div class="why-item"><span class="num">01</span><div><h3>Bir joyda to'liq tekshiruv</h3><p>MRT, MSKT, rentgen, UZI va laboratoriya — turli joyga borib yurmaysiz.</p></div></div>
-      <div class="why-item"><span class="num">02</span><div><h3>Mutaxassislar maslahati</h3><p>Kardiolog, nevrolog, urolog, ginekolog va boshqa yo'nalishlar bo'yicha qabul.</p></div></div>
-      <div class="why-item"><span class="num">03</span><div><h3>Shahar markazida</h3><p>Namangan shahrida, Nodira ko'chasida — yetib borish oson.</p></div></div>
-      <div class="why-item"><span class="num">04</span><div><h3>Qulay ish vaqti</h3><p>Dushanbadan shanbagacha ochiq, yakshanba — dam olish kuni.</p></div></div>
+      <div class="why-item spot"><div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div><div><h3>Bir joyda to'liq tekshiruv</h3><p>MRT, MSKT, rentgen, UZI va laboratoriya — turli joyga borib yurmaysiz.</p></div></div>
+      <div class="why-item spot"><div class="ico"><svg class="ic"><use href="#i-stetho"/></svg></div><div><h3>Mutaxassislar maslahati</h3><p>Kardiolog, nevrolog, urolog, ginekolog va boshqa yo'nalishlar bo'yicha qabul.</p></div></div>
+      <div class="why-item spot"><div class="ico"><svg class="ic"><use href="#i-pin"/></svg></div><div><h3>Shahar markazida</h3><p>Namangan shahrida, Nodira ko'chasida — yetib borish oson.</p></div></div>
+      <div class="why-item spot"><div class="ico"><svg class="ic"><use href="#i-clock"/></svg></div><div><h3>Qulay ish vaqti</h3><p>Dushanbadan shanbagacha ochiq, yakshanba — dam olish kuni.</p></div></div>
     </div>
   </div>
 </section>
@@ -120,10 +181,10 @@
       <span class="eyebrow">Qabulga yozilish</span>
       <h2>Uch oddiy qadamda</h2>
     </div>
-    <ol class="grid steps">
-      <li class="card step"><span class="step-n">1</span><h3>Qo'ng'iroq qiling</h3><p>Quyidagi raqamlardan biriga bog'laning va muammoingizni ayting.</p></li>
-      <li class="card step"><span class="step-n">2</span><h3>Vaqtni kelishing</h3><p>Operator sizga qulay vaqt va mutaxassisni tanlashda yordam beradi.</p></li>
-      <li class="card step"><span class="step-n">3</span><h3>Markazga keling</h3><p>Nodira ko'chasi, 1 manziliga belgilangan vaqtda tashrif buyuring.</p></li>
+    <ol class="steps">
+      <li class="step"><span class="step-n"><svg class="ic"><use href="#i-phone"/></svg></span><h3>Qo'ng'iroq qiling</h3><p>Quyidagi raqamlardan biriga bog'laning va muammoingizni ayting.</p></li>
+      <li class="step"><span class="step-n"><svg class="ic"><use href="#i-clock"/></svg></span><h3>Vaqtni kelishing</h3><p>Operator sizga qulay vaqt va mutaxassisni tanlashda yordam beradi.</p></li>
+      <li class="step"><span class="step-n"><svg class="ic"><use href="#i-pin"/></svg></span><h3>Markazga keling</h3><p>Nodira ko'chasi, 1 manziliga belgilangan vaqtda tashrif buyuring.</p></li>
     </ol>
   </div>
 </section>
@@ -137,7 +198,7 @@
     </div>
     <div class="faq">
       <details><summary>Markaz qachon ochiq?</summary><p>Dushanba–Juma 8:00 dan 17:00 gacha, shanba 8:00 dan 16:00 gacha. Yakshanba — dam olish kuni.</p></details>
-      <details><summary>Qayerda joylashgan?</summary><p>Namangan shahri, Nodira ko'chasi, 1. Xaritada "Yo'nalish olish" tugmasi orqali marshrut oching.</p></details>
+      <details><summary>Qayerda joylashgan?</summary><p>Namangan shahri, Nodira ko'chasi, 1. Xaritada "Xarita ilovasida ochish" tugmasi orqali marshrut oching.</p></details>
       <details><summary>Qabulga qanday yozilaman?</summary><p>+998 (78) 223-10-10 yoki +998 (78) 223-11-11 raqamiga qo'ng'iroq qiling, yoki info@saydanamed.uz manziliga yozing.</p></details>
       <details><summary>Tekshiruv narxi qancha?</summary><p>Narxlar tekshiruv turiga qarab farq qiladi. Aniq narxni qo'ng'iroq qilib bilib oling.</p></details>
       <details><summary>MRT yoki MSKT uchun tayyorgarlik kerakmi?</summary><p>Ba'zi tekshiruvlarga oldindan tayyorlanish talab qilinadi. Yozilayotganda operatordan so'rang.</p></details>
@@ -196,12 +257,22 @@
 
 <footer class="footer">
   <div class="container foot">
-    <a href="#top" class="logo light"><svg class="logo-mark"><use href="#logo-mark"/></svg><span class="logo-text"><b>saydana</b><small>tibbiyot markazi</small></span></a>
-    <p>Namangan shahri, Nodira ko'chasi, 1<br>+998 (78) 223-10-10 · +998 (78) 223-11-11 · info@saydanamed.uz</p>
+    <div class="foot-brand">
+      <a href="#top" class="logo light"><svg class="logo-mark"><use href="#logo-mark"/></svg><span class="logo-text"><b>saydana</b><small>tibbiyot markazi</small></span></a>
+      <p>Namangandagi tibbiyot va diagnostika markazi. Aniq tashxis — sog'liq uchun birinchi qadam.</p>
+    </div>
+    <div class="foot-col">
+      <h4>Sahifalar</h4>
+      <a href="#xizmatlar">Xizmatlar</a><a href="#afzalliklar">Afzalliklar</a><a href="#jarayon">Qabulga yozilish</a><a href="#savollar">Savollar</a>
+    </div>
+    <div class="foot-col">
+      <h4>Aloqa</h4>
+      <a href="tel:+998782231010">+998 (78) 223-10-10</a><a href="tel:+998782231111">+998 (78) 223-11-11</a><a href="mailto:info@saydanamed.uz">info@saydanamed.uz</a>
+      <span>Nodira ko'chasi, 1, Namangan</span>
+    </div>
     <p class="copy">© <span id="year"></span> Saydana. Barcha huquqlar himoyalangan.</p>
   </div>
 </footer>
-
 
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-bg" data-close></div>
@@ -223,13 +294,13 @@
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.500a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20S4 14.5 4 9a4.5 4.5 0 0 1 8-2.800A4.5 4.5 0 0 1 20 9c0 5.5-8 11-8 11z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20S4 14.5 4 9a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 5.5-8 11-8 11z"/></symbol>
   <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></symbol>
   <symbol id="i-stetho" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 0 0 8 0V3M10 13v2a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="11" r="2"/></symbol>
-  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.600A2 2 0 0 0 19 18l-5-9V3M7.5 15h9"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6A2 2 0 0 0 19 18l-5-9V3M7.5 15h9"/></symbol>
   <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></symbol>
   <symbol id="i-cross" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></symbol>
   <symbol id="i-ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/></symbol>
@@ -237,7 +308,7 @@
   <symbol id="i-wave" viewBox="0 0 24 24"><path d="M2 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0"/></symbol>
   <symbol id="i-tube" viewBox="0 0 24 24"><path d="M5 4c0 6 3 7 5 8s3 3 3 8M14 12c3 0 5 2 5 5"/><circle cx="19" cy="18" r="1.5"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
-  <symbol id="i-ambulance" viewBox="0 0 24 24"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/><path d="M8.5 10v4M6.5 12h4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   </g>
 </svg>
 <script src="script.js"></script>
