@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Hisobot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:light;--bg:#f3f3f0;--card:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--ink3:#6b6a65;--line:#e1e0d9;--s1:#2a78d6;--wash:rgba(42,120,214,.10);--good:#0ca30c;--warn:#fab219;--crit:#d03b3b}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){color-scheme:dark;--bg:#121211;--card:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8d8c84;--line:#2c2c2a;--s1:#3987e5;--wash:rgba(57,135,229,.18)}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#121211;--card:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8d8c84;--line:#2c2c2a;--s1:#3987e5;--wash:rgba(57,135,229,.18)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+.wrap{max-width:640px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{font-size:22px;margin:0;font-weight:700}
+.sub{font-size:12px;color:var(--ink3);margin-top:2px}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+.icon{min-width:44px;min-height:44px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:18px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:18px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.tile.hero{grid-column:1/-1}
+.tile b{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums;font-weight:700}
+.tile.hero b{font-size:48px}
+.tile span{display:block;font-size:12px;color:var(--ink2);margin-top:4px}
+h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:22px 0 8px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.seg button{white-space:nowrap;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px}
+.seg button[aria-pressed="true"]{border-color:var(--s1);background:var(--wash);font-weight:600}
+input[type=search]{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 14px;font:inherit;margin-bottom:6px}
+.cols{display:flex;align-items:flex-end;gap:4px;height:150px}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.col .v{font-size:11px;color:var(--ink2);font-variant-numeric:tabular-nums;margin-bottom:3px}
+.col .bar{width:100%;max-width:24px;background:var(--s1);border-radius:4px 4px 0 0;min-height:2px}
+.col .bar.zero{background:var(--line)}
+.col .x{font-size:10px;color:var(--ink3);margin-top:5px;text-align:center;line-height:1.15}
+.col.today .x{color:var(--ink);font-weight:700}
+.axis{height:1px;background:var(--line);margin-top:-1px}
+.day{margin-bottom:10px;padding:0;overflow:hidden}
+.dayhead{padding:12px 14px 10px}
+.dayhead .t{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.dayhead strong{font-size:16px}
+.chip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--wash);border:1px solid var(--s1);margin-left:6px;font-weight:600;vertical-align:1px}
+.cnt{font-size:13px;color:var(--ink2);white-space:nowrap}
+.occ{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--ink2)}
+.track{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.fill{height:100%;background:var(--s1);border-radius:3px}
+.row{display:grid;grid-template-columns:52px 1fr;gap:4px 10px;padding:11px 14px;border-top:1px solid var(--line)}
+.time{font-weight:700;font-variant-numeric:tabular-nums}
+.name{font-weight:600;overflow-wrap:anywhere}
+.meta{font-size:13px;color:var(--ink2);overflow-wrap:anywhere}
+.meta a{color:var(--s1);text-decoration:none;font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-top:4px;color:var(--ink)}
+.note{font-size:12px;color:var(--ink2);margin-top:4px}
+.bars .r{margin-bottom:12px}
+.bars .l{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:4px}
+.bars .l span:last-child{font-variant-numeric:tabular-nums;font-weight:700}
+.bars .tr{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bars .tr i{display:block;height:100%;background:var(--s1);border-radius:0 4px 4px 0}
+.link{width:100%;min-height:44px;border-radius:12px;border:1px dashed var(--line);color:var(--ink2);margin-top:4px}
+.empty,.msg{padding:28px 16px;text-align:center;color:var(--ink2)}
+.msg h2{margin:0 0 8px;color:var(--ink);text-transform:none;font-size:18px;letter-spacing:0}
+.sk{height:88px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;opacity:.7}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+<script>
+(function(){
+var tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); if (tg.colorScheme) document.documentElement.setAttribute('data-theme', tg.colorScheme); } catch (e) {} }
+
+var MONTHS = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+var WD = ['yakshanba','dushanba','seshanba','chorshanba','payshanba','juma','shanba'];
+var WDS = ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+var STATUS = { 'new': { i: '⏳', l: 'Kutilmoqda' }, ok: { i: '✅', l: 'Tasdiqlangan' }, no: { i: '❌', l: 'Rad etilgan' } };
+var state = { data: null, filter: 'all', q: '', past: false, at: null };
+var app = document.getElementById('app');
+
+function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function add(p) { for (var i = 1; i < arguments.length; i++) if (arguments[i]) p.appendChild(arguments[i]); return p; }
+function two(n) { return n < 10 ? '0' + n : '' + n; }
+function tzNow() { return new Date(Date.now() + 5 * 3600000); }
+function todayISO() { return tzNow().toISOString().slice(0, 10); }
+function addDays(iso, n) { var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function dparts(iso) { var d = new Date(iso + 'T00:00:00Z'); return { d: d.getUTCDate(), m: d.getUTCMonth(), w: d.getUTCDay() }; }
+function dlabel(iso) { var p = dparts(iso); return p.d + '-' + MONTHS[p.m] + ', ' + WD[p.w]; }
+function stamp(ms) { var d = new Date(ms + 5 * 3600000); return two(d.getUTCDate()) + '.' + two(d.getUTCMonth() + 1) + ' ' + two(d.getUTCHours()) + ':' + two(d.getUTCMinutes()); }
+function phoneHref(p) { return 'tel:' + String(p || '').replace(/[^+\d]/g, ''); }
+
+function message(title, text) {
+  app.textContent = '';
+  var m = el('div', 'msg'); add(m, el('h2', null, title), el('div', null, text)); add(app, m);
+}
+
+function load() {
+  if (!tg || !tg.initData) { message('Telegram ichida oching', 'Hisobot faqat Telegram botdagi «📊 Hisobot» tugmasi orqali ochiladi.'); return; }
+  fetch('/admin/api/bookings', { headers: { Authorization: 'tma ' + tg.initData }, cache: 'no-store' })
+    .then(function (r) {
+      if (r.status === 403) { message('Ruxsat yo‘q', 'Bu bo‘lim faqat adminlar uchun.'); return null; }
+      if (r.status === 401) { message('Qayta oching', 'Sessiya eskirgan. Hisobotni botdan qaytadan oching.'); return null; }
+      if (!r.ok) throw new Error('http');
+      return r.json();
+    })
+    .then(function (j) { if (j) { state.data = j; state.at = Date.now(); render(); } })
+    .catch(function () { message('Yuklab bo‘lmadi', 'Internetni tekshirib, qayta urinib ko‘ring.'); });
+}
+
+function matches(b) {
+  if (state.filter !== 'all' && b.s !== state.filter) return false;
+  var q = state.q.trim().toLowerCase();
+  if (!q) return true;
+  return ((b.n || '') + ' ' + (b.p || '') + ' ' + (b.t || '')).toLowerCase().indexOf(q) >= 0;
+}
+
+function tile(value, label, hero) { var t = el('div', 'tile' + (hero ? ' hero' : '')); add(t, el('b', null, String(value)), el('span', null, label)); return t; }
+
+function badge(s) { var st = STATUS[s] || STATUS['new']; return el('div', 'badge', st.i + ' ' + st.l); }
+
+function rowFor(b, clash) {
+  var r = el('div', 'row');
+  add(r, el('div', 'time', b.h || '—'));
+  var c = el('div');
+  add(c, el('div', 'name', b.n || '—'));
+  var meta = el('div', 'meta');
+  var a = el('a', null, b.p || ''); a.href = phoneHref(b.p);
+  add(meta, a, document.createTextNode(' · ' + (b.t || '')));
+  add(c, meta);
+  if (b.c) add(c, el('div', 'note', '💬 ' + b.c));
+  add(c, badge(b.s));
+  if (clash) add(c, el('div', 'note', '⚠️ Shu vaqtga yana bir ariza bor'));
+  r.appendChild(c);
+  return r;
+}
+
+function dayCard(iso, all, shown, slots, today) {
+  var card = el('div', 'card day');
+  var head = el('div', 'dayhead');
+  var t = el('div', 't');
+  var left = el('div'); add(left, el('strong', null, dlabel(iso)));
+  if (iso === today) add(left, el('span', 'chip', 'Bugun'));
+  if (iso === addDays(today, 1)) add(left, el('span', 'chip', 'Ertaga'));
+  add(t, left, el('span', 'cnt', shown.length + ' ta ariza'));
+  add(head, t);
+  var live = all.filter(function (b) { return b.s !== 'no'; });
+  var times = {}; live.forEach(function (b) { times[b.h] = (times[b.h] || 0) + 1; });
+  var busy = 0; slots.forEach(function (h) { if (times[h]) busy++; });
+  var occ = el('div', 'occ'); var tr = el('div', 'track'); var f = el('div', 'fill');
+  f.style.width = (slots.length ? Math.min(100, busy / slots.length * 100) : 0) + '%';
+  add(tr, f); add(occ, tr, el('span', null, 'Band: ' + busy + '/' + slots.length + ' soat'));
+  add(head, occ); card.appendChild(head);
+  shown.sort(function (a, b) { return (a.h || '').localeCompare(b.h || '') || a.at - b.at; });
+  shown.forEach(function (b) { card.appendChild(rowFor(b, b.s !== 'no' && times[b.h] > 1)); });
+  return card;
+}
+
+function chart(all, today) {
+  var days = [], i = 0, cur = today;
+  while (days.length < 10 && i < 20) { if (dparts(cur).w !== 0) days.push(cur); cur = addDays(cur, 1); i++; }
+  var cnt = {}; all.forEach(function (b) { if (b.d && b.s !== 'no') cnt[b.d] = (cnt[b.d] || 0) + 1; });
+  var max = Math.max(1, Math.max.apply(null, days.map(function (d) { return cnt[d] || 0; })));
+  var wrap = el('div', 'card'); var cols = el('div', 'cols');
+  days.forEach(function (d) {
+    var n = cnt[d] || 0, p = dparts(d);
+    var c = el('div', 'col' + (d === today ? ' today' : '')); c.title = dlabel(d) + ': ' + n + ' ta';
+    var bar = el('div', 'bar' + (n ? '' : ' zero')); bar.style.height = n ? Math.max(6, n / max * 100) + 'px' : '2px';
+    add(c, el('div', 'v', String(n)), bar, el('div', 'x', p.d + '.' + two(p.m + 1) + '\n' + WDS[p.w]));
+    cols.appendChild(c);
+  });
+  cols.style.whiteSpace = 'pre-line';
+  add(wrap, cols, el('div', 'axis'));
+  return wrap;
+}
+
+function topics(all) {
+  var c = {}; all.forEach(function (b) { if (b.s !== 'no') c[b.t || 'Boshqa'] = (c[b.t || 'Boshqa'] || 0) + 1; });
+  var keys = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; });
+  var wrap = el('div', 'card bars');
+  if (!keys.length) { add(wrap, el('div', 'empty', 'Hozircha ma’lumot yo‘q')); return wrap; }
+  keys.forEach(function (k) {
+    var r = el('div', 'r'), l = el('div', 'l'), tr = el('div', 'tr'), i = el('i');
+    i.style.width = (c[k] / c[keys[0]] * 100) + '%';
+    add(l, el('span', null, k), el('span', null, String(c[k]))); add(tr, i); add(r, l, tr); wrap.appendChild(r);
+  });
+  return wrap;
+}
+
+function render() {
+  var d = state.data, all = d.bookings || [], slots = d.slots || [], today = todayISO();
+  var startDay = Date.parse(today + 'T00:00:00Z') - 5 * 3600000;
+  var cntOf = function (s) { return all.filter(function (b) { return b.s === s; }).length; };
+  var keepFocus = document.activeElement && document.activeElement.type === 'search';
+  var pos = window.scrollY;
+  app.textContent = '';
+
+  var head = el('header'); var hl = el('div');
+  add(hl, el('h1', null, 'Hisobot'), el('div', 'sub', 'Yangilandi: ' + stamp(state.at)));
+  var rf = el('button', 'icon', '↻'); rf.setAttribute('aria-label', 'Yangilash'); rf.onclick = load;
+  add(head, hl, rf); add(app, head);
+
+  var tiles = el('div', 'tiles');
+  add(tiles, tile(all.length, 'Jami arizalar', true),
+    tile(all.filter(function (b) { return b.at >= startDay; }).length, 'Bugun kelgan'),
+    tile(cntOf('new'), 'Kutilmoqda'), tile(cntOf('ok'), 'Tasdiqlangan'), tile(cntOf('no'), 'Rad etilgan'),
+    tile(all.filter(function (b) { return b.src === 'sayt'; }).length, 'Saytdan kelgan'),
+    tile(all.filter(function (b) { return b.src === 'bot'; }).length, 'Botdan kelgan'));
+  add(app, tiles);
+
+  add(app, el('h2', null, 'Kelgusi 10 ish kuni'), chart(all, today));
+
+  add(app, el('h2', null, 'Qabul jadvali'));
+  var seg = el('div', 'seg');
+  [['all', 'Barchasi'], ['new', 'Kutilmoqda'], ['ok', 'Tasdiqlangan'], ['no', 'Rad etilgan']].forEach(function (f) {
+    var b = el('button', null, f[1]); b.setAttribute('aria-pressed', state.filter === f[0] ? 'true' : 'false');
+    b.onclick = function () { state.filter = f[0]; render(); }; seg.appendChild(b);
+  });
+  var q = el('input'); q.type = 'search'; q.placeholder = 'Ism, telefon yoki masala'; q.value = state.q;
+  q.oninput = function () { state.q = q.value; render(); };
+  add(app, seg, q);
+
+  var byDay = {}; all.forEach(function (b) { if (b.d) (byDay[b.d] = byDay[b.d] || []).push(b); });
+  var dates = Object.keys(byDay).sort();
+  var up = dates.filter(function (x) { return x >= today; });
+  var past = dates.filter(function (x) { return x < today; }).reverse();
+  var shownAny = false;
+  up.forEach(function (iso) { var s = byDay[iso].filter(matches); if (s.length) { shownAny = true; add(app, dayCard(iso, byDay[iso], s, slots, today)); } });
+  if (!shownAny) add(app, el('div', 'card empty', all.some(function (b) { return b.d; }) ? 'Bu filtr bo‘yicha kelgusi arizalar yo‘q.' : 'Hozircha kunga yozilgan ariza yo‘q.'));
+  var searching = state.q.trim() !== '';
+  if (past.length) {
+    if (!searching) {
+      var pb = el('button', 'link', (state.past ? 'O‘tgan kunlarni yashirish' : 'O‘tgan kunlar (' + past.length + ')'));
+      pb.onclick = function () { state.past = !state.past; render(); }; add(app, pb);
+    }
+    if (state.past || searching) past.forEach(function (iso) { var s = byDay[iso].filter(matches); if (s.length) add(app, dayCard(iso, byDay[iso], s, slots, today)); });
+  }
+
+  var nod = all.filter(function (b) { return !b.d && matches(b); }).sort(function (a, b) { return b.at - a.at; });
+  if (nod.length) {
+    add(app, el('h2', null, 'Kun tanlanmagan arizalar (sayt)'));
+    var box = el('div', 'card day');
+    nod.forEach(function (b) { var r = rowFor(b, false); r.firstChild.textContent = stamp(b.at).slice(0, 5); r.firstChild.style.fontSize = '12px'; box.appendChild(r); });
+    add(app, box);
+  }
+
+  add(app, el('h2', null, 'Masalalar bo‘yicha'), topics(all));
+
+  window.scrollTo(0, pos);
+  if (keepFocus) { var qq = app.querySelector('input[type=search]'); if (qq) { qq.focus(); try { qq.setSelectionRange(qq.value.length, qq.value.length); } catch (e) {} } }
+}
+
+load();
+})();
+</script>
+</body>
+</html>

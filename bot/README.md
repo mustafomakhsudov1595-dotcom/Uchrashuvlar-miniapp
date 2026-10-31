@@ -15,6 +15,7 @@ Pastdagi tugmalar bosilgan bo‘limga qarab almashadi.
 | 💬 Shifokordan so‘rash | Bemor savol yozadi, savol shifokorga boradi. Shifokor savol xabariga **reply** qilsa, javob bemorga yetadi |
 | 📞 Aloqa | Telefon va klinika |
 | ➕ Yana | Shifokor haqida ma’lumot va chat ID |
+| 📊 Hisobot | **Faqat adminlarga ko‘rinadi.** Hisobot mini ilovasini ochadi (pastga qarang) |
 
 Masalalar ro‘yxati va barcha matnlar `worker.js` boshida (`TOPICS`, `ABOUT_TEXT`, `CONTACT_TEXT` va boshqalar) turadi.
 
@@ -60,9 +61,20 @@ Yangi admin botga **`/admin KOD`** yozadi (`KOD` – `ADMIN_CODE` secret qiymati
 Adminlar uchun buyruqlar: `/adminlar` – ro‘yxat · `/adminni_ochir ID` – adminlikdan olish. `DOCTOR_CHAT_IDS` dagi asosiy adminlarni bot orqali o‘chirib bo‘lmaydi. Qo‘shilgan adminlar KV’da faqat chat ID sifatida saqlanadi. Kodni almashtirish: Cloudflare → Worker → Settings → Variables and Secrets → `ADMIN_CODE`.
 
 
+## Hisobot mini ilovasi (adminlar uchun)
+Telegram ichida ochiladigan sahifa: `https://avazxon-bot.<akkaunt>.workers.dev/admin`. Adminlar uni **«📊 Hisobot»** tugmasi, `/hisobot` buyrug‘i yoki chatdagi menyu tugmasi orqali ochadi.
+Ilovada:
+- jami arizalar, bugun kelgani, kutilayotgan / tasdiqlangan / rad etilgan, sayt va botdan kelgani;
+- kelgusi 10 ish kuni uchun kunlar bo‘yicha ariza soni (ustunli grafik);
+- **qabul jadvali**: har kun uchun soat bo‘yicha kim yozilgani (ism, telefon, masala, holat), band soatlar soni va bir vaqtga tushgan ortiqcha arizalar belgisi;
+- holat filtri va ism / telefon / masala bo‘yicha qidiruv, o‘tgan kunlar;
+- kun tanlanmagan (sayt) arizalar va masalalar bo‘yicha taqsimot.
+
+Xavfsizlik: sahifani hamma ocha oladi, lekin ma’lumot faqat Telegram imzosi (`initData`, `BOT_TOKEN` bilan tekshiriladi) to‘g‘ri va foydalanuvchi admin bo‘lsa beriladi. Boshqalarga 401/403 qaytadi. Sahifaning manba kodi `bot/admin.html` (u `worker.js` ichiga `ADMIN_HTML` sifatida joylangan; o‘zgartirilsa, ikkalasini yangilang).
+
 ## Buyruqlar
 
-`/start`, `/menu` – asosiy menyu · `/ariza` – qabulga yozilish · `/xizmatlar` – masalalar ro‘yxati · `/cancel` – bekor qilish · `/id` – chat ID
+`/hisobot` – hisobot ilovasi (adminlar) · `/start`, `/menu` – asosiy menyu · `/ariza` – qabulga yozilish · `/xizmatlar` – masalalar ro‘yxati · `/cancel` – bekor qilish · `/id` – chat ID
 
 ## Sayt bilan bog‘lanish (ulangan)
 Saytdagi «Tezkor so‘rov» formasi (`sayt/index.html`) «Ariza yuborish» tugmasi bilan `POST https://avazxon-bot.<akkaunt>.workers.dev/api/apply` ga JSON yuboradi:
@@ -84,7 +96,7 @@ Sayt Cloudflare’da (Workers & Pages → `shy-term-577a`) turadi, `dravaz.uz` d
 Saytda `canonical`, `og:url`, `sitemap.xml`, `robots.txt` va JSON-LD (shifokor/klinika, FAQ) allaqachon `https://dravaz.uz/` ga moslangan.
 
 ## Ma’lumotlar
-Arizalar doimiy saqlanmaydi, shifokorning Telegramiga yuboriladi. Tasdiqlash tugmalari ishlashi uchun ariza matni (ism, telefon, kun/soat) KV’da 14 kun turadi va o‘zi o‘chadi. Boshqa vaqtinchalik ma’lumotlar (suhbat bosqichi, spamdan himoya, savollarga javob uchun bog‘lanish) ham o‘zi o‘chib ketadi.
+Hisobot uchun har bir arizaning ma’lumotlari (ism, telefon, masala, kun/soat, izohning boshi, holat) KV’da **400 kun** saqlanadi, keyin o‘zi o‘chadi. Ma’lumotlarni faqat adminlar hisobot orqali ko‘ra oladi. Tasdiqlash tugmalari uchun ariza matni 14 kun turadi. Boshqa vaqtinchalik ma’lumotlar (suhbat bosqichi, spamdan himoya, savollarga javob uchun bog‘lanish) ham o‘zi o‘chib ketadi.
 
 ## Xavfsizlik
 - Tokenni hech qachon kodga yoki GitHub’ga yozmang, faqat Secret sifatida.
