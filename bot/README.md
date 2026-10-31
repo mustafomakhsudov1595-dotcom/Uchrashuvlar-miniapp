@@ -56,23 +56,21 @@ Tanlangan kun va soat shifokorga arizada ko‘rinadi. Band soatlar botda hisobga
 `/start`, `/menu` – asosiy menyu · `/ariza` – qabulga yozilish · `/xizmatlar` – masalalar ro‘yxati · `/cancel` – bekor qilish · `/id` – chat ID
 
 ## Sayt bilan bog‘lanish (ulangan)
-Saytdagi «Tezkor so‘rov» formasi (`netlify-sayt/index.html`) «Ariza yuborish» tugmasi bilan `POST https://avazxon-bot.<akkaunt>.workers.dev/api/apply` ga JSON yuboradi:
+Saytdagi «Tezkor so‘rov» formasi (`sayt/index.html`) «Ariza yuborish» tugmasi bilan `POST https://avazxon-bot.<akkaunt>.workers.dev/api/apply` ga JSON yuboradi:
 `{"name":"Ali","phone":"901234567","topic":"Prostata","comment":"..."}`
 - Ariza shifokorning Telegramiga «veb-sayt orqali» belgisi bilan tushadi. Saytdan kelgan arizada ✅/❌ tugmalari yo‘q (bemorning Telegram chati bo‘lmagani uchun), shifokor telefon orqali bog‘lanadi.
 - `website` maydoni yashirin (spamdan himoya), bo‘sh bo‘lishi kerak. Bir IP’dan daqiqada 1 ta ariza.
-- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi sayt manzilidan o‘tadi (hozir `https://dravaz.uz`, `https://www.dravaz.uz` va Netlify manzili). Yangi domen qo‘shilsa, `ALLOWED_ORIGIN` ga vergul bilan qo‘shing.
+- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi manzillardan o‘tadi (hozir `https://dravaz.uz`, `https://www.dravaz.uz`, `https://dravaz.pages.dev`). Yangi domen qo‘shilsa, `ALLOWED_ORIGIN` ga vergul bilan qo‘shing.
 - Yuborib bo‘lmasa, forma bemorga WhatsApp yoki qo‘ng‘iroq qilishni taklif qiladi.
-- Sayt o‘zgargach, `netlify-sayt` papkasini (yoki `netlify-sayt.zip` ni) Netlify’ga qayta yuklang.
 
-## Domen va Google (dravaz.uz)
-1. **Netlify**: sayt → **Domain management** → **Add a domain** → `dravaz.uz`. Netlify ko‘rsatgan DNS yozuvlarini domen ro‘yxatdan o‘tgan joyda (registrator) kiriting: `dravaz.uz` uchun A yozuv (Netlify ko‘rsatgan IP) va `www` uchun CNAME → `magenta-phoenix-dba70a.netlify.app`. Yoki Netlify DNS nameserverlarini qo‘ying. DNS yangilanishi bir necha soatgacha cho‘zilishi mumkin.
-2. **HTTPS**: DNS ulangach Netlify’da **HTTPS → Verify DNS → Provision certificate** (bepul, avtomatik).
-3. **Asosiy domen**: `dravaz.uz` ni **Primary domain** qiling, shunda Netlify manzili avtomatik shu domenga yo‘naltiriladi. `www` → `dravaz.uz` yo‘naltirishi `_redirects` faylida bor.
-4. **Google Search Console** (search.google.com/search-console) → **Add property** → **Domain** → `dravaz.uz` → Google bergan **TXT** yozuvni DNS’ga qo‘shing → **Verify**.
-5. **Sitemap**: Search Console → **Sitemaps** → `sitemap.xml` ni yuboring. Keyin **URL Inspection** da `https://dravaz.uz/` ni kiritib **Request indexing** bosing. Google saytni odatda bir necha kundan bir necha haftagacha indekslaydi.
-6. **Google Maps / qidiruvda klinika kartasi**: business.google.com da **Google Business Profile** yarating (VitaMed klinikasi yoki shifokor), manzil, telefon va sayt `https://dravaz.uz` ni kiriting. Tasdiqlash (pochta/telefon) kerak bo‘ladi.
-
-**Cloudflare Pages (dravaz.uz Cloudflare’da bo‘lsa):** Workers & Pages → Create → Pages → **Upload assets** → loyiha nomi `dravaz` → `netlify-sayt` papkasini (yoki zip’ini) yuklang → Deploy. Keyin **Custom domains** → `dravaz.uz` va `www.dravaz.uz` ni qo‘shing (DNS’ni Cloudflare o‘zi sozlaydi). Netlify’dagi nusxa kerak emas.
+## Sayt va domen (faqat Cloudflare)
+Sayt Cloudflare Pages’da turadi, `dravaz.uz` domeni ham Cloudflare’da. Boshqa hosting kerak emas.
+1. **Sayt yuklash:** Cloudflare → Workers & Pages → Create → Pages → **Upload assets** → loyiha nomi `dravaz` → `sayt` papkasini (yoki `sayt.zip` ochilgan papkasini) tashlang → Deploy. Sayt o‘zgargach, xuddi shu yo‘l bilan yangi versiyani yuklang (Pages loyihasi → Create deployment).
+2. **Nameserver:** Cloudflare `dravaz.uz` uchun 2 ta nameserver beradi. Domen sotib olingan joyda (Ahost: Домены → dravaz.uz → Серверы имён) shularni yozing. Cloudflare’da «Active» bo‘lguncha kuting.
+3. **Domenni ulash:** Pages loyihasi → **Custom domains** → `dravaz.uz` va `www.dravaz.uz` ni qo‘shing. DNS va HTTPS avtomatik sozlanadi.
+4. **Google Search Console** (search.google.com/search-console) → **Add property → Domain** → `dravaz.uz` → Google bergan **TXT** yozuvni Cloudflare → DNS → Add record (Type TXT, Name `@`) → Verify.
+5. **Sitemap:** Search Console → **Sitemaps** → `sitemap.xml` yuboring. Keyin **URL Inspection** da `https://dravaz.uz/` ni kiritib **Request indexing** bosing. Google odatda bir necha kundan 2–4 haftagacha indekslaydi.
+6. **Google Business Profile** (business.google.com): klinika yoki shifokor uchun profil yarating (manzil, telefon, sayt `https://dravaz.uz`). Xaritada va «urolog Qo‘qon» qidiruvida chiqish uchun eng muhimi shu. Tasdiqlash kodi telefon yoki pochta orqali keladi.
 
 Saytda `canonical`, `og:url`, `sitemap.xml`, `robots.txt` va JSON-LD (shifokor/klinika, FAQ) allaqachon `https://dravaz.uz/` ga moslangan.
 
