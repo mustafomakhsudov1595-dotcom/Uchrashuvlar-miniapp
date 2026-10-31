@@ -60,14 +60,14 @@ Saytdagi «Tezkor so‘rov» formasi (`sayt/index.html`) «Ariza yuborish» tugm
 `{"name":"Ali","phone":"901234567","topic":"Prostata","comment":"..."}`
 - Ariza shifokorning Telegramiga «veb-sayt orqali» belgisi bilan tushadi. Saytdan kelgan arizada ✅/❌ tugmalari yo‘q (bemorning Telegram chati bo‘lmagani uchun), shifokor telefon orqali bog‘lanadi.
 - `website` maydoni yashirin (spamdan himoya), bo‘sh bo‘lishi kerak. Bir IP’dan daqiqada 1 ta ariza.
-- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi manzillardan o‘tadi (hozir `https://dravaz.uz`, `https://www.dravaz.uz`, `https://dravaz.pages.dev`). Yangi domen qo‘shilsa, `ALLOWED_ORIGIN` ga vergul bilan qo‘shing.
+- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi manzillardan o‘tadi (hozir `https://dravaz.uz`, `https://www.dravaz.uz`, `https://shy-term-577a.impro-6c9a2d.workers.dev`). Yangi domen qo‘shilsa, `ALLOWED_ORIGIN` ga vergul bilan qo‘shing.
 - Yuborib bo‘lmasa, forma bemorga WhatsApp yoki qo‘ng‘iroq qilishni taklif qiladi.
 
 ## Sayt va domen (faqat Cloudflare)
-Sayt Cloudflare Pages’da turadi, `dravaz.uz` domeni ham Cloudflare’da. Boshqa hosting kerak emas.
-1. **Sayt yuklash:** Cloudflare → Workers & Pages → Create → Pages → **Upload assets** → loyiha nomi `dravaz` → `sayt` papkasini (yoki `sayt.zip` ochilgan papkasini) tashlang → Deploy. Sayt o‘zgargach, xuddi shu yo‘l bilan yangi versiyani yuklang (Pages loyihasi → Create deployment).
+Sayt Cloudflare’da (Workers & Pages → `shy-term-577a`) turadi, `dravaz.uz` domeni ham Cloudflare’da. Boshqa hosting kerak emas.
+1. **Sayt yuklash:** Cloudflare → Workers & Pages → Create → **Upload your static files** → `sayt` papkasini (`sayt.zip` ochilgan papka) tashlang → Deploy. Sayt o‘zgargach, loyihada **New deployment** bosib yangi papkani yuklang.
 2. **Nameserver:** Cloudflare `dravaz.uz` uchun 2 ta nameserver beradi. Domen sotib olingan joyda (Ahost: Домены → dravaz.uz → Серверы имён) shularni yozing. Cloudflare’da «Active» bo‘lguncha kuting.
-3. **Domenni ulash:** Pages loyihasi → **Custom domains** → `dravaz.uz` va `www.dravaz.uz` ni qo‘shing. DNS va HTTPS avtomatik sozlanadi.
+3. **Domenni ulash:** loyiha → **Settings → Domains & Routes → Add → Custom domain** → `dravaz.uz`, keyin `www.dravaz.uz` ni qo‘shing. DNS va HTTPS avtomatik sozlanadi.
 4. **Google Search Console** (search.google.com/search-console) → **Add property → Domain** → `dravaz.uz` → Google bergan **TXT** yozuvni Cloudflare → DNS → Add record (Type TXT, Name `@`) → Verify.
 5. **Sitemap:** Search Console → **Sitemaps** → `sitemap.xml` yuboring. Keyin **URL Inspection** da `https://dravaz.uz/` ni kiritib **Request indexing** bosing. Google odatda bir necha kundan 2–4 haftagacha indekslaydi.
 6. **Google Business Profile** (business.google.com): klinika yoki shifokor uchun profil yarating (manzil, telefon, sayt `https://dravaz.uz`). Xaritada va «urolog Qo‘qon» qidiruvida chiqish uchun eng muhimi shu. Tasdiqlash kodi telefon yoki pochta orqali keladi.
