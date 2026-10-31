@@ -63,12 +63,12 @@ Adminlar uchun buyruqlar: `/adminlar` – ro‘yxat · `/adminni_ochir ID` – a
 
 ## Hisobot mini ilovasi (adminlar uchun)
 Telegram ichida ochiladigan sahifa: `https://avazxon-bot.<akkaunt>.workers.dev/admin`. Adminlar uni **«📊 Hisobot»** tugmasi, `/hisobot` buyrug‘i yoki chatdagi menyu tugmasi orqali ochadi.
-Ilovada:
-- jami arizalar, bugun kelgani, kutilayotgan / tasdiqlangan / rad etilgan, sayt va botdan kelgani;
-- kelgusi 10 ish kuni uchun kunlar bo‘yicha ariza soni (ustunli grafik);
-- **qabul jadvali**: har kun uchun soat bo‘yicha kim yozilgani (ism, telefon, masala, holat), band soatlar soni va bir vaqtga tushgan ortiqcha arizalar belgisi;
-- holat filtri va ism / telefon / masala bo‘yicha qidiruv, o‘tgan kunlar;
-- kun tanlanmagan (sayt) arizalar va masalalar bo‘yicha taqsimot.
+Pastki panelda 3 ta bo‘lim bor:
+- **Jadval**: kunlar tasmasi (bugun + keyingi 10 ish kuni, har kunning ariza soni bilan). Kun tanlansa, 09:00–18:00 soatlar ro‘yxati chiqadi: band soatda kim yozilgani (ism, masala, holat, qo‘ng‘iroq tugmasi), bo‘sh soatlar «Bo‘sh» deb ko‘rinadi. Band soatlar soni va bir vaqtga tushgan ortiqcha arizalar belgilanadi.
+- **Arizalar**: barcha arizalar (yangisi tepada), ism / telefon / masala bo‘yicha qidiruv, holat filtri (soni bilan). Arizani bossangiz, batafsil oyna ochiladi (telefon, masala, qabul vaqti, izoh, manba, yuborilgan vaqt, «Qo‘ng‘iroq qilish» tugmasi).
+- **Statistika**: jami va bugungi arizalar, kutilmoqda / tasdiqlangan / rad etilgan, kelgusi 10 kunlik grafik, bot va sayt ulushi, masalalar bo‘yicha taqsimot.
+
+Ilova telefon uchun mo‘ljallangan, yorug‘ va qorong‘i rejimda ishlaydi (Telegram mavzusiga moslashadi).
 
 Xavfsizlik: sahifani hamma ocha oladi, lekin ma’lumot faqat Telegram imzosi (`initData`, `BOT_TOKEN` bilan tekshiriladi) to‘g‘ri va foydalanuvchi admin bo‘lsa beriladi. Boshqalarga 401/403 qaytadi. Sahifaning manba kodi `bot/admin.html` (u `worker.js` ichiga `ADMIN_HTML` sifatida joylangan; o‘zgartirilsa, ikkalasini yangilang).
 
