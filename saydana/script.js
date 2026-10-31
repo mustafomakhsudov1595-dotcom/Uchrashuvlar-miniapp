@@ -12,7 +12,7 @@
 
   function closeMenu() { menu.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); if (document.getElementById('sheet').hidden) document.body.classList.remove('lock'); }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
-  window.addEventListener('resize', function () { if (window.innerWidth > 900) closeMenu(); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 1040) closeMenu(); });
 
   // Namangan vaqti (Asia/Tashkent) bo'yicha "hozir ochiq"
   function now() {
@@ -26,7 +26,7 @@
   var isOpen = close !== null && t.m >= 8 * 60 && t.m < close;
   var st = document.getElementById('status');
   st.classList.add(isOpen ? 'open' : 'closed');
-  st.lastChild.textContent = isOpen ? 'Hozir ochiq · ' + (close / 60) + ':00 gacha' : 'Hozir yopiq · ish vaqti 8:00 dan';
+  st.lastChild.textContent = isOpen ? 'Hozir ochiq · ' + (close / 60) + ':00 gacha' : (t.d === 0 ? 'Yakshanba · kardiolog qabuli' : 'Hozir yopiq · ish vaqti 8:00 dan');
   document.querySelectorAll('#hours tr').forEach(function (tr) {
     if (tr.dataset.d.split(',').indexOf(String(t.d)) > -1) tr.classList.add('today');
   });
@@ -85,6 +85,7 @@
   function openSvc(key, isDept) {
     var s = (isDept ? DEPT : SVC)[key]; if (!s) return;
     if (svc.hidden) svcFocus = document.activeElement;
+    document.getElementById('svcPh').hidden = true; document.getElementById('svcIco').hidden = false;
     document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
     document.getElementById('svcTitle').textContent = s.t;
     document.getElementById('svcDesc').textContent = s.d;
@@ -202,6 +203,44 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { btn.textContent = 'Nusxalandi ✓'; setTimeout(function () { btn.textContent = 'Matnni nusxalash'; }, 2200); }).catch(sel); else sel();
   });
 
+  function openDoc(card) {
+    if (svc.hidden) svcFocus = document.activeElement;
+    var name = card.dataset.name;
+    document.getElementById('svcPh').hidden = false; document.getElementById('svcIco').hidden = true;
+    var img = document.getElementById('svcImg'); img.src = card.dataset.img; img.alt = name;
+    document.getElementById('svcTitle').textContent = name;
+    document.getElementById('svcDesc').textContent = card.dataset.role;
+    document.getElementById('svcSub').textContent = 'Shifokor haqida';
+    document.getElementById('svcFacts').innerHTML = card.dataset.facts.split('|').map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
+    document.getElementById('svcNote').textContent = 'Qabul vaqti va narxlarni markazdan aniqlang. Ariza qoldirsangiz, shifokor ismi izohga yoziladi.';
+    document.getElementById('svcRel').hidden = true;
+    svcApply = { svc: 'Mutaxassis maslahati', note: 'Shifokor: ' + name };
+    svc.hidden = false; document.body.classList.add('lock');
+    svc.querySelector('.svc-box').scrollTop = 0;
+    svc.querySelector('.svc-call').focus({ preventScroll: true });
+  }
+  // Shifokorlar: filtr va oyna
+  (function () {
+    var wrap = document.getElementById('docs'), fl = document.getElementById('docFilters'); if (!wrap || !fl) return;
+    var cards = Array.prototype.slice.call(wrap.querySelectorAll('.doc'));
+    var CATS = [['all', 'Hammasi'], ['diag', 'Diagnostika'], ['surg', 'Jarrohlik'], ['neuro', 'Nevrologiya'], ['cardio', 'Kardiologiya'], ['gyn', 'Ginekologiya']];
+    function has(c, k) { return k === 'all' || (' ' + c.dataset.cat + ' ').indexOf(' ' + k + ' ') > -1; }
+    CATS.forEach(function (c, i) {
+      var n = cards.filter(function (x) { return has(x, c[0]); }).length;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'filter'; b.dataset.k = c[0]; b.setAttribute('aria-pressed', String(i === 0));
+      b.innerHTML = c[1] + ' <span>' + n + '</span>';
+      b.addEventListener('click', function () {
+        Array.prototype.forEach.call(fl.children, function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+        cards.forEach(function (x) { var show = has(x, c[0]); x.hidden = !show; x.classList.remove('show'); if (show) { void x.offsetWidth; x.classList.add('show'); } });
+      });
+      fl.appendChild(b);
+    });
+    cards.forEach(function (card) {
+      card.addEventListener('click', function () { openDoc(card); });
+      card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDoc(card); } });
+    });
+  })();
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -220,7 +259,7 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.rating,.fact,.dept,.statement').forEach(function (el) {
+    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.rating,.fact,.dept,.statement,.doc').forEach(function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.07 + 's');
       el.classList.add('reveal'); io.observe(el);
