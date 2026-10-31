@@ -3,6 +3,7 @@
 //   BOT_TOKEN        (Secret)  BotFather bergan token
 //   WEBHOOK_SECRET   (Secret)  o'zingiz o'ylab topgan uzun tasodifiy matn
 //   DOCTOR_CHAT_IDS  (Text)    ariza boradigan chat ID, bir nechta bo'lsa vergul bilan
+//   ADMIN_CODE       (Secret, ixtiyoriy) botga /admin KOD yozgan odam admin bo'ladi
 //   PRICES_TEXT      (Text, ixtiyoriy) «Narxlar» tugmasida chiqadigan matn (HTML: <b>, <i>)
 //   SLOTS            (Text, ixtiyoriy) qabul soatlari, vergul bilan. Standart: 09:00,10:00,...,18:00
 //   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, bir nechta bo'lsa vergul bilan: https://dravaz.uz,https://www.dravaz.uz
@@ -140,13 +141,61 @@ function tashkentNow() {
   return new Date(Date.now() + 5 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 16);
 }
 
-const doctorIds = (env) => String(env.DOCTOR_CHAT_IDS || '').split(',').map((x) => x.trim()).filter(Boolean);
-const isDoctor = (env, chat) => doctorIds(env).includes(String(chat));
+// adminlar: DOCTOR_CHAT_IDS (sozlama) + /admin KOD orqali qo'shilganlar (KV)
+const envDoctorIds = (env) => String(env.DOCTOR_CHAT_IDS || '').split(',').map((x) => x.trim()).filter(Boolean);
+const getAdmins = async (env) => JSON.parse((await env.STATE.get('admins')) || '[]');
+const doctorIds = async (env) => [...new Set([...envDoctorIds(env), ...(await getAdmins(env))])];
+const isDoctor = async (env, chat) => (await doctorIds(env)).includes(String(chat));
+
+function sameText(a, b) {
+  a = String(a); b = String(b);
+  let d = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) d |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return d === 0;
+}
+
+async function adminCommand(env, m, text) {
+  const chat = m.chat.id;
+  const [cmd, ...rest] = text.split(/\s+/);
+  const arg = rest.join(' ').trim();
+
+  if (cmd === '/admin') {
+    // koddan iborat xabarni chatdan o'chiramiz
+    tg(env, 'deleteMessage', { chat_id: chat, message_id: m.message_id }).catch(() => {});
+    if (!env.ADMIN_CODE) return say(env, chat, 'Admin kodi sozlanmagan.');
+    if (await isDoctor(env, chat)) return say(env, chat, 'Siz allaqachon adminsiz.', { reply_markup: mainKb });
+    const tries = Number(await env.STATE.get(`adm:${chat}`)) || 0;
+    if (tries >= 5) return say(env, chat, 'Juda ko‘p urinish. Bir soatdan keyin qayta urinib ko‘ring.');
+    if (!arg || !sameText(arg, env.ADMIN_CODE)) {
+      await env.STATE.put(`adm:${chat}`, String(tries + 1), { expirationTtl: 3600 });
+      return say(env, chat, 'Kod noto‘g‘ri.');
+    }
+    const admins = await getAdmins(env);
+    await env.STATE.put('admins', JSON.stringify([...admins, String(chat)]));
+    await env.STATE.delete(`adm:${chat}`);
+    const who = m.from && m.from.username ? `@${esc(m.from.username)}` : `<code>${chat}</code>`;
+    await Promise.all((await doctorIds(env)).filter((id) => id !== String(chat)).map((id) => say(env, id, `👤 Yangi admin qo‘shildi: ${who} (<code>${chat}</code>)`)));
+    return say(env, chat, '✅ Siz admin bo‘ldingiz. Endi arizalar sizga ham keladi, ✅/❌ tugmalarini bosa olasiz va savollarga javob bera olasiz.\n\nAdminlar ro‘yxati: /adminlar', { reply_markup: mainKb });
+  }
+
+  if (!(await isDoctor(env, chat))) return;
+  if (cmd === '/adminlar') {
+    const fixed = envDoctorIds(env), added = await getAdmins(env);
+    return say(env, chat, `👥 <b>Adminlar</b>\n\nAsosiy: ${fixed.map((x) => `<code>${x}</code>`).join(', ') || '—'}\nQo‘shilgan: ${added.map((x) => `<code>${x}</code>`).join(', ') || '—'}\n\nO‘chirish: /adminni_ochir ID`);
+  }
+  if (cmd === '/adminni_ochir') {
+    if (envDoctorIds(env).includes(arg)) return say(env, chat, 'Bu admin sozlamada (DOCTOR_CHAT_IDS), bot orqali o‘chirib bo‘lmaydi.');
+    const admins = await getAdmins(env);
+    if (!admins.includes(arg)) return say(env, chat, 'Bunday admin topilmadi. Ro‘yxat: /adminlar');
+    await env.STATE.put('admins', JSON.stringify(admins.filter((x) => x !== arg)));
+    return say(env, chat, `✅ <code>${esc(arg)}</code> adminlikdan olindi.`);
+  }
+}
 
 async function askDoctors(env, chat, text, from) {
   const who = from && from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${chat}">profil</a>`;
   const body = `❓ <b>Bemor savoli</b>\n\n${esc(text)}\n\n👤 ${who} · ${tashkentNow()}\n↩️ Javob berish uchun shu xabarga reply qiling.`;
-  const ids = doctorIds(env);
+  const ids = await doctorIds(env);
   await Promise.all(ids.map(async (id) => {
     const r = await say(env, id, body);
     if (r.ok) await env.STATE.put(`q:${id}:${r.result.message_id}`, String(chat), { expirationTtl: 7 * 86400 });
@@ -155,7 +204,7 @@ async function askDoctors(env, chat, text, from) {
 }
 
 async function notifyDoctors(env, a, from, patientChat) {
-  const ids = doctorIds(env);
+  const ids = await doctorIds(env);
   const who = from
     ? from.username ? `@${esc(from.username)}` : `<a href="tg://user?id=${from.id}">profil</a>`
     : 'veb-sayt orqali';
@@ -183,7 +232,7 @@ async function notifyDoctors(env, a, from, patientChat) {
 async function decide(env, q) {
   const [, act, appId] = q.data.split(':');
   const answer = (text) => tg(env, 'answerCallbackQuery', { callback_query_id: q.id, text, show_alert: false });
-  if (!isDoctor(env, q.message.chat.id)) return answer('Bu tugma faqat shifokor uchun.');
+  if (!(await isDoctor(env, q.message.chat.id))) return answer('Bu tugma faqat shifokor uchun.');
   const rec = JSON.parse((await env.STATE.get(`ap:${appId}`)) || 'null');
   if (!rec) return answer('Ariza eskirgan.');
   if (rec.status) return answer(`Allaqachon: ${rec.status}`);
@@ -258,8 +307,10 @@ async function onMessage(env, m) {
   if (text === '/xizmatlar') return say(env, chat, SERVICES_TEXT, { reply_markup: servicesKb });
   if (text === '/ariza') return applyMenu(env, chat);
 
+  if (/^\/(admin|adminlar|adminni_ochir)(\s|$)/.test(text)) return adminCommand(env, m, text);
+
   // shifokor savolga reply qilsa, javob bemorga boradi
-  if (m.reply_to_message && isDoctor(env, chat) && text) {
+  if (m.reply_to_message && text && (await isDoctor(env, chat))) {
     const target = await env.STATE.get(`q:${chat}:${m.reply_to_message.message_id}`);
     if (target) {
       await say(env, target, `👨‍⚕️ <b>Shifokor javobi:</b>\n\n${esc(text)}`);

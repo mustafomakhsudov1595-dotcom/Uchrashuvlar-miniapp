@@ -33,6 +33,7 @@ Masalalar ro‘yxati va barcha matnlar `worker.js` boshida (`TOPICS`, `ABOUT_TEX
 | `DOCTOR_CHAT_IDS` | Text | shifokorning chat ID’si (6-qadamga qarang) |
 | `PRICES_TEXT` | Text (ixtiyoriy) | «Narxlar» tugmasida chiqadigan matn. `<b>qalin</b>` va `<i>qiyshiq</i>` ishlaydi |
 | `SLOTS` | Text (ixtiyoriy) | qabul soatlari vergul bilan, masalan `09:00,10:00,14:00`. Bo‘sh bo‘lsa 09:00 dan 18:00 gacha har soat |
+| `ADMIN_CODE` | Secret (ixtiyoriy) | admin kodi. Botga `/admin KOD` yozgan odam admin bo‘ladi |
 | `ALLOWED_ORIGIN` | Text (ixtiyoriy) | sayt manzili, bir nechta bo‘lsa vergul bilan: `https://dravaz.uz,https://www.dravaz.uz` |
 
 6. **Chat ID olish**: shifokor botga kirib `/id` yozadi (yoki «Yana» → «Mening ID»), bot raqam yuboradi. Shu raqamni `DOCTOR_CHAT_IDS` ga yozing (bir nechta bo‘lsa vergul bilan: `123,456`). Shifokor avval botda `/start` bosgan bo‘lishi shart, aks holda bot unga yoza olmaydi.
@@ -48,7 +49,15 @@ Tanlangan kun va soat shifokorga arizada ko‘rinadi. Band soatlar botda hisobga
 - ✅ bosilsa, bemorga «Qabulingiz tasdiqlandi» va kun/soat yuboriladi.
 - ❌ bosilsa, bemorga «tanlangan vaqt band, boshqa vaqtni tanlang» xabari boradi.
 - Qaror qabul qilingach, tugmalar o‘chadi va arizada natija hamda kim bosgani ko‘rinadi. Bir nechta shifokor bo‘lsa, birinchi bosgan qarorni belgilaydi.
-- Tugmalarni faqat `DOCTOR_CHAT_IDS` dagi chatlar bosa oladi. Admin qo‘shish uchun uning chat ID’sini shu o‘zgaruvchiga vergul bilan qo‘shing.
+- Tugmalarni faqat adminlar bosa oladi.
+
+## Admin qo‘shish (kod bilan)
+Yangi admin botga **`/admin KOD`** yozadi (`KOD` – `ADMIN_CODE` secret qiymati). Kod to‘g‘ri bo‘lsa:
+- u admin bo‘ladi: arizalar unga ham keladi, ✅/❌ tugmalarini bosa oladi va savollarga reply bilan javob beradi;
+- kod yozilgan xabar chatdan avtomatik o‘chiriladi, boshqa adminlarga «yangi admin qo‘shildi» xabari boradi;
+- noto‘g‘ri kod 5 martadan keyin bir soatga bloklanadi.
+
+Adminlar uchun buyruqlar: `/adminlar` – ro‘yxat · `/adminni_ochir ID` – adminlikdan olish. `DOCTOR_CHAT_IDS` dagi asosiy adminlarni bot orqali o‘chirib bo‘lmaydi. Qo‘shilgan adminlar KV’da faqat chat ID sifatida saqlanadi. Kodni almashtirish: Cloudflare → Worker → Settings → Variables and Secrets → `ADMIN_CODE`.
 
 
 ## Buyruqlar
