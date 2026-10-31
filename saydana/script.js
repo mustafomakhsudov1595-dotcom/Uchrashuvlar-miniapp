@@ -3,12 +3,16 @@
   var menu = document.getElementById('menu');
   burger.addEventListener('click', function () {
     var open = menu.classList.toggle('open');
-    burger.setAttribute('aria-expanded', open);
+    burger.setAttribute('aria-expanded', String(open));
     document.body.classList.toggle('lock', open);
   });
   menu.addEventListener('click', function (e) {
     if (e.target.tagName === 'A') { menu.classList.remove('open'); burger.setAttribute('aria-expanded', false); document.body.classList.remove('lock'); }
   });
+
+  function closeMenu() { menu.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); document.body.classList.remove('lock'); }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 720) closeMenu(); });
 
   // Namangan vaqti (Asia/Tashkent) bo'yicha "hozir ochiq"
   function now() {
