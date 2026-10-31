@@ -72,6 +72,8 @@ Saytdagi «Tezkor so‘rov» formasi (`netlify-sayt/index.html`) «Ariza yuboris
 5. **Sitemap**: Search Console → **Sitemaps** → `sitemap.xml` ni yuboring. Keyin **URL Inspection** da `https://dravaz.uz/` ni kiritib **Request indexing** bosing. Google saytni odatda bir necha kundan bir necha haftagacha indekslaydi.
 6. **Google Maps / qidiruvda klinika kartasi**: business.google.com da **Google Business Profile** yarating (VitaMed klinikasi yoki shifokor), manzil, telefon va sayt `https://dravaz.uz` ni kiriting. Tasdiqlash (pochta/telefon) kerak bo‘ladi.
 
+**Cloudflare Pages (dravaz.uz Cloudflare’da bo‘lsa):** Workers & Pages → Create → Pages → **Upload assets** → loyiha nomi `dravaz` → `netlify-sayt` papkasini (yoki zip’ini) yuklang → Deploy. Keyin **Custom domains** → `dravaz.uz` va `www.dravaz.uz` ni qo‘shing (DNS’ni Cloudflare o‘zi sozlaydi). Netlify’dagi nusxa kerak emas.
+
 Saytda `canonical`, `og:url`, `sitemap.xml`, `robots.txt` va JSON-LD (shifokor/klinika, FAQ) allaqachon `https://dravaz.uz/` ga moslangan.
 
 ## Ma’lumotlar
