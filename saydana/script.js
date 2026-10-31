@@ -61,6 +61,47 @@
   sheet.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeSheet(); else if (e.target.closest('.app')) setTimeout(closeSheet, 200); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
 
+  // Xizmat kartochkasini bosganda ma'lumot oynasi
+  var SVC = {
+    mri:  { icon: 'i-scan', t: 'MRT', d: 'Magnit-rezonans tomografiya — a\'zolarning batafsil qatlamli tasviri.', f: ['Bosh miya, umurtqa, bo\'g\'imlar va ichki a\'zolar tekshiruvi', 'Rentgen nurlanishi ishlatilmaydi', 'Og\'riqsiz, lekin apparat ichida bir joyda yotish kerak bo\'ladi'], n: 'Metall buyumlar, implant yoki yurak stimulyatori bo\'lsa, yozilishda albatta ayting.' },
+    mskt: { icon: 'i-ring', t: 'MSKT', d: 'Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.', f: ['Bir necha daqiqada qatlamli tasvir olinadi', 'Rentgen nurlari yordamida bajariladi', 'Shifokor yo\'llanmasi bilan kelish qulay'], n: 'Kontrast modda kerak bo\'lsa, tayyorgarlik haqida operatordan so\'rang.' },
+    xray: { icon: 'i-xray', t: 'Rentgen', d: 'Ko\'krak qafasi va suyak-bo\'g\'im tizimi rentgenografiyasi.', f: ['Tez va og\'riqsiz tekshiruv', 'Natija shifokor xulosasi bilan beriladi'], n: 'Homiladorlik ehtimoli bo\'lsa, tekshiruvdan oldin albatta ogohlantiring.' },
+    uzi:  { icon: 'i-wave', t: 'UZI', d: 'Ultratovush tekshiruvi — qorin bo\'shlig\'i, kichik chanoq va boshqa a\'zolar.', f: ['Nurlanishsiz, og\'riqsiz tekshiruv', 'Natija darhol ma\'lum bo\'ladi'], n: 'Ba\'zi UZI turlariga oldindan tayyorgarlik kerak. Yozilayotganda so\'rang.' },
+    echo: { icon: 'i-heart', t: 'Exokardiografiya', d: 'Yurak UZI tekshiruvi — kameralar, qopqoqlar va qon oqimi holati.', f: ['Nurlanishsiz, og\'riqsiz tekshiruv', 'Yurak ish faoliyatini real vaqtda ko\'rsatadi'], n: 'Odatda maxsus tayyorgarlik talab qilinmaydi. Aniqlash uchun qo\'ng\'iroq qiling.' },
+    ecg:  { icon: 'i-pulse', t: 'EKG', d: 'Elektrokardiografiya — yurak ritmi va elektr faolligini yozib olish.', f: ['Bir necha daqiqa davom etadi', 'Og\'riqsiz va xavfsiz'], n: 'Tekshiruv oldidan jismoniy zo\'riqishdan saqlaning.' },
+    fgds: { icon: 'i-tube', t: 'FGDS', d: 'Fibrogastroduodenoskopiya — qizilo\'ngach, oshqozon va o\'n ikki barmoqli ichak endoskopiyasi.', f: ['Shilliq qavat holatini bevosita ko\'rish imkonini beradi', 'Odatda och qoringa topshiriladi'], n: 'Aniq tayyorgarlik qoidalari uchun yozilishdan oldin operatordan so\'rang.' },
+    lab:  { icon: 'i-flask', t: 'Laboratoriya', d: 'Qon tahlili va boshqa laboratoriya tekshiruvlari.', f: ['Qon tahlili va boshqa tekshiruvlar', 'Shifokor tavsiyasi bo\'yicha topshirish qulay'], n: 'Ko\'p tahlillar ertalab, och qoringa topshiriladi. Aniq tahlil uchun qo\'ng\'iroq qiling.' }
+  };
+  var svc = document.getElementById('svc');
+  var svcFocus = null;
+  var tick = '<svg class="ic"><use href="#i-check"/></svg>';
+  function openSvc(key) {
+    var s = SVC[key]; if (!s) return;
+    svcFocus = document.activeElement;
+    document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
+    document.getElementById('svcTitle').textContent = s.t;
+    document.getElementById('svcDesc').textContent = s.d;
+    document.getElementById('svcFacts').innerHTML = s.f.map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
+    document.getElementById('svcNote').textContent = s.n;
+    svc.hidden = false; document.body.classList.add('lock');
+    svc.querySelector('.svc-call').focus();
+  }
+  function closeSvc() { svc.hidden = true; if (sheet.hidden) document.body.classList.remove('lock'); if (svcFocus && svcFocus.focus) svcFocus.focus(); }
+  var arrow = '<svg class="ic"><use href="#i-arrow"/></svg>';
+  document.querySelectorAll('.b[data-svc]').forEach(function (card) {
+    var more = document.createElement('span'); more.className = 'more'; more.innerHTML = 'Batafsil ' + arrow; card.appendChild(more);
+    card.addEventListener('click', function () { openSvc(card.dataset.svc); });
+    card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.svc); } });
+  });
+  svc.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeSvc(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !svc.hidden) closeSvc(); });
+  document.getElementById('svcCopy').addEventListener('click', function () {
+    var btn = this, num = '+998 (78) 223-10-10';
+    function ok() { btn.textContent = 'Nusxalandi ✓'; setTimeout(function () { btn.textContent = 'Nusxalash'; }, 2000); }
+    function sel() { var r = document.createRange(); r.selectNodeContents(document.getElementById('svcNum')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Belgilandi'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(num).then(ok).catch(sel); else sel();
+  });
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

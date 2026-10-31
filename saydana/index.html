@@ -114,25 +114,25 @@
     </div>
 
     <div class="bento">
-      <article class="b b-mri spot">
+      <article data-svc="mri" tabindex="0" role="button" aria-haspopup="dialog" class="b b-mri spot">
         <svg class="b-art" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="86" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="22"/><circle cx="100" cy="100" r="52" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-dasharray="3 10" stroke-linecap="round"/><circle cx="100" cy="100" r="30" fill="#fff" fill-opacity=".18"/></svg>
         <div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div>
         <h3>MRT</h3>
         <p>Magnit-rezonans tomografiya — bosh miya, umurtqa, bo'g'imlar va ichki a'zolarni batafsil, nurlanishsiz tekshirish.</p>
         <span class="tag">Asosiy xizmat</span>
       </article>
-      <article class="b b-ct spot">
+      <article data-svc="mskt" tabindex="0" role="button" aria-haspopup="dialog" class="b b-ct spot">
         <svg class="b-art" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="80" fill="none" stroke="#F70D45" stroke-opacity=".55" stroke-width="3"/><circle cx="100" cy="100" r="58" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/><circle cx="100" cy="100" r="34" fill="#F70D45" fill-opacity=".35"/></svg>
         <div class="ico"><svg class="ic"><use href="#i-ring"/></svg></div>
         <h3>MSKT</h3>
         <p>Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.</p>
       </article>
-      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-xray"/></svg></div><h3>Rentgen</h3><p>Ko'krak qafasi va suyak-bo'g'im tizimi rentgenografiyasi.</p></article>
-      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-wave"/></svg></div><h3>UZI</h3><p>Qorin bo'shlig'i, kichik chanoq va boshqa a'zolarning ultratovush tekshiruvi.</p></article>
-      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Exokardiografiya</h3><p>Yurak UZI tekshiruvi — kameralar va qopqoqlar holati.</p></article>
-      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-pulse"/></svg></div><h3>EKG</h3><p>Yurak ritmi va o'tkazuvchanligini baholash.</p></article>
-      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>FGDS</h3><p>Qizilo'ngach, oshqozon va o'n ikki barmoqli ichak endoskopiyasi.</p></article>
-      <article class="b spot"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
+      <article data-svc="xray" tabindex="0" role="button" aria-haspopup="dialog" class="b spot"><div class="ico"><svg class="ic"><use href="#i-xray"/></svg></div><h3>Rentgen</h3><p>Ko'krak qafasi va suyak-bo'g'im tizimi rentgenografiyasi.</p></article>
+      <article data-svc="uzi" tabindex="0" role="button" aria-haspopup="dialog" class="b spot"><div class="ico"><svg class="ic"><use href="#i-wave"/></svg></div><h3>UZI</h3><p>Qorin bo'shlig'i, kichik chanoq va boshqa a'zolarning ultratovush tekshiruvi.</p></article>
+      <article data-svc="echo" tabindex="0" role="button" aria-haspopup="dialog" class="b spot"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Exokardiografiya</h3><p>Yurak UZI tekshiruvi — kameralar va qopqoqlar holati.</p></article>
+      <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b spot"><div class="ico"><svg class="ic"><use href="#i-pulse"/></svg></div><h3>EKG</h3><p>Yurak ritmi va o'tkazuvchanligini baholash.</p></article>
+      <article data-svc="fgds" tabindex="0" role="button" aria-haspopup="dialog" class="b spot"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>FGDS</h3><p>Qizilo'ngach, oshqozon va o'n ikki barmoqli ichak endoskopiyasi.</p></article>
+      <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b spot"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
     </div>
 
     <div class="areas">
@@ -290,6 +290,21 @@
   </div>
 </div>
 
+<div class="sheet" id="svc" hidden>
+  <div class="sheet-bg" data-close></div>
+  <div class="sheet-box svc-box" role="dialog" aria-modal="true" aria-labelledby="svcTitle">
+    <div class="svc-head">
+      <div class="ico"><svg class="ic"><use id="svcIcon" href="#i-scan"/></svg></div>
+      <div><h3 id="svcTitle"></h3><p id="svcDesc"></p></div>
+    </div>
+    <ul class="svc-facts" id="svcFacts"></ul>
+    <p class="svc-note" id="svcNote"></p>
+    <div class="svc-num"><span id="svcNum">+998 (78) 223-10-10</span><button class="link" id="svcCopy" type="button">Nusxalash</button></div>
+    <a class="btn btn-primary svc-call" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>Qo'ng'iroq qilib yozilish</a>
+    <button class="btn btn-ghost sheet-close" type="button" data-close>Yopish</button>
+  </div>
+</div>
+
 <a class="fab" href="tel:+998782231010" aria-label="Qo'ng'iroq qilish"><svg class="ic"><use href="#i-phone"/></svg></a>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -308,6 +323,7 @@
   <symbol id="i-wave" viewBox="0 0 24 24"><path d="M2 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0"/></symbol>
   <symbol id="i-tube" viewBox="0 0 24 24"><path d="M5 4c0 6 3 7 5 8s3 3 3 8M14 12c3 0 5 2 5 5"/><circle cx="19" cy="18" r="1.5"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   </g>
 </svg>
