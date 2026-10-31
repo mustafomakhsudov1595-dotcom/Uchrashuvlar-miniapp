@@ -12,7 +12,7 @@
 
   function closeMenu() { menu.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); if (document.getElementById('sheet').hidden) document.body.classList.remove('lock'); }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
-  window.addEventListener('resize', function () { if (window.innerWidth > 720) closeMenu(); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 900) closeMenu(); });
 
   // Namangan vaqti (Asia/Tashkent) bo'yicha "hozir ochiq"
   function now() {
@@ -102,6 +102,73 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(num).then(ok).catch(sel); else sel();
   });
 
+  // Tayyorgarlik tablari
+  var PREP = {
+    'MRT': ['Metall buyumlar (soat, zargarlik, kalit) tekshiruvdan oldin yechiladi', 'Implant, yurak stimulyatori yoki metall protez bo\'lsa, oldindan ayting', 'Yopiq joydan qo\'rqsangiz, operatorga ayting', 'Avvalgi MRT va KT natijalarini olib keling'],
+    'MSKT': ['Kontrast modda ishlatilsa, tayyorgarlik boshqacha bo\'ladi, oldindan so\'rang', 'Homiladorlik ehtimoli bo\'lsa, albatta ayting', 'Dori yoki kontrastga allergiyangiz bo\'lsa, ogohlantiring', 'Avvalgi tasvirlar va xulosalarni olib keling'],
+    'UZI': ['Qorin bo\'shlig\'i UZI odatda och qoringa topshiriladi', 'Kichik chanoq UZI ba\'zan to\'lgan siydik pufagi bilan o\'tkaziladi', 'Aniq tayyorgarlik UZI turiga bog\'liq, yozilganda so\'rang', 'Avvalgi UZI xulosalari bo\'lsa, olib keling'],
+    'FGDS': ['Odatda och qoringa topshiriladi', 'Doimiy ichadigan dorilar haqida shifokorga ayting', 'Allergiya va surunkali kasalliklar haqida ogohlantiring', 'Tayyorgarlik vaqtini yozilishda aniqlashtiring'],
+    'Laboratoriya': ['Ko\'p qon tahlillari ertalab, och qoringa topshiriladi', 'Tahlildan oldin yog\'li ovqat va spirtli ichimlikdan saqlaning', 'Tahlil turiga qarab talablar farq qiladi, operatordan so\'rang', 'Shifokor yo\'llanmasi bo\'lsa, olib keling']
+  };
+  var tabsEl = document.getElementById('tabs'), prepList = document.getElementById('prepList');
+  function showPrep(name) {
+    Array.prototype.forEach.call(tabsEl.children, function (b) { b.setAttribute('aria-selected', String(b.dataset.k === name)); b.tabIndex = b.dataset.k === name ? 0 : -1; });
+    prepList.innerHTML = PREP[name].map(function (x) { return '<li><svg class="ic"><use href="#i-check"/></svg><span>' + x + '</span></li>'; }).join('');
+  }
+  Object.keys(PREP).forEach(function (k) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tab'; b.setAttribute('role', 'tab'); b.dataset.k = k; b.textContent = k;
+    b.addEventListener('click', function () { showPrep(k); });
+    tabsEl.appendChild(b);
+  });
+  tabsEl.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    var tabs = Array.prototype.slice.call(tabsEl.children), i = tabs.indexOf(document.activeElement); if (i < 0) return;
+    i = (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length; tabs[i].focus(); showPrep(tabs[i].dataset.k);
+  });
+  showPrep('MRT');
+
+  // "Olib keling" ro'yxati (brauzerda eslab qoladi)
+  var boxes = document.querySelectorAll('#cl input'), KEY = 'saydana-checklist';
+  function readSaved() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+  function writeSaved(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} }
+  function updateCl() {
+    var n = 0; boxes.forEach(function (b) { if (b.checked) n++; });
+    document.getElementById('clCount').textContent = n + ' / ' + boxes.length + ' tayyor';
+    document.getElementById('clBar').style.width = (n / boxes.length * 100) + '%';
+    writeSaved(Array.prototype.map.call(boxes, function (b) { return b.checked; }));
+  }
+  var saved = readSaved();
+  boxes.forEach(function (b, i) { b.checked = !!saved[i]; b.addEventListener('change', updateCl); });
+  updateCl();
+
+  // Ariza formasi: matn tayyorlanadi va pochta ilovasida ochiladi
+  var form = document.getElementById('form');
+  function setErr(id, msg) { var f = document.getElementById(id).closest('.field'); f.classList.toggle('bad', !!msg); document.getElementById('e-' + id.slice(2)).textContent = msg || ''; }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('f-name').value.trim(), phone = document.getElementById('f-phone').value.trim();
+    var digits = phone.replace(/\D/g, '');
+    setErr('f-name', name.length < 2 ? 'Ismingizni kiriting' : '');
+    setErr('f-phone', digits.length < 9 ? 'Telefon raqamini to\'liq kiriting' : '');
+    if (name.length < 2) { document.getElementById('f-name').focus(); return; }
+    if (digits.length < 9) { document.getElementById('f-phone').focus(); return; }
+    var lines = ['Assalomu alaykum! Qabulga ariza qoldiraman.', '', 'Ism: ' + name, 'Telefon: ' + phone, 'Xizmat: ' + document.getElementById('f-svc').value, 'Qulay vaqt: ' + document.getElementById('f-time').value];
+    var note = document.getElementById('f-note').value.trim(); if (note) lines.push('Izoh: ' + note);
+    var text = lines.join('\n');
+    document.getElementById('resultText').textContent = text;
+    var mail = 'mailto:info@saydanamed.uz?subject=' + encodeURIComponent('Qabulga ariza') + '&body=' + encodeURIComponent(text);
+    document.getElementById('resMail').href = mail;
+    var res = document.getElementById('result'); res.hidden = false;
+    res.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
+    window.location.href = mail;
+  });
+  ['f-name', 'f-phone'].forEach(function (id) { document.getElementById(id).addEventListener('input', function () { setErr(id, ''); }); });
+  document.getElementById('resCopy').addEventListener('click', function () {
+    var btn = this, txt = document.getElementById('resultText').textContent;
+    function sel() { var r = document.createRange(); r.selectNodeContents(document.getElementById('resultText')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Belgilandi, nusxalang'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { btn.textContent = 'Nusxalandi ✓'; setTimeout(function () { btn.textContent = 'Matnni nusxalash'; }, 2200); }).catch(sel); else sel();
+  });
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -120,7 +187,7 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.stats li').forEach(function (el) {
+    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.stats li,.rating,.facts li').forEach(function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.07 + 's');
       el.classList.add('reveal'); io.observe(el);

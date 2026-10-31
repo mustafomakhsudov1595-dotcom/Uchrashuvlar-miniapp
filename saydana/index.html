@@ -30,9 +30,10 @@
       <span class="logo-text"><b>saydana</b><small>tibbiyot markazi</small></span>
     </a>
     <nav class="menu" id="menu" aria-label="Asosiy menyu">
+      <a href="#haqida">Markaz</a>
       <a href="#xizmatlar">Xizmatlar</a>
-      <a href="#afzalliklar">Afzalliklar</a>
-      <a href="#jarayon">Qabulga yozilish</a>
+      <a href="#tayyorgarlik">Tayyorgarlik</a>
+      <a href="#ariza">Ariza</a>
       <a href="#savollar">Savollar</a>
       <a href="#aloqa">Aloqa</a>
     </nav>
@@ -104,6 +105,35 @@
   </div>
 </div>
 
+<!-- MARKAZ HAQIDA -->
+<section class="section" id="haqida">
+  <div class="container about">
+    <div class="about-copy">
+      <span class="eyebrow">Markaz haqida</span>
+      <h2>O'zbek-german loyihasi asosidagi diagnostika markazi</h2>
+      <p>Saydana — Namangandagi ko'p yo'nalishli diagnostika markazi. Ochiq manbalarda u o'zbek-german loyihasi sifatida tavsiflanadi va MRT, MSKT, rentgen, laboratoriya hamda yurak va oshqozon-ichak tekshiruvlarini bir joyda birlashtiradi.</p>
+      <p>Har bir bemorga individual yondashuv: tekshiruv dasturi alohida tuziladi, kerak bo'lsa tor mutaxassisga yo'naltiriladi.</p>
+      <ul class="facts">
+        <li><b>400+</b><span>diagnostika xizmati turi<sup>*</sup></span></li>
+        <li><b>4</b><span>asosiy bo'lim</span></li>
+        <li><b>8:00</b><span>har kuni ish boshlanishi</span></li>
+      </ul>
+      <a class="rating spot" href="https://yandex.com/maps/org/saydana/189026158000/" target="_blank" rel="noopener">
+        <span class="stars" aria-hidden="true"><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star half"><use href="#i-star"/></svg></span>
+        <span><b>4.4 / 5</b> Yandex Maps'da · 125 ta baho</span>
+        <span class="more">Sharhlar <svg class="ic"><use href="#i-arrow"/></svg></span>
+      </a>
+      <p class="fine"><sup>*</sup> Ma'lumotnoma saytlariga ko'ra. Aniq ro'yxatni markazdan so'rang.</p>
+    </div>
+    <div class="depts">
+      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></div>
+      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div><h3>Radiologiya</h3><p>MRT, MSKT va rentgen tekshiruvlari.</p></div>
+      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>Endoskopiya</h3><p>FGDS — oshqozon-ichak yo'llarini ko'rik.</p></div>
+      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Kardiologiya</h3><p>EKG va exokardiografiya — yurak tekshiruvi.</p></div>
+    </div>
+  </div>
+</section>
+
 <!-- XIZMATLAR -->
 <section class="section" id="xizmatlar">
   <div class="container">
@@ -174,6 +204,36 @@
   </div>
 </section>
 
+<!-- TAYYORGARLIK -->
+<section class="section alt" id="tayyorgarlik">
+  <div class="container">
+    <div class="sec-head">
+      <span class="eyebrow">Tayyorgarlik</span>
+      <h2>Tekshiruvga qanday tayyorlanish kerak</h2>
+      <p>Umumiy tavsiyalar. Aniq qoidalar tekshiruv turiga qarab farq qiladi, yozilayotganda operatordan so'rang.</p>
+    </div>
+    <div class="prep">
+      <div class="card prep-tabs">
+        <div class="tabs" role="tablist" aria-label="Tekshiruv turi" id="tabs"></div>
+        <ul class="prep-list" id="prepList" role="tabpanel"></ul>
+        <p class="fine" id="prepNote">Bu umumiy ma'lumot, shifokor tavsiyasi o'rnini bosmaydi.</p>
+      </div>
+      <div class="card checklist">
+        <h3>Qabulga kelganda olib keling</h3>
+        <p class="fine" id="clCount">0 / 5 tayyor</p>
+        <div class="cl-bar"><i id="clBar"></i></div>
+        <ul id="cl">
+          <li><label><input type="checkbox"><span>Pasport yoki shaxsni tasdiqlovchi hujjat</span></label></li>
+          <li><label><input type="checkbox"><span>Shifokor yo'llanmasi (agar bo'lsa)</span></label></li>
+          <li><label><input type="checkbox"><span>Avvalgi tekshiruv natijalari va tasvirlari (xulosa, disk)</span></label></li>
+          <li><label><input type="checkbox"><span>Doimiy ichadigan dorilar ro'yxati</span></label></li>
+          <li><label><input type="checkbox"><span>Allergiya va surunkali kasalliklar haqida ma'lumot</span></label></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- JARAYON -->
 <section class="section" id="jarayon">
   <div class="container">
@@ -186,6 +246,41 @@
       <li class="step"><span class="step-n"><svg class="ic"><use href="#i-clock"/></svg></span><h3>Vaqtni kelishing</h3><p>Operator sizga qulay vaqt va mutaxassisni tanlashda yordam beradi.</p></li>
       <li class="step"><span class="step-n"><svg class="ic"><use href="#i-pin"/></svg></span><h3>Markazga keling</h3><p>Nodira ko'chasi, 1 manziliga belgilangan vaqtda tashrif buyuring.</p></li>
     </ol>
+  </div>
+</section>
+
+<!-- ARIZA -->
+<section class="section" id="ariza">
+  <div class="container apply">
+    <div class="apply-copy">
+      <span class="eyebrow">Ariza</span>
+      <h2>Qabulga ariza qoldiring</h2>
+      <p>Ma'lumotlaringizni kiriting. Ariza matni tayyorlanib, markazning elektron pochtasiga yuborish uchun ochiladi. Shoshilinch bo'lsa, to'g'ridan-to'g'ri qo'ng'iroq qiling.</p>
+      <ul class="checks col">
+        <li><svg class="ic"><use href="#i-check"/></svg>Ish vaqtida operator aloqaga chiqadi</li>
+        <li><svg class="ic"><use href="#i-check"/></svg>Narx va tayyorgarlikni aniqlashtirasiz</li>
+        <li><svg class="ic"><use href="#i-check"/></svg>Hech qanday to'lov so'ralmaydi</li>
+      </ul>
+      <a class="btn btn-ghost" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-10-10</a>
+    </div>
+    <form class="card form" id="form" novalidate>
+      <div class="field"><label for="f-name">Ismingiz</label><input id="f-name" name="name" type="text" autocomplete="name" placeholder="Masalan, Aziza Karimova" required><small class="err" id="e-name"></small></div>
+      <div class="field"><label for="f-phone">Telefon raqamingiz</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998 90 123 45 67" required><small class="err" id="e-phone"></small></div>
+      <div class="field"><label for="f-svc">Xizmat</label>
+        <select id="f-svc" name="svc">
+          <option>Mutaxassis maslahati</option><option>MRT</option><option>MSKT</option><option>Rentgen</option><option>UZI</option><option>Exokardiografiya</option><option>EKG</option><option>FGDS</option><option>Laboratoriya</option><option>Boshqa / bilmayman</option>
+        </select></div>
+      <div class="field"><label for="f-time">Qulay vaqt</label>
+        <select id="f-time" name="time"><option>Ertalab (8:00–12:00)</option><option>Kunduzi (12:00–17:00)</option><option>Farqi yo'q</option></select></div>
+      <div class="field"><label for="f-note">Izoh (ixtiyoriy)</label><textarea id="f-note" name="note" rows="3" placeholder="Qo'shimcha ma'lumot"></textarea></div>
+      <button class="btn btn-primary btn-lg" type="submit"><svg class="ic"><use href="#i-mail"/></svg>Ariza matnini tayyorlash</button>
+      <div class="result" id="result" hidden>
+        <b>Ariza matni tayyor</b>
+        <p>Pochta ilovangiz ochilmasa, matnni nusxalab info@saydanamed.uz ga yuboring yoki qo'ng'iroq qiling.</p>
+        <pre id="resultText"></pre>
+        <div class="result-btns"><button class="btn btn-ghost" type="button" id="resCopy">Matnni nusxalash</button><a class="btn btn-primary" id="resMail" href="#">Pochtada ochish</a></div>
+      </div>
+    </form>
   </div>
 </section>
 
@@ -263,14 +358,14 @@
     </div>
     <div class="foot-col">
       <h4>Sahifalar</h4>
-      <a href="#xizmatlar">Xizmatlar</a><a href="#afzalliklar">Afzalliklar</a><a href="#jarayon">Qabulga yozilish</a><a href="#savollar">Savollar</a>
+      <a href="#haqida">Markaz haqida</a><a href="#xizmatlar">Xizmatlar</a><a href="#tayyorgarlik">Tayyorgarlik</a><a href="#ariza">Ariza qoldirish</a><a href="#savollar">Savollar</a>
     </div>
     <div class="foot-col">
       <h4>Aloqa</h4>
       <a href="tel:+998782231010">+998 (78) 223-10-10</a><a href="tel:+998782231111">+998 (78) 223-11-11</a><a href="mailto:info@saydanamed.uz">info@saydanamed.uz</a>
       <span>Nodira ko'chasi, 1, Namangan</span>
     </div>
-    <p class="copy">© <span id="year"></span> Saydana. Barcha huquqlar himoyalangan.</p>
+    <p class="copy">© <span id="year"></span> Saydana. Barcha huquqlar himoyalangan. Sayt ma'lumotlari ochiq manbalardan olingan; aniq xizmat va narxlarni markazdan so'rang.</p>
   </div>
 </footer>
 
@@ -324,6 +419,7 @@
   <symbol id="i-tube" viewBox="0 0 24 24"><path d="M5 4c0 6 3 7 5 8s3 3 3 8M14 12c3 0 5 2 5 5"/><circle cx="19" cy="18" r="1.5"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3L12 17.2 6.4 20.3l1.2-6.3L3 9.6l6.3-.8z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   </g>
 </svg>
