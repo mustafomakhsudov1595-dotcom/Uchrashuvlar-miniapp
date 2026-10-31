@@ -220,7 +220,7 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.stats li,.rating,.facts li').forEach(function (el) {
+    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.rating,.fact,.dept,.statement').forEach(function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.07 + 's');
       el.classList.add('reveal'); io.observe(el);
@@ -283,4 +283,105 @@
       el.style.setProperty('--my', (e.clientY - r.top) + 'px');
     }, { passive: true });
   }
+
+  // Radiologiya ko'rsatkichi: kompyuterda yaratilgan namunaviy bosh miya kesimi (MRT / MSKT)
+  (function () {
+    var cv = document.getElementById('mri'); if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext('2d'); var N = cv.width; var img = ctx.createImageData(N, N);
+    var slider = document.getElementById('vSlice'), seLbl = document.getElementById('vSe'), titleLbl = document.getElementById('vTitle');
+    var viewer = document.getElementById('viewer');
+    var TOTAL = 24, slice = 12, mode = 'mr', auto = !reduce, dir = 1, lastStep = 0, visible = true;
+
+    function hash(x, y, z) {
+      var h = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 1442695041)) | 0;
+      h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296;
+    }
+    function sm(t) { return t * t * (3 - 2 * t); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function vnoise(x, y, z) {
+      var xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = sm(x - xi), yf = sm(y - yi), zf = sm(z - zi);
+      return lerp(
+        lerp(lerp(hash(xi, yi, zi), hash(xi + 1, yi, zi), xf), lerp(hash(xi, yi + 1, zi), hash(xi + 1, yi + 1, zi), xf), yf),
+        lerp(lerp(hash(xi, yi, zi + 1), hash(xi + 1, yi, zi + 1), xf), lerp(hash(xi, yi + 1, zi + 1), hash(xi + 1, yi + 1, zi + 1), xf), yf), zf);
+    }
+    function fbm(x, y, z) { return vnoise(x, y, z) * .55 + vnoise(x * 2.1, y * 2.1, z * 2.1) * .3 + vnoise(x * 4.3, y * 4.3, z * 4.3) * .15; }
+
+    function ss(a, b, x) { var t = (x - a) / (b - a); t = t < 0 ? 0 : t > 1 ? 1 : t; return t * t * (3 - 2 * t); }
+    function render() {
+      var s = (slice - 1) / (TOTAL - 1), ct = mode === 'ct';
+      var sc = .38 + .62 * Math.pow(Math.max(Math.sin(Math.PI * (.1 + .8 * s)), 0), .55);
+      var vent = Math.max(0, 1 - Math.abs(s - .52) * 3.4);
+      var z = slice * .33, d = img.data, p = 0;
+      var SCALP = ct ? .36 : .62, SKULL = ct ? .96 : .07, CSF = ct ? .2 : .86;
+      for (var y = 0; y < N; y++) {
+        var v = (.5 - y / N) * 2;
+        for (var x = 0; x < N; x++) {
+          var u = (x / N - .5) * 2;
+          var ex = u / (.8 * sc), ey = (v + .02) / (.95 * sc), r = Math.sqrt(ex * ex + ey * ey), val = 0;
+          if (r < 1.02) {
+            var rr = r > .79 ? 1 : r / .79, br;
+            if (rr < 1 || r < .82) {
+              var nx = u / sc * 6.4, ny = v / sc * 6.4;
+              var wx = vnoise(nx + 3.1, ny + 1.7, z) - .5, wy = vnoise(nx - 2.3, ny + 5.2, z) - .5;
+              var n = fbm(nx + wx * 1.5, ny + wy * 1.5, z * .8), t = Math.abs(n - .5) * 2;
+              var bnd = .6 + (vnoise(nx * .7, ny * .7, z + 7) - .5) * .28, gm = ss(bnd - .06, bnd + .06, rr);
+              var sulc = (1 - ss(0, .11, t)) * ss(.5, .78, rr);
+              if (ct) br = (.47 + (n - .5) * .07 + gm * .025) * (1 - sulc * .3) + .3 * sulc * .3;
+              else {
+                br = lerp(.33 + (n - .5) * .1, .55 + (n - .5) * .16, gm);
+                br = lerp(br, .7, sulc * .8);
+                if (Math.abs(ex) < .02) br = lerp(br, .26, (1 - ss(.005, .02, Math.abs(ex))) * ss(.3, .5, rr));
+              }
+              if (vent > .05) {
+                var dx = (Math.abs(ex) - .13) / (.075 * vent + .001), dy = (ey - .04) / (.18 * vent + .001), vd = Math.sqrt(dx * dx + dy * dy);
+                br = lerp(br, ct ? .2 : .9, (1 - ss(.7, 1.05, vd)) * ss(.05, .25, vent));
+              }
+            } else br = CSF;
+            val = br;
+            val = lerp(val, CSF, ss(.775, .805, r));
+            val = lerp(val, SKULL, ss(.825, .855, r));
+            val = lerp(val, SCALP + (hash(x >> 1, y >> 1, slice) - .5) * (ct ? 0 : .08), ss(.915, .945, r));
+            val = lerp(val, 0, ss(.98, 1.0, r));
+            val += (hash(x, y, slice) - .5) * .05 * (val > .02 ? 1 : 0);
+          }
+          val = val < 0 ? 0 : val > 1 ? 1 : val;
+          d[p++] = val * 236; d[p++] = val * 241; d[p++] = val * 255; d[p++] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      seLbl.textContent = 'Kesim ' + slice + ' / ' + TOTAL;
+      slider.value = slice;
+      titleLbl.innerHTML = ct ? 'SAYDANA · MSKT<br>AKSIAL · KT' : 'SAYDANA · MRT<br>AKSIAL · T2';
+    }
+    var pending = false;
+    function schedule() { if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; render(); }); } }
+    function setSlice(n) { n = Math.max(1, Math.min(TOTAL, n)); if (n !== slice) { slice = n; schedule(); } }
+    function stopAuto() { auto = false; }
+
+    slider.addEventListener('input', function () { stopAuto(); setSlice(parseInt(slider.value, 10)); });
+    Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (b) {
+      b.addEventListener('click', function () {
+        mode = b.dataset.mode; stopAuto();
+        Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (o) { var on = o === b; o.classList.toggle('on', on); o.setAttribute('aria-pressed', String(on)); });
+        schedule();
+      });
+    });
+    var drag = null;
+    viewer.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, s: slice }; stopAuto(); try { viewer.setPointerCapture(e.pointerId); } catch (er) {} });
+    viewer.addEventListener('pointermove', function (e) { if (!drag) return; var w = viewer.getBoundingClientRect().width; setSlice(drag.s + Math.round((e.clientX - drag.x) / w * TOTAL * 1.4)); });
+    function endDrag() { drag = null; }
+    viewer.addEventListener('pointerup', endDrag); viewer.addEventListener('pointercancel', endDrag);
+
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }, { threshold: .1 }).observe(viewer);
+    function loop(ts) {
+      if (auto && visible && ts - lastStep > 150) {
+        lastStep = ts;
+        var n = slice + dir; if (n > TOTAL - 3) { dir = -1; n = TOTAL - 3; } if (n < 4) { dir = 1; n = 4; }
+        slice = n; render();
+      }
+      requestAnimationFrame(loop);
+    }
+    render();
+    if (!reduce) requestAnimationFrame(loop);
+  })();
 })();
