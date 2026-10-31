@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"MedicalClinic","name":"Saydana","email":"info@saydanamed.uz","medicalSpecialty":["Radiology","Gynecology","Urology","Neurology","Gastroenterology","Cardiology"],"address":{"@type":"PostalAddress","streetAddress":"Nodira ko'chasi, 1","addressLocality":"Namangan","addressRegion":"Namangan viloyati","addressCountry":"UZ"},"telephone":["+998782231010","+998782231111"],"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"08:00","closes":"17:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"08:00","closes":"16:00"}]}
+{"@context":"https://schema.org","@type":"MedicalClinic","name":"Saydana","email":"info@saydanamed.uz","medicalSpecialty":["Radiology","Gynecology","Urology","Neurology","Gastroenterology","Cardiology"],"address":{"@type":"PostalAddress","streetAddress":"Nodira ko'chasi, 1","addressLocality":"Namangan","addressRegion":"Namangan viloyati","addressCountry":"UZ"},"geo":{"@type":"GeoCoordinates","latitude":40.997889,"longitude":71.666325},"telephone":["+998782231010","+998782231111"],"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"08:00","closes":"17:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"08:00","closes":"16:00"}]}
 </script>
 </head>
 <body>
@@ -184,9 +184,10 @@
           </table></div></div>
       </div>
       <div class="map">
-        <iframe title="Saydana xaritada" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps?q=Nodira+ko%27chasi+1,+Namangan,+Uzbekistan&output=embed"></iframe>
-        <a class="btn btn-primary map-btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Nodira+ko%27chasi+1+Namangan">Yo'nalish olish</a>
+        <iframe title="Saydana xaritada" loading="lazy" tabindex="-1" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=40.997889,71.666325&z=17&output=embed"></iframe>
+        <a class="map-hit" id="mapHit" href="https://www.google.com/maps/search/?api=1&query=40.997889,71.666325" target="_blank" rel="noopener" aria-label="Xaritani ilovada ochish"></a>
+        <button class="btn btn-primary map-btn" id="mapBtn" type="button"><svg class="ic"><use href="#i-pin"/></svg>Xarita ilovasida ochish</button>
       </div>
     </div>
   </div>
@@ -200,6 +201,23 @@
     <p class="copy">© <span id="year"></span> Saydana. Barcha huquqlar himoyalangan.</p>
   </div>
 </footer>
+
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-bg" data-close></div>
+  <div class="sheet-box" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h3 id="sheetTitle">Qaysi xarita ilovasida ochamiz?</h3>
+    <p>Saydana — Nodira ko'chasi, 1, Namangan</p>
+    <div class="sheet-list">
+      <a class="app" id="app-geo" hidden href="#"><b>Telefondagi xarita</b><small>Standart ilova</small></a>
+      <a class="app" id="app-apple" hidden target="_blank" rel="noopener" href="#"><b>Apple Maps</b><small>iPhone / Mac</small></a>
+      <a class="app" id="app-google" target="_blank" rel="noopener" href="#"><b>Google Maps</b><small>Brauzer yoki ilova</small></a>
+      <a class="app" id="app-yandex" target="_blank" rel="noopener" href="#"><b>Yandex Maps</b><small>Brauzer yoki ilova</small></a>
+      <a class="app" id="app-2gis" target="_blank" rel="noopener" href="#"><b>2GIS</b><small>Brauzer yoki ilova</small></a>
+    </div>
+    <button class="btn btn-ghost sheet-close" type="button" data-close>Yopish</button>
+  </div>
+</div>
 
 <a class="fab" href="tel:+998782231010" aria-label="Qo'ng'iroq qilish"><svg class="ic"><use href="#i-phone"/></svg></a>
 
