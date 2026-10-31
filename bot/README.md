@@ -68,7 +68,7 @@ Pastki panelda 3 ta bo‘lim bor:
 - **Arizalar**: barcha arizalar (yangisi tepada), ism / telefon / masala bo‘yicha qidiruv, holat filtri (soni bilan). Arizani bossangiz, batafsil oyna ochiladi (telefon, masala, qabul vaqti, izoh, manba, yuborilgan vaqt, «Qo‘ng‘iroq qilish» tugmasi).
 - **Statistika**: jami va bugungi arizalar, kutilmoqda / tasdiqlangan / rad etilgan, kelgusi 10 kunlik grafik, bot va sayt ulushi, masalalar bo‘yicha taqsimot.
 
-Ilova telefon uchun mo‘ljallangan, yorug‘ va qorong‘i rejimda ishlaydi (Telegram mavzusiga moslashadi).
+Dizayn sayt bilan bir xil: to‘q yashil fon, oltin urg‘u, Fraunces va Manrope shriftlari. Ilova telefon uchun mo‘ljallangan, Telegram sarlavhasi va pastki paneli ham shu ranglarga moslanadi.
 
 Xavfsizlik: sahifani hamma ocha oladi, lekin ma’lumot faqat Telegram imzosi (`initData`, `BOT_TOKEN` bilan tekshiriladi) to‘g‘ri va foydalanuvchi admin bo‘lsa beriladi. Boshqalarga 401/403 qaytadi. Sahifaning manba kodi `bot/admin.html` (u `worker.js` ichiga `ADMIN_HTML` sifatida joylangan; o‘zgartirilsa, ikkalasini yangilang).
 
