@@ -75,16 +75,36 @@
   var svc = document.getElementById('svc');
   var svcFocus = null;
   var tick = '<svg class="ic"><use href="#i-check"/></svg>';
-  function openSvc(key) {
-    var s = SVC[key]; if (!s) return;
-    svcFocus = document.activeElement;
+  var DEPT = {
+    lab:  { icon: 'i-flask', t: 'Laboratoriya', d: 'Tibbiy laboratoriyada qon va boshqa namunalar tahlil qilinadi. Natijalar shifokorga tashxis qo\'yishda va davolashni kuzatishda yordam beradi.', f: ['Qon tahlili va boshqa laboratoriya tekshiruvlari', 'Shifokor yo\'llanmasi bilan yoki profilaktika uchun topshirish mumkin', 'Natija shifokor ko\'rigida davolash rejasini belgilash uchun ishlatiladi', 'Mavjud tahlillar ro\'yxati va natija muddatini markazdan aniqlang'], n: 'Ko\'p tahlillar ertalab, och qoringa topshiriladi. Aniq talablar tahlil turiga bog\'liq.', rel: ['lab'], apply: 'Laboratoriya', note: 'Laboratoriya bo\'limi bo\'yicha' },
+    rad:  { icon: 'i-scan', t: 'Radiologiya', d: 'Radiologiya — tasviriy diagnostika bo\'limi: tananing ichki tuzilishi rasmga olinadi. MRT, MSKT va rentgen shu yo\'nalishga kiradi.', f: ['MRT — magnit maydon yordamida, rentgen nurlanishisiz', 'MSKT — rentgen nurlari asosida tezkor qatlamli tasvir', 'Rentgen — ko\'krak qafasi va suyak-bo\'g\'imlar rasmi', 'Qaysi usul kerakligini shifokor ko\'rsatmasi belgilaydi'], n: 'Tekshiruvga yozilishdan oldin implant, metall buyum yoki homiladorlik haqida ayting.', rel: ['mri', 'mskt', 'xray'], apply: 'MRT', note: 'Radiologiya bo\'limi bo\'yicha' },
+    endo: { icon: 'i-tube', t: 'Endoskopiya', d: 'Endoskopiyada ichki a\'zolar ichidan ingichka egiluvchan asbob yordamida ko\'riladi. Markazda shu bo\'limda FGDS o\'tkaziladi.', f: ['FGDS — qizilo\'ngach, oshqozon va o\'n ikki barmoqli ichak shilliq qavatini bevosita ko\'rish', 'Odatda shifokor ko\'rsatmasi bilan tayinlanadi', 'Odatda och qoringa topshiriladi', 'Tekshiruv davomiyligi va noqulaylikni kamaytirish usullarini markazdan so\'rang'], n: 'Surunkali kasalliklar, allergiya va doimiy ichadigan dorilar haqida oldindan ogohlantiring.', rel: ['fgds'], apply: 'FGDS', note: 'Endoskopiya bo\'limi bo\'yicha' },
+    card: { icon: 'i-heart', t: 'Kardiologiya', d: 'Kardiologiya — yurak va qon-tomir tizimini tekshirish bo\'limi. Markazda EKG va exokardiografiya mavjud, kardiolog maslahati yo\'nalishlar qatorida ko\'rsatilgan.', f: ['EKG — yurak ritmi va elektr faolligini yozib olish', 'Exokardiografiya — yurak kameralari va qopqoqlari UZI', 'Kardiolog maslahati (qabul vaqtini markazdan aniqlang)', 'Bu tekshiruvlar nurlanishsiz va og\'riqsiz'], n: 'Yurakdagi og\'riq yoki hushdan ketish kabi o\'tkir holatlarda kutmasdan shoshilinch yordamga murojaat qiling.', rel: ['ecg', 'echo'], apply: 'EKG', note: 'Kardiologiya bo\'limi bo\'yicha' }
+  };
+  var svcApply = null;
+  function openSvc(key, isDept) {
+    var s = (isDept ? DEPT : SVC)[key]; if (!s) return;
+    if (svc.hidden) svcFocus = document.activeElement;
     document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
     document.getElementById('svcTitle').textContent = s.t;
     document.getElementById('svcDesc').textContent = s.d;
+    document.getElementById('svcSub').textContent = isDept ? 'Nimalar tekshiriladi' : 'Nimalar qilinadi';
     document.getElementById('svcFacts').innerHTML = s.f.map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
     document.getElementById('svcNote').textContent = s.n;
+    var rel = document.getElementById('svcRel'), chips = document.getElementById('svcChips');
+    chips.innerHTML = '';
+    if (s.rel && s.rel.length > 1 || (isDept && s.rel)) {
+      s.rel.forEach(function (k) {
+        var b = document.createElement('button'); b.type = 'button'; b.innerHTML = SVC[k].t + ' <svg class="ic"><use href="#i-arrow"/></svg>';
+        b.addEventListener('click', function () { openSvc(k, false); svc.querySelector('.svc-box').scrollTop = 0; });
+        chips.appendChild(b);
+      });
+      rel.hidden = false;
+    } else rel.hidden = true;
+    svcApply = { svc: s.apply || s.t, note: s.note || '' };
     svc.hidden = false; document.body.classList.add('lock');
-    svc.querySelector('.svc-call').focus();
+    var box = svc.querySelector('.svc-box'); box.scrollTop = 0;
+    svc.querySelector('.svc-call').focus({ preventScroll: true });
   }
   function closeSvc() { svc.hidden = true; if (sheet.hidden) document.body.classList.remove('lock'); if (svcFocus && svcFocus.focus) svcFocus.focus(); }
   var arrow = '<svg class="ic"><use href="#i-arrow"/></svg>';
@@ -92,6 +112,19 @@
     var more = document.createElement('span'); more.className = 'more'; more.innerHTML = 'Batafsil ' + arrow; card.appendChild(more);
     card.addEventListener('click', function () { openSvc(card.dataset.svc); });
     card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.svc); } });
+  });
+  document.querySelectorAll('.dept[data-dept]').forEach(function (card) {
+    var more = document.createElement('span'); more.className = 'more'; more.innerHTML = 'Batafsil ' + arrow; card.appendChild(more);
+    card.addEventListener('click', function () { openSvc(card.dataset.dept, true); });
+    card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.dept, true); } });
+  });
+  document.getElementById('svcApply').addEventListener('click', function () {
+    var a = svcApply || {}; svcFocus = null; closeSvc();
+    var sel = document.getElementById('f-svc'), note = document.getElementById('f-note');
+    Array.prototype.forEach.call(sel.options, function (o) { if (o.text === a.svc) sel.value = o.value || o.text; });
+    if (a.note && !note.value.trim()) note.value = a.note;
+    var target = document.getElementById('ariza'); target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    setTimeout(function () { document.getElementById('f-name').focus({ preventScroll: true }); }, reduce ? 0 : 500);
   });
   svc.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeSvc(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !svc.hidden) closeSvc(); });

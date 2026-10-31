@@ -126,10 +126,10 @@
       <p class="fine"><sup>*</sup> Ma'lumotnoma saytlariga ko'ra. Aniq ro'yxatni markazdan so'rang.</p>
     </div>
     <div class="depts">
-      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></div>
-      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div><h3>Radiologiya</h3><p>MRT, MSKT va rentgen tekshiruvlari.</p></div>
-      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>Endoskopiya</h3><p>FGDS — oshqozon-ichak yo'llarini ko'rik.</p></div>
-      <div class="dept spot"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Kardiologiya</h3><p>EKG va exokardiografiya — yurak tekshiruvi.</p></div>
+      <div class="dept spot" data-dept="lab" tabindex="0" role="button" aria-haspopup="dialog"><div class="ico"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></div>
+      <div class="dept spot" data-dept="rad" tabindex="0" role="button" aria-haspopup="dialog"><div class="ico"><svg class="ic"><use href="#i-scan"/></svg></div><h3>Radiologiya</h3><p>MRT, MSKT va rentgen tekshiruvlari.</p></div>
+      <div class="dept spot" data-dept="endo" tabindex="0" role="button" aria-haspopup="dialog"><div class="ico"><svg class="ic"><use href="#i-tube"/></svg></div><h3>Endoskopiya</h3><p>FGDS — oshqozon-ichak yo'llarini ko'rik.</p></div>
+      <div class="dept spot" data-dept="card" tabindex="0" role="button" aria-haspopup="dialog"><div class="ico"><svg class="ic"><use href="#i-heart"/></svg></div><h3>Kardiologiya</h3><p>EKG va exokardiografiya — yurak tekshiruvi.</p></div>
     </div>
   </div>
 </section>
@@ -392,10 +392,13 @@
       <div class="ico"><svg class="ic"><use id="svcIcon" href="#i-scan"/></svg></div>
       <div><h3 id="svcTitle"></h3><p id="svcDesc"></p></div>
     </div>
+    <h4 class="svc-sub" id="svcSub">Nimalar qilinadi</h4>
     <ul class="svc-facts" id="svcFacts"></ul>
+    <div class="svc-rel" id="svcRel" hidden><h4 class="svc-sub">Shu bo'limdagi xizmatlar</h4><div class="svc-chips" id="svcChips"></div></div>
     <p class="svc-note" id="svcNote"></p>
     <div class="svc-num"><span id="svcNum">+998 (78) 223-10-10</span><button class="link" id="svcCopy" type="button">Nusxalash</button></div>
     <a class="btn btn-primary svc-call" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>Qo'ng'iroq qilib yozilish</a>
+    <button class="btn btn-ghost svc-apply" type="button" id="svcApply"><svg class="ic"><use href="#i-mail"/></svg>Ariza qoldirish</button>
     <button class="btn btn-ghost sheet-close" type="button" data-close>Yopish</button>
   </div>
 </div>

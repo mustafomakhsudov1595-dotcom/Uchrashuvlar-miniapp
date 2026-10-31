@@ -171,6 +171,8 @@ p{color:var(--muted)}
 .step p{max-width:280px;margin-inline:auto}
 
 
+.hero-grid>*,.about>*,.prep>*,.apply>*,.contact>*,.why>*,.bento>*,.depts>*,.steps>*,.foot>*{min-width:0}
+
 /* markaz haqida */
 .about{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
 .about-copy p{margin-top:16px}
@@ -320,6 +322,19 @@ p{color:var(--muted)}
 .svc-num{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px dashed var(--pink2);border-radius:16px;padding:12px 16px;margin-bottom:12px;font-weight:800;font-size:1.05rem;user-select:all}
 .svc-num .link{margin:0;user-select:none;white-space:nowrap}
 .svc-call{width:100%;justify-content:center;margin-bottom:10px}
+
+/* bo'lim oynasi qo'shimchalari */
+.dept[data-dept]{cursor:pointer}
+.dept .more{margin-top:12px}
+.dept:hover .more .ic{transform:translateX(4px)}
+.svc-sub{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin:4px 0 10px}
+.svc-rel{margin:4px 0 16px}
+.svc-rel[hidden]{display:none}
+.svc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.svc-chips button{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer;transition:.2s}
+.svc-chips button:hover{border-color:var(--red);color:var(--red);background:var(--pink)}
+.svc-chips .ic{width:16px;height:16px;stroke-width:2.4}
+.svc-apply{width:100%;justify-content:center;margin-bottom:10px}
 
 /* reveal */
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
