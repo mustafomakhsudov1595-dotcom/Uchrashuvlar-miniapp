@@ -33,7 +33,7 @@ Masalalar ro‘yxati va barcha matnlar `worker.js` boshida (`TOPICS`, `ABOUT_TEX
 | `DOCTOR_CHAT_IDS` | Text | shifokorning chat ID’si (6-qadamga qarang) |
 | `PRICES_TEXT` | Text (ixtiyoriy) | «Narxlar» tugmasida chiqadigan matn. `<b>qalin</b>` va `<i>qiyshiq</i>` ishlaydi |
 | `SLOTS` | Text (ixtiyoriy) | qabul soatlari vergul bilan, masalan `09:00,10:00,14:00`. Bo‘sh bo‘lsa 09:00 dan 18:00 gacha har soat |
-| `ALLOWED_ORIGIN` | Text (ixtiyoriy) | sayt manzili, masalan `https://avazxon.uz` |
+| `ALLOWED_ORIGIN` | Text (ixtiyoriy) | sayt manzili, bir nechta bo‘lsa vergul bilan: `https://dravaz.uz,https://www.dravaz.uz` |
 
 6. **Chat ID olish**: shifokor botga kirib `/id` yozadi (yoki «Yana» → «Mening ID»), bot raqam yuboradi. Shu raqamni `DOCTOR_CHAT_IDS` ga yozing (bir nechta bo‘lsa vergul bilan: `123,456`). Shifokor avval botda `/start` bosgan bo‘lishi shart, aks holda bot unga yoza olmaydi.
 7. **Webhookni ulash**: brauzerda oching:
@@ -60,9 +60,19 @@ Saytdagi «Tezkor so‘rov» formasi (`netlify-sayt/index.html`) «Ariza yuboris
 `{"name":"Ali","phone":"901234567","topic":"Prostata","comment":"..."}`
 - Ariza shifokorning Telegramiga «veb-sayt orqali» belgisi bilan tushadi. Saytdan kelgan arizada ✅/❌ tugmalari yo‘q (bemorning Telegram chati bo‘lmagani uchun), shifokor telefon orqali bog‘lanadi.
 - `website` maydoni yashirin (spamdan himoya), bo‘sh bo‘lishi kerak. Bir IP’dan daqiqada 1 ta ariza.
-- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi sayt manzilidan o‘tadi (hozir `https://magenta-phoenix-dba70a.netlify.app`). Saytga o‘z domeningiz ulansa, `ALLOWED_ORIGIN` ni shu domenga o‘zgartiring.
+- Brauzer so‘rovi faqat `ALLOWED_ORIGIN` dagi sayt manzilidan o‘tadi (hozir `https://dravaz.uz`, `https://www.dravaz.uz` va Netlify manzili). Yangi domen qo‘shilsa, `ALLOWED_ORIGIN` ga vergul bilan qo‘shing.
 - Yuborib bo‘lmasa, forma bemorga WhatsApp yoki qo‘ng‘iroq qilishni taklif qiladi.
 - Sayt o‘zgargach, `netlify-sayt` papkasini (yoki `netlify-sayt.zip` ni) Netlify’ga qayta yuklang.
+
+## Domen va Google (dravaz.uz)
+1. **Netlify**: sayt → **Domain management** → **Add a domain** → `dravaz.uz`. Netlify ko‘rsatgan DNS yozuvlarini domen ro‘yxatdan o‘tgan joyda (registrator) kiriting: `dravaz.uz` uchun A yozuv (Netlify ko‘rsatgan IP) va `www` uchun CNAME → `magenta-phoenix-dba70a.netlify.app`. Yoki Netlify DNS nameserverlarini qo‘ying. DNS yangilanishi bir necha soatgacha cho‘zilishi mumkin.
+2. **HTTPS**: DNS ulangach Netlify’da **HTTPS → Verify DNS → Provision certificate** (bepul, avtomatik).
+3. **Asosiy domen**: `dravaz.uz` ni **Primary domain** qiling, shunda Netlify manzili avtomatik shu domenga yo‘naltiriladi. `www` → `dravaz.uz` yo‘naltirishi `_redirects` faylida bor.
+4. **Google Search Console** (search.google.com/search-console) → **Add property** → **Domain** → `dravaz.uz` → Google bergan **TXT** yozuvni DNS’ga qo‘shing → **Verify**.
+5. **Sitemap**: Search Console → **Sitemaps** → `sitemap.xml` ni yuboring. Keyin **URL Inspection** da `https://dravaz.uz/` ni kiritib **Request indexing** bosing. Google saytni odatda bir necha kundan bir necha haftagacha indekslaydi.
+6. **Google Maps / qidiruvda klinika kartasi**: business.google.com da **Google Business Profile** yarating (VitaMed klinikasi yoki shifokor), manzil, telefon va sayt `https://dravaz.uz` ni kiriting. Tasdiqlash (pochta/telefon) kerak bo‘ladi.
+
+Saytda `canonical`, `og:url`, `sitemap.xml`, `robots.txt` va JSON-LD (shifokor/klinika, FAQ) allaqachon `https://dravaz.uz/` ga moslangan.
 
 ## Ma’lumotlar
 Arizalar doimiy saqlanmaydi, shifokorning Telegramiga yuboriladi. Tasdiqlash tugmalari ishlashi uchun ariza matni (ism, telefon, kun/soat) KV’da 14 kun turadi va o‘zi o‘chadi. Boshqa vaqtinchalik ma’lumotlar (suhbat bosqichi, spamdan himoya, savollarga javob uchun bog‘lanish) ham o‘zi o‘chib ketadi.

@@ -5,7 +5,7 @@
 //   DOCTOR_CHAT_IDS  (Text)    ariza boradigan chat ID, bir nechta bo'lsa vergul bilan
 //   PRICES_TEXT      (Text, ixtiyoriy) «Narxlar» tugmasida chiqadigan matn (HTML: <b>, <i>)
 //   SLOTS            (Text, ixtiyoriy) qabul soatlari, vergul bilan. Standart: 09:00,10:00,...,18:00
-//   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, masalan https://avazxon.uz (saytni ulashda kerak)
+//   ALLOWED_ORIGIN   (Text, ixtiyoriy) sayt manzili, bir nechta bo'lsa vergul bilan: https://dravaz.uz,https://www.dravaz.uz
 // KV Namespace binding nomi: STATE
 
 const TOPICS = {
@@ -354,8 +354,12 @@ async function onCallback(env, q) {
 
 // Saytdan ariza olish (keyinchalik saytni ulash uchun)
 async function apply(env, request) {
-  const origin = env.ALLOWED_ORIGIN || '*';
+  // ALLOWED_ORIGIN: bitta yoki vergul bilan bir nechta sayt manzili
+  const allowed = String(env.ALLOWED_ORIGIN || '*').split(',').map((x) => x.trim()).filter(Boolean);
+  const reqOrigin = request.headers.get('origin');
+  const origin = allowed.includes('*') ? '*' : allowed.includes(reqOrigin) ? reqOrigin : allowed[0];
   const cors = {
+    vary: 'Origin',
     'access-control-allow-origin': origin,
     'access-control-allow-methods': 'POST, OPTIONS',
     'access-control-allow-headers': 'content-type',
