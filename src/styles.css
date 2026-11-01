@@ -914,6 +914,311 @@ textarea.input {
   }
 }
 
+/* ================= Dizayn kuchaytirildi ================= */
+:root {
+  --shadow-sm: 0 1px 2px rgba(14, 32, 56, 0.05), 0 2px 8px rgba(14, 32, 56, 0.05);
+  --shadow-md: 0 2px 4px rgba(14, 32, 56, 0.05), 0 12px 28px rgba(14, 32, 56, 0.09);
+  --hero-grad: linear-gradient(145deg, #1a4f88 0%, #133a66 48%, #0c5b66 100%);
+}
+
+:root[data-theme='dark'] {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --hero-grad: linear-gradient(145deg, #1b5a8f 0%, #133a66 50%, #0d6670 100%);
+}
+
+body {
+  background:
+    radial-gradient(520px 320px at 100% -40px, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(460px 300px at -10% 0, color-mix(in srgb, var(--primary) 10%, transparent), transparent 70%),
+    var(--bg);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Sarlavha */
+.top h1 {
+  font-size: 32px;
+  background: linear-gradient(90deg, var(--text) 40%, var(--accent-ink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.top p {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Keyingi uchrashuv kartasi */
+.hero {
+  background: var(--hero-grad);
+  box-shadow: 0 16px 36px rgba(19, 58, 102, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  padding: 22px 22px 38px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero:active {
+  transform: scale(0.985);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -70px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(94, 214, 206, 0.35), transparent 68%);
+  pointer-events: none;
+}
+
+.hero > span {
+  position: relative;
+}
+
+.hero-kicker {
+  display: inline-block !important;
+  padding: 4px 11px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+}
+
+.hero-count {
+  margin: 12px 0 14px;
+  font-size: 34px;
+}
+
+.hero-meta {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.bar {
+  height: 8px;
+}
+
+.bar > i {
+  background: linear-gradient(90deg, #5ed6ce, #9ff0e9);
+  box-shadow: 0 0 10px rgba(94, 214, 206, 0.6);
+}
+
+/* Ro'yxatlar */
+.group {
+  animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.group-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.list {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.row {
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  min-height: 68px;
+  transition: background 0.12s ease;
+}
+
+.row-time {
+  justify-self: start;
+  padding: 6px 10px;
+  font-size: 15px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+
+.row.past .row-time {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.chip {
+  padding: 5px 10px;
+}
+
+.empty {
+  border-radius: 26px;
+  padding: 30px 22px;
+  background:
+    radial-gradient(260px 160px at 100% 0, var(--accent-soft), transparent 70%),
+    var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty .btn {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 8px 18px rgba(14, 140, 135, 0.3);
+}
+
+/* Kalendar */
+.cal {
+  box-shadow: var(--shadow-md);
+  padding: 16px 12px 12px;
+}
+
+.day {
+  position: relative;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+
+@media (hover: hover) {
+  .day:not(.selected):hover {
+    background: var(--surface-2);
+  }
+}
+
+.day:active {
+  transform: scale(0.94);
+}
+
+.day.selected {
+  background: linear-gradient(145deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--accent)));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.day.today:not(.selected) {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+/* Pastki menyu: shisha effekti */
+.tabbar {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
+  backdrop-filter: saturate(1.6) blur(16px);
+  box-shadow: 0 -6px 24px rgba(14, 32, 56, 0.06);
+}
+
+.tab {
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.tab[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--accent);
+}
+
+.fab {
+  background: linear-gradient(145deg, #14a8a2, var(--accent-ink));
+  box-shadow: 0 10px 22px rgba(14, 140, 135, 0.42);
+  transition: transform 0.15s ease;
+}
+
+/* Tugmalar */
+.btn-primary {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 88%, #fff), var(--primary));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.btn-accent {
+  box-shadow: 0 6px 16px rgba(14, 140, 135, 0.28);
+}
+
+.btn,
+.fab,
+.icon-btn {
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+/* Oynalar */
+.overlay {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.sheet {
+  border-radius: 28px 28px 0 0;
+}
+
+.sheet::before {
+  content: '';
+  align-self: center;
+  flex: none;
+  width: 40px;
+  height: 5px;
+  margin-top: 8px;
+  border-radius: 99px;
+  background: var(--line);
+}
+
+.dialog {
+  box-shadow: var(--shadow-md);
+  animation: rise 0.2s ease-out;
+}
+
+/* Tafsilotlar */
+.info,
+.notes {
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+}
+
+.info-row > svg {
+  box-sizing: content-box;
+  padding: 7px;
+  margin-top: -2px;
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+
+.todo {
+  transition: background 0.12s ease;
+}
+
+.box {
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.todo[aria-checked='true'] .box {
+  transform: scale(1.06);
+}
+
+.check-item {
+  box-shadow: var(--shadow-sm);
+}
+
+.toast {
+  box-shadow: var(--shadow-md);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
