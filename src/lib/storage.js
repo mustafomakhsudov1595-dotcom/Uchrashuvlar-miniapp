@@ -78,6 +78,7 @@ export function cleanProject(p) {
     price: n(p.price),
     paid: n(p.paid),
     notes: typeof p.notes === 'string' ? p.notes : '',
+    pays: Array.isArray(p.pays) ? p.pays.filter((x) => x && Number(x.a) > 0 && DATE_RE.test(x.d)).slice(-40).map((x) => ({ a: Math.round(Number(x.a)), d: x.d })) : [],
     tasks: Array.isArray(p.tasks)
       ? p.tasks.filter((t) => t && typeof t.text === 'string').map((t) => ({ id: String(t.id ?? newId()), text: t.text, done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' }))
       : [],
@@ -116,7 +117,7 @@ export const savePDeleted = (ids) => {
   }
 };
 export const projSignature = (list) =>
-  JSON.stringify(list.map((p) => [p.id, p.updatedAt, p.name, p.status, p.date, p.time, p.price, p.paid, p.tasks.map((t) => [t.id, t.done, t.text, t.due])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+  JSON.stringify(list.map((p) => [p.id, p.updatedAt, p.name, p.status, p.date, p.time, p.price, p.paid, (p.pays || []).length, p.tasks.map((t) => [t.id, t.done, t.text, t.due])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 
 // ---- Server bilan sinxronlash (faqat Telegram ichida) ----
 // Uchrashuvlar serverda ham saqlanadi: shu sabab bot buyruqlari va eslatmalar ishlaydi,

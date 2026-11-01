@@ -592,3 +592,14 @@ button.kpi.sel { border-color: var(--a1); box-shadow: 0 0 0 3px var(--a-soft); }
 .rcard small { font-size: 12px; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rcard .urg { justify-self: start; margin-top: 6px; }
 .hero.hero-empty { background: var(--glass) !important; color: var(--text); box-shadow: var(--shadow); }
+
+/* To'lov va qarzlar */
+.owed { margin-top: 8px; font-weight: 800; font-size: 14px; color: var(--danger); }
+.owed.ok { color: var(--ok); }
+.debt-card { display: grid; gap: 2px; padding: 14px 16px; margin-bottom: 12px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.debt-card small { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.debt-card b { font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.1; color: var(--danger); }
+.debt-card span { font-size: 13px; color: var(--muted); }
+.pay-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.pay-list li { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: var(--r-md, 14px); background: var(--glass); border: 1px solid var(--line); font-size: 14px; }
+.pay-list b { color: var(--ok); }

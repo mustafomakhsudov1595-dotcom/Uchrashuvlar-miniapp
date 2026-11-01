@@ -2,17 +2,17 @@ import { useState } from 'react';
 import Sheet from './Sheet.jsx';
 import { TypeIcon, urgencyText } from './ProjectCard.jsx';
 import { IconCheck, IconClose, IconEdit, IconPhone, IconTrash } from './Icons.jsx';
-import { progress, PSTATUS, urgency } from '../lib/projects.js';
+import { progress, PSTATUS, urgency, owed, money } from '../lib/projects.js';
 import { formatFull, formatShort } from '../lib/dates.js';
 import { todayISO } from '../lib/dates.js';
 import { t } from '../lib/i18n.js';
 
 const R = 28;
 const C = 2 * Math.PI * R;
-const money = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
-export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, onStatus, onToggleTask, onRemoveTask, onAddTask, onShift }) {
+export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, onStatus, onToggleTask, onRemoveTask, onAddTask, onShift, onPay }) {
   const [text, setText] = useState('');
+  const [pay, setPay] = useState('');
   const g = progress(p);
   const u = urgency(p, todayISO());
   const add = () => {
@@ -20,6 +20,13 @@ export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, o
     if (!v) return;
     onAddTask(v);
     setText('');
+  };
+  const left = owed(p);
+  const addPay = (v) => {
+    const a = Math.round(Number(v));
+    if (!a || a <= 0) return;
+    onPay(a);
+    setPay('');
   };
   const tel = p.contact && /[\d]{7,}/.test(p.contact.replace(/\D/g, '')) ? p.contact.replace(/[^\d+]/g, '') : '';
 
@@ -132,11 +139,34 @@ export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, o
                 <div>
                   <div className="info-label">{t('lblPrice')}</div>
                   <div className="info-value">{money(p.price)}{p.paid !== null ? ` · ${t('lblPaid')}: ${money(p.paid)}` : ''}</div>
-                  {p.paid !== null && p.price > 0 && <span className="bar big" style={{ marginTop: 8 }}><i style={{ width: `${Math.min(100, (p.paid / p.price) * 100)}%` }} /></span>}
+                  {p.price > 0 && <span className="bar big" style={{ marginTop: 8 }}><i style={{ width: `${Math.min(100, ((p.paid || 0) / p.price) * 100)}%` }} /></span>}
+                  <div className={`owed${left > 0 ? '' : ' ok'}`}>{left > 0 ? `${t('lblOwed')}: ${money(left)}` : `✓ ${t('pjPaidFull')}`}</div>
                 </div>
               </div>
             )}
           </div>
+        </>
+      )}
+
+      {p.price !== null && (
+        <>
+          <div className="section-title"><h4>{t('pjPayHist')}</h4></div>
+          <div className="add-row">
+            <input className="input" type="number" inputMode="numeric" min="0" value={pay} onChange={(e) => setPay(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addPay(pay))} placeholder={t('pjPayPh')} enterKeyHint="done" />
+            <button type="button" className="btn btn-accent add-btn" style={{ whiteSpace: 'nowrap' }} onClick={() => addPay(pay)}>{t('pjPay')}</button>
+          </div>
+          {left > 0 && (
+            <div className="shift-row" style={{ marginTop: 10 }}>
+              <button type="button" className="act-chip" onClick={() => addPay(left)}>{t('pjPaidFull')} · {money(left)}</button>
+            </div>
+          )}
+          {(p.pays || []).length > 0 && (
+            <ul className="pay-list">
+              {[...p.pays].reverse().slice(0, 6).map((x, i) => (
+                <li key={`${x.d}-${i}`}><span>{formatShort(x.d)}</span><b>+{money(x.a)}</b></li>
+              ))}
+            </ul>
+          )}
         </>
       )}
 

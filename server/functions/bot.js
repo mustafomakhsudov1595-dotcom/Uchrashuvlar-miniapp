@@ -200,11 +200,11 @@ async function showRemind(ctx, u) {
   return show(ctx, `${T.remTitle}\n\n${T.remState(u.remind, S.leadText(u.lead, T))}`, { inline_keyboard: rows });
 }
 async function showDigest(ctx, u) {
-  const T = S.Tof(u), mk = (kind, vals) => vals.map((v) => ({ text: `${u.digest[kind] === v ? '✔️ ' : ''}${v}`, callback_data: `dg:${kind}:${v.replace(':', '')}` }));
-  return show(ctx, `${T.digTitle}\n\n${T.digState(u.digest.m, u.digest.e)}\n${T.p.pdigState(Boolean(u.digest.p), u.digest.p)}`, { inline_keyboard: [
-    [{ text: T.digMorning, callback_data: 'noop' }, ...mk('m', ['07:00', '08:00', '09:00'])], [{ text: T.digEvening, callback_data: 'noop' }, ...mk('e', ['19:00', '20:00', '21:00'])],
-    [{ text: '📁', callback_data: 'noop' }, ...mk('p', ['08:00', '09:00', '10:00'])],
-    [{ text: `🔕 ${T.digMorning} ${T.off}`, callback_data: 'dg:m:off' }, { text: `🔕 ${T.digEvening} ${T.off}`, callback_data: 'dg:e:off' }, { text: `🔕 📁`, callback_data: 'dg:p:off' }],
+  const T = S.Tof(u), P = T.p, mk = (kind, vals) => vals.map((v) => ({ text: `${u.digest[kind] === v ? '✔️ ' : ''}${v}`, callback_data: `dg:${kind}:${v.replace(':', '')}` }));
+  return show(ctx, `${T.digTitle}\n\n${P.digBriefState(u.digest.b)}\n${P.digWeekState(u.digest.w)}\n${T.digState(null, u.digest.e).split('\n')[1]}`, { inline_keyboard: [
+    [{ text: '☀️', callback_data: 'noop' }, ...mk('b', ['07:00', '08:00', '09:00'])], [{ text: '📊', callback_data: 'noop' }, ...mk('w', ['18:00', '19:00', '20:00'])],
+    [{ text: T.digEvening, callback_data: 'noop' }, ...mk('e', ['19:00', '20:00', '21:00'])],
+    [{ text: `🔕 ☀️`, callback_data: 'dg:b:off' }, { text: `🔕 📊`, callback_data: 'dg:w:off' }, { text: `🔕 ${T.digEvening}`, callback_data: 'dg:e:off' }],
   ] });
 }
 const QUIET = [['22:00', '07:00'], ['23:00', '07:00'], ['21:00', '08:00'], ['00:00', '09:00']];
@@ -291,7 +291,7 @@ const e164 = (p) => { const d = p.replace(/\D/g, ''); return `+${d.length === 9 
 async function sendWelcome(chat, u, from) {
   const T = S.Tof(u);
   await send(chat, T.welcome(esc(from.first_name || '')), kbFor(T));
-  return send(chat, `${T.help}\n\n${T.p.helpLine}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
+  return send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
 }
 
 async function onMessage(st, m) {
@@ -332,7 +332,7 @@ async function onMessage(st, m) {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
     else await sendWelcome(chat, u, from);
   } else if (cmd === '/yordam' || cmd === '/help') {
-    await send(chat, `${T.help}\n\n${T.p.helpLine}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
+    await send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
   } else if (cmd === '/ilova' || cmd === '/app') {
     await send(chat, T.openApp, { inline_keyboard: [[S.appBtn(T.openApp)]] });
   } else if (cmd === '/yangi') {

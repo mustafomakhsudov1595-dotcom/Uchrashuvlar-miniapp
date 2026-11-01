@@ -44,7 +44,7 @@ const openStore = () => openKV();
 const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
-  quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: '09:00' }, dsent: { m: '', e: '', p: '' },
+  quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00' }, dsent: { m: '', e: '', p: '', b: '', w: '' },
   meetings: [], deleted: {}, projects: [], pdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
@@ -160,6 +160,7 @@ function cleanProject(p) {
     id: p.id, name: p.name.trim().slice(0, 120), client: typeof p.client === 'string' ? p.client.trim().slice(0, 100) : '', contact: typeof p.contact === 'string' ? p.contact.slice(0, 60) : '',
     type: PTYPES.includes(p.type) ? p.type : 'other', status: PSTATUS.includes(p.status) ? p.status : 'new', date: p.date, time: TIME_RE.test(p.time) ? p.time : '18:00',
     price: price !== null && price >= 0 ? price : null, paid: paid !== null && paid >= 0 ? paid : null, notes: typeof p.notes === 'string' ? p.notes.slice(0, 1500) : '',
+    pays: Array.isArray(p.pays) ? p.pays.filter((x) => x && Number(x.a) > 0 && DATE_RE.test(x.d)).slice(-40).map((x) => ({ a: Math.round(Number(x.a)), d: x.d })) : [],
     tasks: Array.isArray(p.tasks) ? p.tasks.filter((t) => t && typeof t.text === 'string' && t.text.trim()).slice(0, 80).map((t) => ({ id: String(t.id || newId()).slice(0, 64), text: t.text.trim().slice(0, 120), done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' })) : [],
     createdAt: Number(p.createdAt) || Date.now(), updatedAt: Number(p.updatedAt) || 0, r: p.r,
   };
@@ -176,6 +177,7 @@ function deadlineTag(p, today, T) {
   const d = daysBetween(today, p.date);
   return d < 0 ? T.p.overdue(-d) : d === 0 ? T.p.today : d === 1 ? T.p.tomorrow : T.p.left(d);
 }
+const owed = (p) => (p.price !== null && p.price !== undefined ? Math.max(0, p.price - (p.paid || 0)) : 0);
 const money = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 function projectText(p, u, now = Date.now()) {
   const T = Tof(u), today = todayISO(u.tz, now), { done, total } = projProgress(p), pc = total ? Math.round((done / total) * 100) : 0;
@@ -184,6 +186,8 @@ function projectText(p, u, now = Date.now()) {
   if (p.contact) t += `\n📞 ${esc(p.contact)}`;
   t += `\n📅 ${T.p.lblDeadline}: <b>${esc(fmtWd(p.date, T))}</b> · ${deadlineTag(p, today, T)}`;
   if (p.price !== null) t += `\n💰 ${T.p.lblPrice}: <b>${money(p.price)}</b>${p.paid !== null ? ` · ${T.p.lblPaid}: ${money(p.paid)}` : ''}`;
+  if (owed(p) > 0) t += `\n🧾 ${T.p.lblOwed}: <b>${money(owed(p))}</b>`;
+  else if (p.price !== null && p.price > 0 && owed(p) === 0) t += ` ✅`;
   if (total) t += `\n\n${barText(done, total)} <b>${done}/${total}</b> (${pc}%)`;
   if (p.notes) t += `\n📝 ${esc(p.notes)}`;
   return t;
@@ -324,5 +328,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

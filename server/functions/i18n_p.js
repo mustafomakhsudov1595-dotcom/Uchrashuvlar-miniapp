@@ -87,4 +87,6 @@ const en = {
   helpLine: '📁 /loyiha — new project · /loyihalar — list · /vazifalar — today’s tasks',
   welcomeProj: '📁 <b>Projects:</b> track website, bot and Instagram video orders with deadlines — /loyiha',
 };
+const X = require('./i18n_x');
+Object.assign(uz, X.uz); Object.assign(ru, X.ru); Object.assign(en, X.en);
 module.exports = { uz, ru, en };

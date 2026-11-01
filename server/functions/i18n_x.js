@@ -1,0 +1,55 @@
+'use strict';
+// Loyihalar: toʻlovlar/qarzlar, ertalabki karta va haftalik xulosa matnlari (uz / ru / en)
+const fm = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const uz = {
+  lblOwed: 'Qoldiq', bPay: '💵 Toʻlov', bPayFull: '✅ Toʻliq toʻlandi', bDebts: '🧾 Qarzlar',
+  payAsk: (n, o) => `💵 <b>${n}</b>\nQancha toʻlov keldi? Summani yozing (masalan: <code>500 000</code> yoki <code>1 mln</code>).${o ? `\nQoldiq: <b>${o}</b>` : ''}`,
+  payBad: 'Summani tushunmadim. Masalan: <code>500000</code> yoki <code>1 mln</code>',
+  payDone: (a, left) => `✅ Toʻlov qoʻshildi: <b>+${a}</b>${left > 0 ? `\n🧾 Qoldiq: <b>${fm(left)}</b>` : '\n🎉 Toʻliq toʻlandi!'}`,
+  debtTitle: (n, sum) => `🧾 <b>Qarzlar</b> — ${n} ta loyiha, jami <b>${sum}</b>`, debtNone: 'Qarz yoʻq 🎉 Hamma toʻlovlar kelgan.',
+  debtLine: (icon, name, client, o) => `${icon} <b>${name}</b>${client ? ' · ' + client : ''} — <b>${o}</b>`,
+  payRem: (name, o) => `🧾 <b>${name}</b> — toʻlov qoldigʻi <b>${o}</b>. Mijozga eslating!`,
+  brTitle: (d) => `☀️ <b>Xayrli tong! Bugun nima qilaman</b>\n<i>${d}</i>`, brMeet: '🤝 Uchrashuvlar', brNone: '🎉 Bugun reja boʻsh — yangi loyiha qoʻshing: /loyiha',
+  brProj: '📁 Muddati yaqin loyihalar', brDebt: (n, s) => `🧾 Qarzlar: ${n} ta loyiha, jami <b>${s}</b>`, brOverTasks: 'Kechikkan vazifalar bor — avval shularni yoping!',
+  digBrief: '☀️ Ertalabki karta', digWeek: '📊 Haftalik xulosa (yakshanba)',
+  digBriefState: (at) => `☀️ Ertalabki karta (bugungi uchrashuv, vazifa, muddat, qarz): ${at ? `har kuni <b>${at}</b> da` : '<b>oʻchirilgan</b>'}`,
+  digWeekState: (at) => `📊 Haftalik xulosa: ${at ? `yakshanba <b>${at}</b> da` : '<b>oʻchirilgan</b>'}`,
+  wkTitle: '📊 <b>Haftalik xulosa</b>', wkDone: (n) => `✅ Tugagan loyihalar: <b>${n}</b>`, wkMoney: (s) => `💰 Bu hafta tushgan pul: <b>${s}</b>`, wkDebt: (n, s) => `🧾 Hozirgi qarz: <b>${s}</b> (${n} ta loyiha)`,
+  wkActive: (n, o) => `📁 Faol loyiha: <b>${n}</b>${o ? ` · kechikkan: <b>${o}</b>` : ''}`, wkNext: '🗓 Kelasi hafta muddatlari', wkMeet: (n) => `🤝 Uchrashuvlar: <b>${n}</b>`, wkEmpty: 'Bu hafta tinch oʻtdi.',
+  helpLine2: '🧾 /qarz — kim qancha qarz · ☀️ Ertalab 08:00 da bugungi reja avtomatik keladi',
+};
+const ru = {
+  ...uz,
+  lblOwed: 'Остаток', bPay: '💵 Оплата', bPayFull: '✅ Оплачено полностью', bDebts: '🧾 Долги',
+  payAsk: (n, o) => `💵 <b>${n}</b>\nСколько поступило? Напишите сумму (например: <code>500 000</code> или <code>1 млн</code>).${o ? `\nОстаток: <b>${o}</b>` : ''}`,
+  payBad: 'Не понял сумму. Например: <code>500000</code> или <code>1 млн</code>',
+  payDone: (a, left) => `✅ Оплата добавлена: <b>+${a}</b>${left > 0 ? `\n🧾 Остаток: <b>${fm(left)}</b>` : '\n🎉 Оплачено полностью!'}`,
+  debtTitle: (n, sum) => `🧾 <b>Долги</b> — проектов: ${n}, всего <b>${sum}</b>`, debtNone: 'Долгов нет 🎉 Все оплаты получены.',
+  payRem: (name, o) => `🧾 <b>${name}</b> — остаток оплаты <b>${o}</b>. Напомните клиенту!`,
+  brTitle: (d) => `☀️ <b>Доброе утро! План на сегодня</b>\n<i>${d}</i>`, brMeet: '🤝 Встречи', brNone: '🎉 На сегодня планов нет — добавьте проект: /loyiha',
+  brProj: '📁 Проекты с близким сроком', brDebt: (n, s) => `🧾 Долги: проектов ${n}, всего <b>${s}</b>`, brOverTasks: 'Есть просроченные задачи — закройте их в первую очередь!',
+  digBrief: '☀️ Утренняя карточка', digWeek: '📊 Недельная сводка (воскресенье)',
+  digBriefState: (at) => `☀️ Утренняя карточка (встречи, задачи, сроки, долги): ${at ? `каждый день в <b>${at}</b>` : '<b>выключена</b>'}`,
+  digWeekState: (at) => `📊 Недельная сводка: ${at ? `воскресенье в <b>${at}</b>` : '<b>выключена</b>'}`,
+  wkTitle: '📊 <b>Итоги недели</b>', wkDone: (n) => `✅ Завершено проектов: <b>${n}</b>`, wkMoney: (s) => `💰 Получено за неделю: <b>${s}</b>`, wkDebt: (n, s) => `🧾 Текущий долг: <b>${s}</b> (проектов: ${n})`,
+  wkActive: (n, o) => `📁 Активных проектов: <b>${n}</b>${o ? ` · просрочено: <b>${o}</b>` : ''}`, wkNext: '🗓 Сроки на следующей неделе', wkMeet: (n) => `🤝 Встреч: <b>${n}</b>`, wkEmpty: 'Неделя прошла спокойно.',
+  helpLine2: '🧾 /qarz — кто сколько должен · ☀️ Каждое утро в 08:00 приходит план на сегодня',
+};
+const en = {
+  ...uz,
+  lblOwed: 'Balance due', bPay: '💵 Payment', bPayFull: '✅ Paid in full', bDebts: '🧾 Debts',
+  payAsk: (n, o) => `💵 <b>${n}</b>\nHow much did you receive? Type the amount (e.g. <code>500 000</code> or <code>1 mln</code>).${o ? `\nBalance due: <b>${o}</b>` : ''}`,
+  payBad: 'Could not read the amount. Example: <code>500000</code> or <code>1 mln</code>',
+  payDone: (a, left) => `✅ Payment added: <b>+${a}</b>${left > 0 ? `\n🧾 Balance due: <b>${fm(left)}</b>` : '\n🎉 Paid in full!'}`,
+  debtTitle: (n, sum) => `🧾 <b>Debts</b> — ${n} project${n > 1 ? 's' : ''}, total <b>${sum}</b>`, debtNone: 'No debts 🎉 All payments received.',
+  payRem: (name, o) => `🧾 <b>${name}</b> — balance due <b>${o}</b>. Remind the client!`,
+  brTitle: (d) => `☀️ <b>Good morning! Today’s plan</b>\n<i>${d}</i>`, brMeet: '🤝 Meetings', brNone: '🎉 Nothing planned today — add a project: /loyiha',
+  brProj: '📁 Projects due soon', brDebt: (n, s) => `🧾 Debts: ${n} project${n > 1 ? 's' : ''}, total <b>${s}</b>`, brOverTasks: 'You have overdue tasks — close those first!',
+  digBrief: '☀️ Morning card', digWeek: '📊 Weekly summary (Sunday)',
+  digBriefState: (at) => `☀️ Morning card (meetings, tasks, deadlines, debts): ${at ? `every day at <b>${at}</b>` : '<b>off</b>'}`,
+  digWeekState: (at) => `📊 Weekly summary: ${at ? `Sunday at <b>${at}</b>` : '<b>off</b>'}`,
+  wkTitle: '📊 <b>Weekly summary</b>', wkDone: (n) => `✅ Projects finished: <b>${n}</b>`, wkMoney: (s) => `💰 Received this week: <b>${s}</b>`, wkDebt: (n, s) => `🧾 Outstanding: <b>${s}</b> (${n} project${n > 1 ? 's' : ''})`,
+  wkActive: (n, o) => `📁 Active projects: <b>${n}</b>${o ? ` · overdue: <b>${o}</b>` : ''}`, wkNext: '🗓 Deadlines next week', wkMeet: (n) => `🤝 Meetings: <b>${n}</b>`, wkEmpty: 'A quiet week.',
+  helpLine2: '🧾 /qarz — who owes how much · ☀️ Every morning at 08:00 your plan for today arrives',
+};
+module.exports = { uz, ru, en };

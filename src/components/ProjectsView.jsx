@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import ProjectCard, { TypeIcon } from './ProjectCard.jsx';
 import Illustration from './Illustration.jsx';
 import { IconSettings } from './Icons.jsx';
-import { byDeadline, PTYPES, urgency } from '../lib/projects.js';
+import { byDeadline, PTYPES, urgency, owed, money } from '../lib/projects.js';
 import { toISODate } from '../lib/dates.js';
 import { t } from '../lib/i18n.js';
 
@@ -15,6 +15,9 @@ export default function ProjectsView({ projects, now, onOpen, onAdd, onDone, onD
   const finished = useMemo(() => projects.filter((p) => p.status === 'done').sort((a, b) => b.updatedAt - a.updatedAt), [projects]);
   const soon = active.filter((p) => ['soon', 'today'].includes(urgency(p, today).kind)).length;
   const over = active.filter((p) => urgency(p, today).kind === 'over').length;
+
+  const debts = useMemo(() => projects.filter((p) => owed(p) > 0), [projects]);
+  const debtSum = debts.reduce((n, p) => n + owed(p), 0);
 
   const list = active.filter((p) => (!type || p.type === type) && (!flt || (flt === 'over' ? urgency(p, today).kind === 'over' : ['soon', 'today'].includes(urgency(p, today).kind))));
 
@@ -66,6 +69,14 @@ export default function ProjectsView({ projects, now, onOpen, onAdd, onDone, onD
               <b>{over}</b>
             </button>
           </div>
+
+          {debts.length > 0 && (
+            <div className="debt-card">
+              <small>{t('pjDebts')}</small>
+              <b>{money(debtSum)}</b>
+              <span>{t('pjDebtsSub', debts.length)}</span>
+            </div>
+          )}
 
           <div className="cat-chips" role="group" aria-label={t('pfType')}>
             <button type="button" className={`cat-chip${type === '' ? ' on' : ''}`} onClick={() => setType('')}>

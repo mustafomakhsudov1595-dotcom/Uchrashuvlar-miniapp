@@ -38,3 +38,6 @@ export function urgency(p, today) {
 }
 
 export const byDeadline = (a, b) => (a.date + a.time < b.date + b.time ? -1 : 1);
+
+export const owed = (p) => (p.price !== null && p.price !== undefined ? Math.max(0, p.price - (p.paid || 0)) : 0);
+export const money = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');

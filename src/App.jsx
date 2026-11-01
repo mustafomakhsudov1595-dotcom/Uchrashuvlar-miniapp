@@ -417,6 +417,11 @@ export default function App() {
     touchProject(id, (x) => ({ tasks: [...x.tasks, { id: newId(), text, done: false, due: '' }] }));
     showToast(t('toastTaskAdded'));
   };
+  const projPay = (id, amount) => {
+    haptic.success();
+    touchProject(id, (x) => ({ paid: (x.paid || 0) + amount, pays: [...(x.pays || []), { a: amount, d: todayISO() }].slice(-40) }));
+    showToast(t('toastPaid'));
+  };
   const projShift = (id, n) => {
     haptic.select();
     touchProject(id, (x) => ({ date: shiftDate(x.date < todayISO() && n > 0 ? todayISO() : x.date, n) }));
@@ -509,6 +514,7 @@ export default function App() {
           onRemoveTask={(tid) => projRemoveTask(curProject.id, tid)}
           onAddTask={(text) => projAddTask(curProject.id, text)}
           onShift={(n) => projShift(curProject.id, n)}
+          onPay={(a) => projPay(curProject.id, a)}
         />
       )}
 

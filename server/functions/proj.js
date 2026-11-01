@@ -27,7 +27,7 @@ async function showList(ctx, u, page = 0) {
   if (page < pages - 1) nav.push({ text: '▶️', callback_data: `pl:${page + 1}` });
   if (nav.length) rows.push(nav);
   rows.push([{ text: P.addNew, callback_data: 'pn' }, { text: P.bTasksToday, callback_data: 'ptd' }]);
-  rows.push([S.appBtn(T.openAppShort, '?tab=projects')]);
+  rows.push([{ text: P.bDebts, callback_data: 'pq:0' }, S.appBtn(T.openAppShort, '?tab=projects')]);
   return show(ctx, text, { inline_keyboard: rows });
 }
 
@@ -36,6 +36,8 @@ function cardMarkup(p, u) {
   const rows = p.tasks.slice(0, 14).map((t, i) => [{ text: `${t.done ? '✅' : '⬜️'} ${t.text}${t.due && !t.done ? ' · ' + t.due.slice(5).replace('-', '.') : ''}`.slice(0, 60), callback_data: `pt:${p.id}:${i}` }]);
   rows.push(S.PSTATUS.map((s) => ({ text: `${p.status === s ? '✔️' : S.SICON[s]}`, callback_data: `ps:${p.id}:${s}` })));
   rows.push([1, 3, 7].map((n) => ({ text: `🗓 ${P.bPlus(n)}`, callback_data: `pd:${p.id}:${n}` })));
+  if (p.price !== null && S.owed(p) > 0) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]);
+  else if (p.price !== null) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }]);
   rows.push([{ text: P.bAddTask, callback_data: `pa:${p.id}` }, S.appBtn(P.bApp, `?proj=${p.id}`), { text: P.bDel, callback_data: `px:${p.id}` }]);
   rows.push([{ text: P.backList, callback_data: 'pl:0' }]);
   return { inline_keyboard: rows };
@@ -69,6 +71,70 @@ function tasksView(u, now = Date.now()) {
   return { text, markup: { inline_keyboard: rows }, count: n + g.soon.length };
 }
 async function showTasks(ctx, u) { const v = tasksView(u); return show(ctx, v.text, v.markup); }
+
+
+/* ---------- toʻlovlar va qarzlar ---------- */
+const debtors = (u) => u.projects.filter((p) => S.owed(p) > 0).sort((a, b) => (a.date < b.date ? -1 : 1));
+const debtSum = (list) => list.reduce((n, p) => n + S.owed(p), 0);
+function payAmount(text) {
+  const m = parseMoney(text);
+  if (m) return m.value;
+  const n = text.replace(/\s/g, '');
+  return /^\d{1,12}$/.test(n) && Number(n) > 0 ? Number(n) : null;
+}
+function applyPayment(u, p, amount) {
+  p.paid = (p.paid || 0) + amount;
+  p.pays = [...(p.pays || []), { a: amount, d: S.todayISO(u.tz) }].slice(-40);
+  p.updatedAt = Date.now();
+  if (p.r) p.r.pay = undefined;
+}
+async function showDebts(ctx, u) {
+  const T = S.Tof(u), P = T.p, list = debtors(u);
+  if (!list.length) return show(ctx, `${P.debtTitle(0, '0')}\n\n${P.debtNone}`, { inline_keyboard: [[{ text: P.backList, callback_data: 'pl:0' }]] });
+  const text = `${P.debtTitle(list.length, S.money(debtSum(list)))}\n\n${list.slice(0, 20).map((p) => P.debtLine(S.PICON[p.type], esc(p.name), esc(p.client), S.money(S.owed(p)))).join('\n')}`;
+  const rows = list.slice(0, 10).map((p) => [{ text: `${S.PICON[p.type]} ${p.name} · ${S.money(S.owed(p))}`.slice(0, 60), callback_data: `pj:${p.id}` }]);
+  rows.push([{ text: P.backList, callback_data: 'pl:0' }]);
+  return show(ctx, text, { inline_keyboard: rows });
+}
+
+/* ---------- ertalabki karta (har kuni 08:00) ---------- */
+function briefMessage(u, now = Date.now()) {
+  const T = S.Tof(u), P = T.p, today = S.todayISO(u.tz, now);
+  const meets = u.meetings.filter((m) => m.date === today && m.status !== 'cancelled' && m.status !== 'done').sort(S.byStart(u.tz));
+  const g = collectTasks(u, now);
+  const near = S.activeProjects(u).filter((p) => S.daysBetween(today, p.date) <= 3);
+  const dl = debtors(u);
+  const parts = [P.brTitle(esc(S.fmtWd(today, T)))];
+  if (meets.length) parts.push(`${P.brMeet} (${meets.length})\n${meets.slice(0, 8).map((m) => `• <b>${m.time}</b> — ${esc(m.name)}${m.location ? ' 📍' + esc(m.location) : ''}`).join('\n')}`);
+  if (g.over.length) parts.push(`${P.hOver} (${g.over.length})\n${g.over.slice(0, 6).map(line).join('\n')}\n<i>${P.brOverTasks}</i>`);
+  if (g.today.length) parts.push(`${P.hToday} (${g.today.length})\n${g.today.slice(0, 8).map(line).join('\n')}`);
+  if (near.length) parts.push(`${P.brProj}\n${near.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${S.deadlineTag(p, today, T)}`).join('\n')}`);
+  if (dl.length) parts.push(P.brDebt(dl.length, S.money(debtSum(dl))));
+  const empty = !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;
+  if (empty) parts.push(P.brNone);
+  const rows = [...g.over, ...g.today].slice(0, 6).map((e) => [{ text: `⬜️ ${e.t.text} · ${e.p.name}`.slice(0, 60), callback_data: `pu:${e.p.id}:${e.i}` }]);
+  for (const m of meets.slice(0, 4)) rows.push([{ text: `${m.time} · ${m.name}`.slice(0, 60), callback_data: `d:${m.id}` }]);
+  const last = [S.appBtn(T.openAppShort)];
+  if (dl.length) last.unshift({ text: P.bDebts, callback_data: 'pq:0' });
+  rows.push(last);
+  return { text: parts.join('\n\n'), markup: { inline_keyboard: rows } };
+}
+
+/* ---------- haftalik xulosa (yakshanba) ---------- */
+function weeklyMessage(u, now = Date.now()) {
+  const T = S.Tof(u), P = T.p, today = S.todayISO(u.tz, now), from = S.addDaysISO(today, -6), next = S.addDaysISO(today, 7);
+  const done = u.projects.filter((p) => p.status === 'done' && p.updatedAt >= now - 7 * 86400000);
+  const money = u.projects.reduce((n, p) => n + (p.pays || []).filter((x) => x.d >= from).reduce((m, x) => m + x.a, 0), 0);
+  const dl = debtors(u), act = S.activeProjects(u), over = act.filter((p) => S.daysBetween(today, p.date) < 0).length;
+  const meets = u.meetings.filter((m) => m.date >= from && m.date <= today && m.status !== 'cancelled').length;
+  const upcoming = act.filter((p) => p.date > today && p.date <= next);
+  if (!done.length && !money && !dl.length && !act.length && !meets) return null;
+  const parts = [P.wkTitle, [P.wkDone(done.length), P.wkMoney(S.money(money)), dl.length ? P.wkDebt(dl.length, S.money(debtSum(dl))) : '', P.wkActive(act.length, over), P.wkMeet(meets)].filter(Boolean).join('\n')];
+  if (upcoming.length) parts.push(`${P.wkNext}\n${upcoming.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${esc(S.fmtWd(p.date, T))}`).join('\n')}`);
+  const rows = [[S.appBtn(T.openAppShort, '?tab=projects')]];
+  if (dl.length) rows.unshift([{ text: P.bDebts, callback_data: 'pq:0' }]);
+  return { text: parts.join('\n\n'), markup: { inline_keyboard: rows } };
+}
 
 /* ---------- yangi loyiha ---------- */
 const typeButtons = (P) => ({ inline_keyboard: [S.PTYPES.slice(0, 2).map((t) => ({ text: `${S.PICON[t]} ${P.types[t]}`, callback_data: `pnt:${t}` })), S.PTYPES.slice(2).map((t) => ({ text: `${S.PICON[t]} ${P.types[t]}`, callback_data: `pnt:${t}` })), cancelRow(P)] });
@@ -153,6 +219,15 @@ async function onMessage(chat, u, cmd, args, text) {
   }
   if (cmd === '/loyihalar' || cmd === '/projects') { await showList({ chat }, u, 0); return true; }
   if (cmd === '/vazifalar' || cmd === '/tasks') { await showTasks({ chat }, u); return true; }
+  if (cmd === '/qarz' || cmd === '/qarzlar' || cmd === '/debts') { await showDebts({ chat }, u); return true; }
+  if (!cmd && u.state && u.state.kind === 'pay') {
+    const p = find(u, u.state.pid), amount = text ? payAmount(text) : null;
+    if (!p) { u.state = null; await send(chat, T.p.notFound); return true; }
+    if (!amount) { await send(chat, T.p.payBad, { inline_keyboard: [cancelRow(T.p)] }); return true; }
+    u.state = null; applyPayment(u, p, amount);
+    await send(chat, `${T.p.payDone(S.money(amount), S.owed(p))}\n\n${S.projectText(p, u)}`, cardMarkup(p, u));
+    return true;
+  }
   if (!cmd && u.state && u.state.kind === 'p') {
     if (u.state.step === 'confirm') { await send(chat, T.pressButtons); return true; }
     if (text) await flowText(chat, u, text); else await send(chat, T.pleaseText);
@@ -187,7 +262,15 @@ async function onCallback(ctx, u, act, a, b) {
     const p = find(u, a), n = Number(b) || 1;
     if (p) { const today = S.todayISO(u.tz); p.date = S.addDaysISO(p.date < today ? today : p.date, n); p.r = undefined; p.updatedAt = Date.now(); toast = P.deadlineMoved(S.fmtShort(p.date, T)); }
     await showCard(ctx, u, a);
-  } else if (act === 'pa') {
+  } else if (act === 'pp') {
+    const p = find(u, a);
+    if (p) { u.state = { kind: 'pay', pid: a }; await send(chat, P.payAsk(esc(p.name), S.owed(p) > 0 ? S.money(S.owed(p)) : ''), { inline_keyboard: [cancelRow(P)] }); }
+  } else if (act === 'ppf') {
+    const p = find(u, a), left = p ? S.owed(p) : 0;
+    if (p && left > 0) { applyPayment(u, p, left); toast = P.payDone(S.money(left), 0).replace(/<[^>]+>/g, '').split('\n')[0]; }
+    await showCard(ctx, u, a);
+  } else if (act === 'pq') await showDebts(ctx, u);
+  else if (act === 'pa') {
     if (find(u, a)) { u.state = { kind: 'ptask', pid: a }; await send(chat, P.addTaskAsk, { inline_keyboard: [cancelRow(P)] }); }
   } else if (act === 'px') {
     const p = find(u, a);
@@ -224,18 +307,32 @@ async function remind(u, now) {
       dirty = true; if (res.ok) sent += 1;
     }
   }
-  // Kunlik loyiha xulosasi
-  const at = u.digest && u.digest.p;
-  if (at && u.dsent.p !== today) {
-    const since = S.toMin(hhmm) - S.toMin(at);
-    if (since >= 0 && since <= 120) {
-      u.dsent.p = today; dirty = true;
-      const v = tasksView(u, now);
-      const g = collectTasks(u, now);
-      if (g.over.length + g.today.length > 0) { const res = await S.tg('sendMessage', { chat_id: u.chat, text: v.text, parse_mode: 'HTML', reply_markup: v.markup, disable_web_page_preview: true }); if (res.ok) sent += 1; }
+  // To'lov qoldig'i: tayyor yoki muddati o'tgan loyiha bo'yicha har 3 kunda, ko'pi bilan 6 marta
+  if (u.remind && !S.inQuiet(u, hhmm) && hhmm >= '10:00') {
+    for (const p of u.projects) {
+      if (S.owed(p) <= 0 || !(p.status === 'done' || p.date < today)) continue;
+      const r = p.r || (p.r = {});
+      if ((r.payN || 0) >= 6 || (r.pay && S.daysBetween(r.pay, today) < 3)) continue;
+      r.pay = today; r.payN = (r.payN || 0) + 1; dirty = true;
+      const rows = [[{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]];
+      const res = await S.tg('sendMessage', { chat_id: u.chat, text: `${P.payRem(esc(p.name), S.money(S.owed(p)))}\n\n${S.projectText(p, u, now)}`, parse_mode: 'HTML', reply_markup: { inline_keyboard: rows }, disable_web_page_preview: true });
+      if (res.ok) sent += 1;
     }
+  }
+  // Ertalabki karta: tanlangan vaqtdan keyingi 2 soat ichida bir marta (har kuni)
+  for (const [kind, build, onlyDay] of [['b', briefMessage, null], ['w', weeklyMessage, 6]]) {
+    const at = u.digest && u.digest[kind];
+    if (!at || u.dsent[kind] === today) continue;
+    if (onlyDay !== null && S.weekdayIdx(today) !== onlyDay) continue;
+    const since = S.toMin(hhmm) - S.toMin(at);
+    if (since < 0 || since > 120) continue;
+    u.dsent[kind] = today; dirty = true;
+    const v = build(u, now);
+    if (!v) continue;
+    const res = await S.tg('sendMessage', { chat_id: u.chat, text: v.text, parse_mode: 'HTML', reply_markup: v.markup, disable_web_page_preview: true });
+    if (res.ok) sent += 1;
   }
   return { dirty, sent };
 }
 
-module.exports = { onMessage, onCallback, remind, showList, showTasks, tasksView, ACTS: ['pl', 'pj', 'pt', 'pu', 'ps', 'pd', 'pa', 'px', 'pxy', 'pn', 'pno', 'pnt', 'pnd', 'pk', 'pok', 'ptd'] };
+module.exports = { onMessage, onCallback, remind, showList, showTasks, tasksView, showDebts, briefMessage, weeklyMessage, applyPayment, payAmount, ACTS: ['pl', 'pj', 'pt', 'pu', 'ps', 'pd', 'pa', 'px', 'pxy', 'pn', 'pno', 'pnt', 'pnd', 'pk', 'pok', 'ptd', 'pp', 'ppf', 'pq'] };

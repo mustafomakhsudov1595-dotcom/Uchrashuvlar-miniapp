@@ -31,7 +31,7 @@ async function processUser(u, now) {
   // Kunlik xulosa: tanlangan vaqtdan keyingi 2 soat ichida bir marta
   for (const [kind, day] of [['m', today], ['e', S.addDaysISO(today, 1)]]) {
     const at = u.digest[kind];
-    if (!at || u.dsent[kind] === today) continue;
+    if (!at || u.dsent[kind] === today || (kind === 'm' && u.digest.b)) continue;
     const since = S.toMin(hhmm) - S.toMin(at);
     if (since < 0 || since > 120) continue;
     u.dsent[kind] = today; dirty = true;
