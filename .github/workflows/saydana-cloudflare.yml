@@ -1,0 +1,45 @@
+# Saydana saytini Cloudflare Pages'ga avtomatik joylash.
+# Kerakli GitHub secrets (Settings -> Secrets and variables -> Actions):
+#   CLOUDFLARE_API_TOKEN  - "Cloudflare Pages: Edit" ruxsatli token
+#   CLOUDFLARE_ACCOUNT_ID - Cloudflare hisob raqami (Account ID)
+name: Saydana -> Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - claude/saydana-medical-center-site-ccqhxs
+      - main
+    paths:
+      - 'saydana/**'
+      - '.github/workflows/saydana-cloudflare.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: saydana-cloudflare
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Kalitlar mavjudligini tekshirish
+        if: ${{ env.CF_TOKEN == '' || env.CF_ACCOUNT == '' }}
+        run: |
+          echo "::warning::CLOUDFLARE_API_TOKEN va CLOUDFLARE_ACCOUNT_ID secrets qo'shilmagan, deploy o'tkazib yuborildi."
+
+      - uses: actions/checkout@v4
+        if: ${{ env.CF_TOKEN != '' && env.CF_ACCOUNT != '' }}
+
+      - name: Cloudflare Pages'ga joylash
+        if: ${{ env.CF_TOKEN != '' && env.CF_ACCOUNT != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy saydana --project-name=saydanaa --branch=main --commit-dirty=true

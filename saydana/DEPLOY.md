@@ -36,3 +36,16 @@ npx wrangler pages deploy saydana --project-name=saydana
 
 - `index.html` ichiga `<link rel="canonical" href="https://SIZNING-DOMEN/">` qo'shing.
 - Kerak bo'lsa `sitemap.xml` yarating va `robots.txt` ga `Sitemap: https://SIZNING-DOMEN/sitemap.xml` qatorini qo'shing.
+
+## 3-usul: GitHub Actions (avtomatik yangilanish, mavjud loyihaga)
+
+`.github/workflows/saydana-cloudflare.yml` `saydana/` papkasi o'zgarganda saytni Cloudflare Pages'dagi `saydanaa` loyihasiga o'zi joylaydi.
+
+GitHub repozitoriyasida **Settings → Secrets and variables → Actions → New repository secret** orqali ikkita secret qo'shing:
+
+| Nomi | Qiymati |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare → My Profile → API Tokens → Create Token → Custom token → ruxsat: **Account · Cloudflare Pages · Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare → Workers & Pages sahifasining o'ng tomonidagi **Account ID** |
+
+Keyin **Actions** → **Saydana -> Cloudflare Pages** → **Run workflow** ni bosing, yoki shunchaki `saydana/` ichidagi faylni o'zgartirib push qiling.
