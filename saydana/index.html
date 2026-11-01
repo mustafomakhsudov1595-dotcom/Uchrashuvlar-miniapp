@@ -59,23 +59,20 @@
       </div>
     </div>
 
-    <div class="viewer-wrap">
-      <div class="viewer" id="viewer">
-        <canvas id="mri" width="224" height="224" role="img" aria-label="Namunaviy bosh miya kesimi (kompyuterda yaratilgan tasvir)"></canvas>
-        <i class="sweep" aria-hidden="true"></i>
-        <svg class="vx" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M50 0v38M50 62v38M0 50h38M62 50h38" /></svg>
-        <span class="vl tl" id="vTitle">SAYDANA · MRT<br>AKSIAL · T2</span>
-        <span class="vl tr" id="vSe">Kesim 12 / 24</span>
-        <span class="vl bl">W 1400 · L 700</span>
-        <span class="vl br">namunaviy tasvir</span>
-        <span class="ori o-t">A</span><span class="ori o-b">P</span><span class="ori o-l">R</span><span class="ori o-r">L</span>
+    <div class="stage-wrap">
+      <div class="stage" id="stage">
+        <canvas id="gl" role="img" aria-label="Tomograf va rentgen apparatlarining 3D modeli. Sudrab aylantirish mumkin."></canvas>
+        <span class="vl tl" id="stTitle">SAYDANA · MRT<br>3D MODEL</span>
+        <span class="vl tr hint">Sudrab aylantiring</span>
+        <figure class="inset">
+          <canvas id="inset" width="168" height="168" role="img" aria-label="Namunaviy tomografiya tasviri"></canvas>
+          <figcaption class="vl">tasvir · namunaviy</figcaption>
+        </figure>
       </div>
-      <div class="vctl">
-        <div class="seg" role="group" aria-label="Tekshiruv turi">
-          <button type="button" class="on" data-mode="mr" aria-pressed="true">MRT</button>
-          <button type="button" data-mode="ct" aria-pressed="false">MSKT</button>
-        </div>
-        <label class="slider"><span>Kesimni suring</span><input id="vSlice" type="range" min="1" max="24" value="12" aria-label="Kesim raqami"></label>
+      <div class="modes" role="group" aria-label="Apparat turi">
+        <button type="button" class="on" data-m="mr" aria-pressed="true"><canvas class="mthumb" data-kind="mr" width="96" height="96"></canvas><span><b>MRT</b><small>Magnit-rezonans</small></span></button>
+        <button type="button" data-m="ct" aria-pressed="false"><canvas class="mthumb" data-kind="ct" width="96" height="96"></canvas><span><b>MSKT</b><small>Kompyuter tomografiya</small></span></button>
+        <button type="button" data-m="xr" aria-pressed="false"><canvas class="mthumb" data-kind="xray" width="96" height="96"></canvas><span><b>Rentgen</b><small>Ko'krak qafasi</small></span></button>
       </div>
     </div>
   </div>
@@ -87,6 +84,24 @@
       <div><dt>Telefon</dt><dd><a href="tel:+998782231010">+998 (78) 223-10-10</a><br><a href="tel:+998782231111">+998 (78) 223-11-11</a></dd></div>
       <div><dt>Elektron pochta</dt><dd><a href="mailto:info@saydanamed.uz">info@saydanamed.uz</a><br>Yakshanba — kardiolog qabuli</dd></div>
     </dl>
+  </div>
+</section>
+
+<!-- TASVIRLAR GALEREYASI -->
+<section class="gallery" aria-label="Tibbiy tasvirlar galereyasi">
+  <div class="container">
+    <div class="gal-head">
+      <span class="eyebrow">Tasvirlar</span>
+      <p>Diagnostika tasvirlarining namunalari. Bular kompyuterda yaratilgan illyustratsiyalar, haqiqiy bemor suratlari emas.</p>
+    </div>
+    <div class="gal">
+      <figure class="tile"><canvas data-kind="mr" width="160" height="160" role="img" aria-label="MRT tasviri namunasi"></canvas><figcaption><b>MRT</b><span>MR</span></figcaption></figure>
+      <figure class="tile"><canvas data-kind="ct" width="160" height="160" role="img" aria-label="MSKT tasviri namunasi"></canvas><figcaption><b>MSKT</b><span>CT</span></figcaption></figure>
+      <figure class="tile"><canvas data-kind="xray" width="160" height="160" role="img" aria-label="Rentgen tasviri namunasi"></canvas><figcaption><b>Rentgen</b><span>DX</span></figcaption></figure>
+      <figure class="tile"><canvas data-kind="us" width="160" height="160" role="img" aria-label="UZI tasviri namunasi"></canvas><figcaption><b>UZI</b><span>US</span></figcaption></figure>
+      <figure class="tile"><canvas data-kind="echo" width="160" height="160" role="img" aria-label="Exokardiografiya tasviri namunasi"></canvas><figcaption><b>Exo-KG</b><span>US</span></figcaption></figure>
+      <figure class="tile"><canvas data-kind="endo" width="160" height="160" role="img" aria-label="FGDS tasviri namunasi"></canvas><figcaption><b>FGDS</b><span>ES</span></figcaption></figure>
+    </div>
   </div>
 </section>
 
@@ -135,6 +150,7 @@
       <h2>Diagnostika va tekshiruvlar</h2>
       <p>Ro'yxat ochiq manbalar asosida tuzilgan. Narxlar va tayyorgarlik bo'yicha markazga qo'ng'iroq qilib aniqlashtiring. Batafsil ma'lumot uchun qatorni bosing.</p>
     </div>
+    <div class="svc-layout">
     <div class="list">
       <article data-svc="mri" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">MR</span><h3>MRT</h3><p>Magnit-rezonans tomografiya — bosh miya, umurtqa, bo'g'imlar va ichki a'zolarni batafsil, nurlanishsiz tekshirish.</p></article>
       <article data-svc="mskt" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">CT</span><h3>MSKT</h3><p>Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.</p></article>
@@ -144,6 +160,15 @@
       <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">ECG</span><h3>EKG</h3><p>Yurak ritmi va o'tkazuvchanligini baholash.</p></article>
       <article data-svc="fgds" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">ES</span><h3>FGDS</h3><p>Qizilo'ngach, oshqozon va o'n ikki barmoqli ichak endoskopiyasi.</p></article>
       <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">LAB</span><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
+    </div>
+    <aside class="svc-preview" aria-label="Tanlangan xizmat tasviri">
+      <div class="pv">
+        <canvas id="pvCanvas" width="224" height="224" role="img" aria-label="Tanlangan xizmatning namunaviy tasviri"></canvas>
+        <span class="vl tl" id="pvCode">MR · MRT</span>
+        <span class="vl br">namunaviy tasvir</span>
+      </div>
+      <p class="pv-cap" id="pvCap">Qatorning ustiga boring yoki bosing.</p>
+    </aside>
     </div>
 
     <div class="areas">
@@ -451,7 +476,7 @@
   <div class="sheet-bg" data-close></div>
   <div class="sheet-box svc-box" role="dialog" aria-modal="true" aria-labelledby="svcTitle">
     <div class="svc-head">
-      <div class="svc-ph" id="svcPh" hidden><img id="svcImg" alt="" width="96" height="120"></div>
+      <div class="svc-ph" id="svcPh" hidden><img id="svcImg" alt="" width="96" height="120"><canvas id="svcCv" width="120" height="120" hidden></canvas></div>
       <div class="ico" id="svcIco"><svg class="ic"><use id="svcIcon" href="#i-scan"/></svg></div>
       <div><h3 id="svcTitle"></h3><p id="svcDesc"></p></div>
     </div>
@@ -493,6 +518,9 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   </g>
 </svg>
+<script src="vendor/three.min.js"></script>
+<script src="scan.js"></script>
+<script src="stage3d.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
