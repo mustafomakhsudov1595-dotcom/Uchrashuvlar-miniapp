@@ -206,6 +206,12 @@
     });
   }
 
+  // Sarlavha: skroll qilinganda ingichka chiziq
+  var header = document.getElementById('top');
+  function onScroll() { header.classList.toggle('scrolled', (window.scrollY || document.documentElement.scrollTop) > 8); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
   // Menyuda joriy bo'limni ajratib ko'rsatish
   if (hasIO) {
     var links = {};
