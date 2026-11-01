@@ -6,6 +6,13 @@
 - `functions/remind.js` — uchrashuvdan 1 soat (yoki /eslatma da tanlangan vaqt) oldin eslatma yuboradi
 - `functions/_shared.js` — umumiy kod. Ma'lumotlar Cloudflare KV'da (`user/<id>`, `cal/<token>`, `invite/<token>`, `idx/users`) — `kv.js`.
 
+## Loyihalar, qarzlar va xulosalar
+
+- `functions/proj.js` — loyihalar: vazifalar, muddat eslatmalari, `/loyiha`, `/loyihalar`, `/vazifalar`, `/qarz` (mijoz toʻlovlari va qoldiq).
+- Ertalabki karta: har kuni 08:00 (sozlamalardan 07:00/09:00 yoki oʻchirish) — bugungi uchrashuvlar, kechikkan va bugungi vazifalar, yaqin muddatlar, qarzlar.
+- Haftalik xulosa: yakshanba 19:00 — tugagan loyihalar, tushgan pul, qarz, kelasi hafta muddatlari.
+- Toʻlov eslatmasi: tayyor yoki muddati oʻtgan loyiha qoldigʻi boʻyicha har 3 kunda (ko'pi bilan 6 marta).
+
 ## Deploy
 
 ```bash
