@@ -5,17 +5,19 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-src https://www.google.com; connect-src 'self'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
 
-/img/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/vendor/*
-  Cache-Control: public, max-age=604800
-
-/*.css
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/*.js
-  Cache-Control: public, max-age=3600, must-revalidate
-
+# Sayt fayllari: har ochilganda yangilanganini tekshiradi (o'zgarmagan bo'lsa tez 304 qaytadi).
+# Shu sababli yangilanish eski havolada darhol ko'rinadi.
+/
+  Cache-Control: public, max-age=0, must-revalidate
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+/img/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Tashqi kutubxona (o'zgarmaydi): 1 hafta keshlanadi.
+/vendor/*
+  Cache-Control: public, max-age=604800
