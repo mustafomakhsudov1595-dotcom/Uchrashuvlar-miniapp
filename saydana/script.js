@@ -75,34 +75,17 @@
   var svc = document.getElementById('svc');
   var svcFocus = null;
   var tick = '<svg class="ic"><use href="#i-check"/></svg>';
-  var DEPT = {
-    lab:  { icon: 'i-flask', t: 'Laboratoriya', d: 'Tibbiy laboratoriyada qon va boshqa namunalar tahlil qilinadi. Natijalar shifokorga tashxis qo\'yishda va davolashni kuzatishda yordam beradi.', f: ['Qon tahlili va boshqa laboratoriya tekshiruvlari', 'Shifokor yo\'llanmasi bilan yoki profilaktika uchun topshirish mumkin', 'Natija shifokor ko\'rigida davolash rejasini belgilash uchun ishlatiladi', 'Mavjud tahlillar ro\'yxati va natija muddatini markazdan aniqlang'], n: 'Ko\'p tahlillar ertalab, och qoringa topshiriladi. Aniq talablar tahlil turiga bog\'liq.', rel: ['lab'], apply: 'Laboratoriya', note: 'Laboratoriya bo\'limi bo\'yicha' },
-    rad:  { icon: 'i-scan', t: 'Radiologiya', d: 'Radiologiya — tasviriy diagnostika bo\'limi: tananing ichki tuzilishi rasmga olinadi. MRT, MSKT va rentgen shu yo\'nalishga kiradi.', f: ['MRT — magnit maydon yordamida, rentgen nurlanishisiz', 'MSKT — rentgen nurlari asosida tezkor qatlamli tasvir', 'Rentgen — ko\'krak qafasi va suyak-bo\'g\'imlar rasmi', 'Qaysi usul kerakligini shifokor ko\'rsatmasi belgilaydi'], n: 'Tekshiruvga yozilishdan oldin implant, metall buyum yoki homiladorlik haqida ayting.', rel: ['mri', 'mskt', 'xray'], apply: 'MRT', note: 'Radiologiya bo\'limi bo\'yicha' },
-    endo: { icon: 'i-tube', t: 'Endoskopiya', d: 'Endoskopiyada ichki a\'zolar ichidan ingichka egiluvchan asbob yordamida ko\'riladi. Markazda shu bo\'limda FGDS o\'tkaziladi.', f: ['FGDS — qizilo\'ngach, oshqozon va o\'n ikki barmoqli ichak shilliq qavatini bevosita ko\'rish', 'Odatda shifokor ko\'rsatmasi bilan tayinlanadi', 'Odatda och qoringa topshiriladi', 'Tekshiruv davomiyligi va noqulaylikni kamaytirish usullarini markazdan so\'rang'], n: 'Surunkali kasalliklar, allergiya va doimiy ichadigan dorilar haqida oldindan ogohlantiring.', rel: ['fgds'], apply: 'FGDS', note: 'Endoskopiya bo\'limi bo\'yicha' },
-    card: { icon: 'i-heart', t: 'Kardiologiya', d: 'Kardiologiya — yurak va qon-tomir tizimini tekshirish bo\'limi. Markazda EKG va exokardiografiya mavjud, kardiolog maslahati yo\'nalishlar qatorida ko\'rsatilgan.', f: ['EKG — yurak ritmi va elektr faolligini yozib olish', 'Exokardiografiya — yurak kameralari va qopqoqlari UZI', 'Kardiolog maslahati (qabul vaqtini markazdan aniqlang)', 'Bu tekshiruvlar nurlanishsiz va og\'riqsiz'], n: 'Yurakdagi og\'riq yoki hushdan ketish kabi o\'tkir holatlarda kutmasdan shoshilinch yordamga murojaat qiling.', rel: ['ecg', 'echo'], apply: 'EKG', note: 'Kardiologiya bo\'limi bo\'yicha' }
-  };
   var svcApply = null;
-  function openSvc(key, isDept) {
-    var s = (isDept ? DEPT : SVC)[key]; if (!s) return;
+  function openSvc(key) {
+    var s = SVC[key]; if (!s) return;
     if (svc.hidden) svcFocus = document.activeElement;
     document.getElementById('svcPh').hidden = true; document.getElementById('svcIco').hidden = false;
     document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
     document.getElementById('svcTitle').textContent = s.t;
     document.getElementById('svcDesc').textContent = s.d;
-    document.getElementById('svcSub').textContent = isDept ? 'Nimalar tekshiriladi' : 'Nimalar qilinadi';
-    document.getElementById('svcFacts').innerHTML = s.f.map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
-    document.getElementById('svcNote').textContent = s.n;
-    var rel = document.getElementById('svcRel'), chips = document.getElementById('svcChips');
-    chips.innerHTML = '';
-    if (s.rel && s.rel.length > 1 || (isDept && s.rel)) {
-      s.rel.forEach(function (k) {
-        var b = document.createElement('button'); b.type = 'button'; b.innerHTML = SVC[k].t + ' <svg class="ic"><use href="#i-arrow"/></svg>';
-        b.addEventListener('click', function () { openSvc(k, false); svc.querySelector('.svc-box').scrollTop = 0; });
-        chips.appendChild(b);
-      });
-      rel.hidden = false;
-    } else rel.hidden = true;
-    svcApply = { svc: s.apply || s.t, note: s.note || '' };
+    document.getElementById('svcFacts').innerHTML = s.f.slice(0, 2).map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
+    document.getElementById('svcNote').textContent = "Narx va tayyorgarlik bo'yicha qo'ng'iroq qiling.";
+    svcApply = { svc: s.apply || s.t, note: '' };
     svc.hidden = false; document.body.classList.add('lock');
     var box = svc.querySelector('.svc-box'); box.scrollTop = 0;
     svc.querySelector('.svc-call').focus({ preventScroll: true });
@@ -111,10 +94,6 @@
   document.querySelectorAll('.b[data-svc]').forEach(function (card) {
     card.addEventListener('click', function () { openSvc(card.dataset.svc); });
     card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.svc); } });
-  });
-  document.querySelectorAll('.dept[data-dept]').forEach(function (card) {
-    card.addEventListener('click', function () { openSvc(card.dataset.dept, true); });
-    card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.dept, true); } });
   });
   document.getElementById('svcApply').addEventListener('click', function () {
     var a = svcApply || {}; svcFocus = null; closeSvc();
@@ -126,51 +105,6 @@
   });
   svc.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeSvc(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !svc.hidden) closeSvc(); });
-  document.getElementById('svcCopy').addEventListener('click', function () {
-    var btn = this, num = '+998 (78) 223-10-10';
-    function ok() { btn.textContent = 'Nusxalandi ✓'; setTimeout(function () { btn.textContent = 'Nusxalash'; }, 2000); }
-    function sel() { var r = document.createRange(); r.selectNodeContents(document.getElementById('svcNum')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Belgilandi'; }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(num).then(ok).catch(sel); else sel();
-  });
-
-  // Tayyorgarlik tablari
-  var PREP = {
-    'MRT': ['Metall buyumlar (soat, zargarlik, kalit) tekshiruvdan oldin yechiladi', 'Implant, yurak stimulyatori yoki metall protez bo\'lsa, oldindan ayting', 'Yopiq joydan qo\'rqsangiz, operatorga ayting', 'Avvalgi MRT va KT natijalarini olib keling'],
-    'MSKT': ['Kontrast modda ishlatilsa, tayyorgarlik boshqacha bo\'ladi, oldindan so\'rang', 'Homiladorlik ehtimoli bo\'lsa, albatta ayting', 'Dori yoki kontrastga allergiyangiz bo\'lsa, ogohlantiring', 'Avvalgi tasvirlar va xulosalarni olib keling'],
-    'UZI': ['Qorin bo\'shlig\'i UZI odatda och qoringa topshiriladi', 'Kichik chanoq UZI ba\'zan to\'lgan siydik pufagi bilan o\'tkaziladi', 'Aniq tayyorgarlik UZI turiga bog\'liq, yozilganda so\'rang', 'Avvalgi UZI xulosalari bo\'lsa, olib keling'],
-    'FGDS': ['Odatda och qoringa topshiriladi', 'Doimiy ichadigan dorilar haqida shifokorga ayting', 'Allergiya va surunkali kasalliklar haqida ogohlantiring', 'Tayyorgarlik vaqtini yozilishda aniqlashtiring'],
-    'Laboratoriya': ['Ko\'p qon tahlillari ertalab, och qoringa topshiriladi', 'Tahlildan oldin yog\'li ovqat va spirtli ichimlikdan saqlaning', 'Tahlil turiga qarab talablar farq qiladi, operatordan so\'rang', 'Shifokor yo\'llanmasi bo\'lsa, olib keling']
-  };
-  var tabsEl = document.getElementById('tabs'), prepList = document.getElementById('prepList');
-  function showPrep(name) {
-    Array.prototype.forEach.call(tabsEl.children, function (b) { b.setAttribute('aria-selected', String(b.dataset.k === name)); b.tabIndex = b.dataset.k === name ? 0 : -1; });
-    prepList.innerHTML = PREP[name].map(function (x) { return '<li><svg class="ic"><use href="#i-check"/></svg><span>' + x + '</span></li>'; }).join('');
-  }
-  Object.keys(PREP).forEach(function (k) {
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'tab'; b.setAttribute('role', 'tab'); b.dataset.k = k; b.textContent = k;
-    b.addEventListener('click', function () { showPrep(k); });
-    tabsEl.appendChild(b);
-  });
-  tabsEl.addEventListener('keydown', function (e) {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    var tabs = Array.prototype.slice.call(tabsEl.children), i = tabs.indexOf(document.activeElement); if (i < 0) return;
-    i = (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length; tabs[i].focus(); showPrep(tabs[i].dataset.k);
-  });
-  showPrep('MRT');
-
-  // "Olib keling" ro'yxati (brauzerda eslab qoladi)
-  var boxes = document.querySelectorAll('#cl input'), KEY = 'saydana-checklist';
-  function readSaved() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
-  function writeSaved(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} }
-  function updateCl() {
-    var n = 0; boxes.forEach(function (b) { if (b.checked) n++; });
-    document.getElementById('clCount').textContent = n + ' / ' + boxes.length + ' tayyor';
-    document.getElementById('clBar').style.width = (n / boxes.length * 100) + '%';
-    writeSaved(Array.prototype.map.call(boxes, function (b) { return b.checked; }));
-  }
-  var saved = readSaved();
-  boxes.forEach(function (b, i) { b.checked = !!saved[i]; b.addEventListener('change', updateCl); });
-  updateCl();
 
   // Ariza formasi: matn tayyorlanadi va pochta ilovasida ochiladi
   var form = document.getElementById('form');
@@ -207,10 +141,8 @@
     var img = document.getElementById('svcImg'); img.src = card.dataset.img; img.alt = name;
     document.getElementById('svcTitle').textContent = name;
     document.getElementById('svcDesc').textContent = card.dataset.role;
-    document.getElementById('svcSub').textContent = 'Shifokor haqida';
-    document.getElementById('svcFacts').innerHTML = card.dataset.facts.split('|').map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
-    document.getElementById('svcNote').textContent = 'Qabul vaqti va narxlarni markazdan aniqlang. Ariza qoldirsangiz, shifokor ismi izohga yoziladi.';
-    document.getElementById('svcRel').hidden = true;
+    document.getElementById('svcFacts').innerHTML = card.dataset.facts.split('|').slice(0, 3).map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
+    document.getElementById('svcNote').textContent = "Qabul vaqti va narxni markazdan aniqlang.";
     svcApply = { svc: 'Mutaxassis maslahati', note: 'Shifokor: ' + name };
     svc.hidden = false; document.body.classList.add('lock');
     svc.querySelector('.svc-box').scrollTop = 0;
@@ -267,7 +199,7 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    document.querySelectorAll('.card,.b,.dept,.doc,.step,.sec-head,.faq details,.info-row>div,.amen li,.dirs li').forEach(function (el) {
+    document.querySelectorAll('.b,.doc,.sec-head,.info-row>div,.amen li,.dirs li,.form').forEach(function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.07 + 's');
       el.classList.add('reveal'); io.observe(el);
