@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Saydana — Tibbiyot va diagnostika markazi | Namangan</title>
 <meta name="description" content="Saydana — Namangandagi tibbiyot va diagnostika markazi: MRT, MSKT, rentgen, UZI, EKG, exokardiografiya, FGDS, laboratoriya va statsionar. Nodira ko'chasi, 1. Tel: +998 (78) 223-10-10.">
-<meta name="theme-color" content="#0B0B10">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F70D45'/%3E%3Cpath d='M32 46C20 38 14 31 14 24c0-5 4-9 9-9 4 0 7 2 9 5 2-3 5-5 9-5 5 0 9 4 9 9 0 7-6 14-18 22z' fill='none' stroke='white' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"MedicalClinic","name":"Saydana","email":"info@saydanamed.uz","medicalSpecialty":["Radiology","Gynecology","Urology","Neurology","Gastroenterology","Cardiology"],"address":{"@type":"PostalAddress","streetAddress":"Nodira ko'chasi, 1","addressLocality":"Namangan","addressRegion":"Namangan viloyati","addressCountry":"UZ"},"geo":{"@type":"GeoCoordinates","latitude":40.997889,"longitude":71.666325},"telephone":["+998782231010","+998782231111"],"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"08:00","closes":"17:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"08:00","closes":"16:00"}]}
@@ -20,8 +20,6 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="logo-mark" viewBox="0 0 48 40"><path d="M24 34C13 27 6 21 6 14.5 6 9.8 9.7 6 14.3 6c3.6 0 7 2.2 9.7 6 2.7-3.8 6.1-6 9.7-6C38.3 6 42 9.8 42 14.5 42 21 35 27 24 34z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></symbol>
 </svg>
-
-<div class="progress" id="progress" aria-hidden="true"></div>
 
 <header class="header" id="top">
   <div class="container nav">
@@ -48,135 +46,67 @@
 <main>
 <!-- HERO -->
 <section class="hero">
-  <div class="container hero-grid">
-    <div class="hero-copy">
-      <span class="status" id="status"><i></i><span>Yuklanmoqda…</span></span>
-      <h1>Aniq tashxis — <em>aniq tasvirdan</em> boshlanadi.</h1>
-      <p class="lead">Saydana — Namangan shahridagi tibbiyot va diagnostika markazi. MRT, MSKT, rentgen, UZI, EKG va laboratoriya bir joyda, mutaxassis shifokorlar maslahati bilan. Statsionarda yotib davolanish ham mumkin.</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary btn-lg" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-10-10</a>
-        <a class="btn btn-line btn-lg" href="#ariza">Ariza qoldirish<svg class="ic"><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-
-    <div class="stage-wrap">
-      <div class="stage" id="stage">
-        <canvas id="gl" role="img" aria-label="Tomograf va rentgen apparatlarining 3D modeli. Sudrab aylantirish mumkin."></canvas>
-        <span class="vl tl" id="stTitle">SAYDANA · MRT<br>3D MODEL</span>
-        <span class="vl tr hint">Sudrab aylantiring</span>
-        <figure class="inset">
-          <canvas id="inset" width="168" height="168" role="img" aria-label="Namunaviy tomografiya tasviri"></canvas>
-          <figcaption class="vl">tasvir · namunaviy</figcaption>
-        </figure>
-      </div>
-      <div class="modes" role="group" aria-label="Apparat turi">
-        <button type="button" class="on" data-m="mr" aria-pressed="true"><canvas class="mthumb" data-kind="mr" width="96" height="96"></canvas><span><b>MRT</b><small>Magnit-rezonans</small></span></button>
-        <button type="button" data-m="ct" aria-pressed="false"><canvas class="mthumb" data-kind="ct" width="96" height="96"></canvas><span><b>MSKT</b><small>Kompyuter tomografiya</small></span></button>
-        <button type="button" data-m="xr" aria-pressed="false"><canvas class="mthumb" data-kind="xray" width="96" height="96"></canvas><span><b>Rentgen</b><small>Ko'krak qafasi</small></span></button>
-      </div>
-    </div>
-  </div>
-
   <div class="container">
-    <dl class="report">
-      <div><dt>Ish vaqti</dt><dd>Du–Ju 8:00–17:00<br>Shanba 8:00–16:00</dd></div>
+    <span class="status" id="status"><i></i><span>Yuklanmoqda…</span></span>
+    <h1>Aniq tashxis va ishonchli davolash</h1>
+    <p class="lead">Saydana — Namangan shahridagi tibbiyot va diagnostika markazi. MRT, MSKT, rentgen, UZI, EKG va laboratoriya bir joyda, mutaxassis shifokorlar qabuli va statsionar.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-10-10</a>
+      <a class="arrow-link" href="#ariza">Ariza qoldirish<svg class="ic"><use href="#i-arrow"/></svg></a>
+    </div>
+    <dl class="info-row">
+      <div><dt>Ish vaqti</dt><dd>Du–Ju 8:00–17:00<br>Shanba 8:00–16:00<br>Yakshanba — kardiolog qabuli</dd></div>
       <div><dt>Manzil</dt><dd>Nodira ko'chasi, 1<br>Namangan shahri</dd></div>
-      <div><dt>Telefon</dt><dd><a href="tel:+998782231010">+998 (78) 223-10-10</a><br><a href="tel:+998782231111">+998 (78) 223-11-11</a></dd></div>
-      <div><dt>Elektron pochta</dt><dd><a href="mailto:info@saydanamed.uz">info@saydanamed.uz</a><br>Yakshanba — kardiolog qabuli</dd></div>
+      <div><dt>Aloqa</dt><dd><a href="tel:+998782231010">+998 (78) 223-10-10</a><br><a href="tel:+998782231111">+998 (78) 223-11-11</a><br><a href="mailto:info@saydanamed.uz">info@saydanamed.uz</a></dd></div>
     </dl>
   </div>
 </section>
 
-<!-- TASVIRLAR GALEREYASI -->
-<section class="gallery" aria-label="Tibbiy tasvirlar galereyasi">
-  <div class="container">
-    <div class="gal-head">
-      <span class="eyebrow">Tasvirlar</span>
-      <p>Diagnostika tasvirlarining namunalari. Bular kompyuterda yaratilgan illyustratsiyalar, haqiqiy bemor suratlari emas.</p>
-    </div>
-    <div class="gal">
-      <figure class="tile"><canvas data-kind="mr" width="160" height="160" role="img" aria-label="MRT tasviri namunasi"></canvas><figcaption><b>MRT</b><span>MR</span></figcaption></figure>
-      <figure class="tile"><canvas data-kind="ct" width="160" height="160" role="img" aria-label="MSKT tasviri namunasi"></canvas><figcaption><b>MSKT</b><span>CT</span></figcaption></figure>
-      <figure class="tile"><canvas data-kind="xray" width="160" height="160" role="img" aria-label="Rentgen tasviri namunasi"></canvas><figcaption><b>Rentgen</b><span>DX</span></figcaption></figure>
-      <figure class="tile"><canvas data-kind="us" width="160" height="160" role="img" aria-label="UZI tasviri namunasi"></canvas><figcaption><b>UZI</b><span>US</span></figcaption></figure>
-      <figure class="tile"><canvas data-kind="echo" width="160" height="160" role="img" aria-label="Exokardiografiya tasviri namunasi"></canvas><figcaption><b>Exo-KG</b><span>US</span></figcaption></figure>
-      <figure class="tile"><canvas data-kind="endo" width="160" height="160" role="img" aria-label="FGDS tasviri namunasi"></canvas><figcaption><b>FGDS</b><span>ES</span></figcaption></figure>
-    </div>
-  </div>
-</section>
-
-<!-- LENTA -->
-<div class="ticker" aria-hidden="true">
-  <div class="ticker-track">
-    <span>MRT</span><span>MSKT</span><span>Rentgen</span><span>UZI</span><span>EKG</span><span>Exokardiografiya</span><span>FGDS</span><span>Laboratoriya</span>
-    <span>MRT</span><span>MSKT</span><span>Rentgen</span><span>UZI</span><span>EKG</span><span>Exokardiografiya</span><span>FGDS</span><span>Laboratoriya</span>
-  </div>
-</div>
-
 <!-- MARKAZ HAQIDA -->
-<section class="section" id="haqida">
+<section class="section tight" id="haqida">
   <div class="container">
-    <span class="eyebrow">Markaz haqida</span>
-    <p class="statement">Saydana — Namangandagi <b>o'zbek-german loyihasi</b> asosidagi diagnostika markazi. <span>Har bir bemorga individual yondashuv: tekshiruv dasturi alohida tuziladi, kerak bo'lsa tor mutaxassisga yo'naltiriladi.</span></p>
-
-    <div class="about-meta">
-      <ul class="facts">
-        <li class="fact"><b data-count="400">400</b><sup>+</sup><span>diagnostika xizmati turi*</span></li>
-        <li class="fact"><b data-count="4">4</b><span>asosiy bo'lim</span></li>
-        <li class="fact"><b data-count="8">8</b><span>asosiy tekshiruv turi</span></li>
-      </ul>
-      <a class="rating" href="https://yandex.com/maps/org/saydana/189026158000/" target="_blank" rel="noopener">
-        <span class="stars" aria-hidden="true"><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star half"><use href="#i-star"/></svg></span>
-        <span class="rating-t"><b>4.4 / 5</b> Yandex Maps'da · 125 ta baho</span>
-        <span class="more">Sharhlar <svg class="ic"><use href="#i-arrow"/></svg></span>
-      </a>
+    <div class="split">
+      <div>
+        <span class="eyebrow">Markaz haqida</span>
+        <h2>O'zbek-german loyihasi asosidagi diagnostika markazi</h2>
+      </div>
+      <div class="prose">
+        <p>Saydana — Namangandagi ko'p yo'nalishli diagnostika markazi. Ochiq manbalarda u o'zbek-german loyihasi sifatida tavsiflanadi va MRT, MSKT, rentgen, laboratoriya hamda yurak va oshqozon-ichak tekshiruvlarini bir joyda birlashtiradi.</p>
+        <p>Har bir bemorga individual yondashuv: tekshiruv dasturi alohida tuziladi, kerak bo'lsa tor mutaxassisga yo'naltiriladi.</p>
+        <a class="rating" href="https://yandex.com/maps/org/saydana/189026158000/" target="_blank" rel="noopener">
+          <span class="stars" aria-hidden="true"><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star"><use href="#i-star"/></svg><svg class="ic star half"><use href="#i-star"/></svg></span>
+          <span><b>4.4</b> Yandex Maps'da · 125 ta baho</span>
+        </a>
+      </div>
     </div>
-    <p class="fine">* Ma'lumotnoma saytlariga ko'ra. Aniq ro'yxatni markazdan so'rang.</p>
-
     <div class="depts">
-      <div class="dept" data-dept="lab" tabindex="0" role="button" aria-haspopup="dialog"><svg class="ic"><use href="#i-flask"/></svg><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></div>
-      <div class="dept" data-dept="rad" tabindex="0" role="button" aria-haspopup="dialog"><svg class="ic"><use href="#i-scan"/></svg><h3>Radiologiya</h3><p>MRT, MSKT va rentgen tekshiruvlari.</p></div>
-      <div class="dept" data-dept="endo" tabindex="0" role="button" aria-haspopup="dialog"><svg class="ic"><use href="#i-tube"/></svg><h3>Endoskopiya</h3><p>FGDS — oshqozon-ichak yo'llarini ko'rik.</p></div>
-      <div class="dept" data-dept="card" tabindex="0" role="button" aria-haspopup="dialog"><svg class="ic"><use href="#i-heart"/></svg><h3>Kardiologiya</h3><p>EKG va exokardiografiya — yurak tekshiruvi.</p></div>
+      <div class="dept" data-dept="lab" tabindex="0" role="button" aria-haspopup="dialog"><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></div>
+      <div class="dept" data-dept="rad" tabindex="0" role="button" aria-haspopup="dialog"><h3>Radiologiya</h3><p>MRT, MSKT va rentgen tekshiruvlari.</p></div>
+      <div class="dept" data-dept="endo" tabindex="0" role="button" aria-haspopup="dialog"><h3>Endoskopiya</h3><p>FGDS — oshqozon-ichak yo'llarini ko'rik.</p></div>
+      <div class="dept" data-dept="card" tabindex="0" role="button" aria-haspopup="dialog"><h3>Kardiologiya</h3><p>EKG va exokardiografiya — yurak tekshiruvi.</p></div>
     </div>
   </div>
 </section>
 
 <!-- XIZMATLAR -->
-<section class="section paper" id="xizmatlar">
+<section class="section soft" id="xizmatlar">
   <div class="container">
     <div class="sec-head">
       <span class="eyebrow">Xizmatlar</span>
       <h2>Diagnostika va tekshiruvlar</h2>
-      <p>Ro'yxat ochiq manbalar asosida tuzilgan. Narxlar va tayyorgarlik bo'yicha markazga qo'ng'iroq qilib aniqlashtiring. Batafsil ma'lumot uchun qatorni bosing.</p>
+      <p>Ro'yxat ochiq manbalar asosida tuzilgan. Narxlar va tayyorgarlik bo'yicha markazga qo'ng'iroq qilib aniqlashtiring. Batafsil ma'lumot uchun xizmatni bosing.</p>
     </div>
-    <div class="svc-layout">
     <div class="list">
-      <article data-svc="mri" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">MR</span><h3>MRT</h3><p>Magnit-rezonans tomografiya — bosh miya, umurtqa, bo'g'imlar va ichki a'zolarni batafsil, nurlanishsiz tekshirish.</p></article>
-      <article data-svc="mskt" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">CT</span><h3>MSKT</h3><p>Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.</p></article>
-      <article data-svc="xray" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">DX</span><h3>Rentgen</h3><p>Ko'krak qafasi va suyak-bo'g'im tizimi rentgenografiyasi.</p></article>
-      <article data-svc="uzi" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">US</span><h3>UZI</h3><p>Qorin bo'shlig'i, kichik chanoq va boshqa a'zolarning ultratovush tekshiruvi.</p></article>
-      <article data-svc="echo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">US</span><h3>Exokardiografiya</h3><p>Yurak UZI tekshiruvi — kameralar va qopqoqlar holati.</p></article>
-      <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">ECG</span><h3>EKG</h3><p>Yurak ritmi va o'tkazuvchanligini baholash.</p></article>
-      <article data-svc="fgds" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">ES</span><h3>FGDS</h3><p>Qizilo'ngach, oshqozon va o'n ikki barmoqli ichak endoskopiyasi.</p></article>
-      <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b"><span class="code">LAB</span><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
+      <article data-svc="mri" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>MRT</h3><p>Magnit-rezonans tomografiya — bosh miya, umurtqa, bo'g'imlar va ichki a'zolarni batafsil, nurlanishsiz tekshirish.</p></article>
+      <article data-svc="mskt" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>MSKT</h3><p>Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.</p></article>
+      <article data-svc="xray" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Rentgen</h3><p>Ko'krak qafasi va suyak-bo'g'im tizimi rentgenografiyasi.</p></article>
+      <article data-svc="uzi" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>UZI</h3><p>Qorin bo'shlig'i, kichik chanoq va boshqa a'zolarning ultratovush tekshiruvi.</p></article>
+      <article data-svc="echo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Exokardiografiya</h3><p>Yurak UZI tekshiruvi — kameralar va qopqoqlar holati.</p></article>
+      <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>EKG</h3><p>Yurak ritmi va o'tkazuvchanligini baholash.</p></article>
+      <article data-svc="fgds" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>FGDS</h3><p>Qizilo'ngach, oshqozon va o'n ikki barmoqli ichak endoskopiyasi.</p></article>
+      <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Laboratoriya</h3><p>Qon tahlili va boshqa laboratoriya tekshiruvlari.</p></article>
     </div>
-    <aside class="svc-preview" aria-label="Tanlangan xizmat tasviri">
-      <div class="pv">
-        <canvas id="pvCanvas" width="224" height="224" role="img" aria-label="Tanlangan xizmatning namunaviy tasviri"></canvas>
-        <span class="vl tl" id="pvCode">MR · MRT</span>
-        <span class="vl br">namunaviy tasvir</span>
-      </div>
-      <p class="pv-cap" id="pvCap">Qatorning ustiga boring yoki bosing.</p>
-    </aside>
-    </div>
-
-    <div class="areas">
-      <h3>Tibbiy yo'nalishlar</h3>
-      <ul class="chips">
-        <li>Radiologiya</li><li>Kardiologiya</li><li>Nevrologiya</li><li>Neyroxirurgiya</li><li>Gastroenterologiya</li><li>Urologiya</li><li>Ginekologiya</li>
-      </ul>
-    </div>
+    <p class="areas"><span>Tibbiy yo'nalishlar:</span> Radiologiya, kardiologiya, nevrologiya, neyroxirurgiya, gastroenterologiya, urologiya, ginekologiya.</p>
   </div>
 </section>
 
@@ -185,108 +115,85 @@
   <div class="container">
     <div class="sec-head">
       <span class="eyebrow">Shifokorlar</span>
-      <h2>Mutaxassis shifokorlar jamoasi</h2>
-      <p>Saydana shifokorlari bilan tanishing. Qabul vaqti va narxlarni markazga qo'ng'iroq qilib aniqlashtiring. Batafsil ma'lumot uchun kartani bosing.</p>
+      <h2>Mutaxassis shifokorlar</h2>
+      <p>Saydana shifokorlari bilan tanishing. Qabul vaqti va narxlarni markazga qo'ng'iroq qilib aniqlashtiring.</p>
     </div>
     <div class="filters" id="docFilters" role="group" aria-label="Shifokorlar yo'nalishi"></div>
     <div class="docs" id="docs">
       <article class="doc" data-cat="diag" data-name="Mirxidoyatov Erkin" data-role="Oliy toifali, ko'p yillik tajribaga ega shifokor" data-facts="Oliy toifali shifokor|Ko'p yillik tajribaga ega|MRT tekshiruvlari bo'yicha mutaxassis" data-img="img/doctors/mirxidoyatov-erkin.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/mirxidoyatov-erkin.webp" alt="Mirxidoyatov Erkin — mrt shifokori" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Radiologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/mirxidoyatov-erkin.webp" alt="Mirxidoyatov Erkin — mrt shifokori" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Mirxidoyatov Erkin</h3><p>MRT shifokori</p></div>
       </article>
       <article class="doc" data-cat="diag" data-name="Mavlanov Abdurashid Abdulpattayevich" data-role="Oliy toifali rentgenolog shifokor" data-facts="Oliy toifali rentgenolog shifokor|Rentgen tekshiruvlari natijalarini tahlil qiladi" data-img="img/doctors/mavlanov-abdurashid.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/mavlanov-abdurashid.webp" alt="Mavlanov Abdurashid Abdulpattayevich — rentgenolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Radiologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/mavlanov-abdurashid.webp" alt="Mavlanov Abdurashid Abdulpattayevich — rentgenolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Mavlanov Abdurashid Abdulpattayevich</h3><p>Rentgenolog</p></div>
       </article>
       <article class="doc" data-cat="diag" data-name="Umarqulov Po'latjon" data-role="Endoskopik tekshiruvlar bo'yicha shifokor" data-facts="Endoskopist|Endoskopik tekshiruvlar (masalan, FGDS) bo'yicha" data-img="img/doctors/umarqulov-polatjon.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/umarqulov-polatjon.webp" alt="Umarqulov Po'latjon — endoskopist" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Endoskopiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/umarqulov-polatjon.webp" alt="Umarqulov Po'latjon — endoskopist" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Umarqulov Po'latjon</h3><p>Endoskopist</p></div>
       </article>
       <article class="doc" data-cat="surg neuro" data-name="Xadjiyev Serob Kodirovich" data-role="Oliy toifali neyroxirurg, endoskopik lazer amaliyot mutaxassisi" data-facts="Oliy toifali neyroxirurg|Endoskopik lazer amaliyot mutaxassisi" data-img="img/doctors/xadjiyev-serob.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/xadjiyev-serob.webp" alt="Xadjiyev Serob Kodirovich — neyroxirurg" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Neyroxirurgiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/xadjiyev-serob.webp" alt="Xadjiyev Serob Kodirovich — neyroxirurg" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Xadjiyev Serob Kodirovich</h3><p>Neyroxirurg</p></div>
       </article>
       <article class="doc" data-cat="neuro" data-name="Ashurqulov Ulug'bek Djabirxanovich" data-role="Nevropatolog (nevrolog)" data-facts="Nevropatolog (nevrolog)|Asab tizimi kasalliklari bo'yicha qabul" data-img="img/doctors/ashurqulov-ulugbek.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/ashurqulov-ulugbek.webp" alt="Ashurqulov Ulug'bek Djabirxanovich — nevropatolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Nevrologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/ashurqulov-ulugbek.webp" alt="Ashurqulov Ulug'bek Djabirxanovich — nevropatolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Ashurqulov Ulug'bek Djabirxanovich</h3><p>Nevropatolog</p></div>
       </article>
       <article class="doc" data-cat="neuro" data-name="Nurmatov Ilhom" data-role="Nevropatolog (nevrolog)" data-facts="Nevropatolog (nevrolog)|Asab tizimi kasalliklari bo'yicha qabul" data-img="img/doctors/nurmatov-ilhom.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/nurmatov-ilhom.webp" alt="Nurmatov Ilhom — nevropatolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Nevrologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/nurmatov-ilhom.webp" alt="Nurmatov Ilhom — nevropatolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Nurmatov Ilhom</h3><p>Nevropatolog</p></div>
       </article>
       <article class="doc" data-cat="cardio" data-name="Kardiolog shifokor" data-role="Yakshanba kuni ham qabul qiladi" data-facts="Kardiolog shifokor|Yakshanba kuni ham qabul qiladi (markaz e'loniga ko'ra)|Qabul vaqtini oldindan aniqlang" data-img="img/doctors/kardiolog.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/kardiolog.webp" alt="Kardiolog shifokor — kardiolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Kardiologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/kardiolog.webp" alt="Kardiolog shifokor — kardiolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Kardiolog shifokor</h3><p>Kardiolog</p></div>
       </article>
       <article class="doc" data-cat="gyn" data-name="Abilova Muqaddasxon Nematillayevna" data-role="Oliy toifali akusher-ginekolog shifokor" data-facts="Oliy toifali akusher-ginekolog shifokor|Ayollar salomatligi bo'yicha qabul" data-img="img/doctors/abilova-muqaddasxon.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/abilova-muqaddasxon.webp" alt="Abilova Muqaddasxon Nematillayevna — akusher-ginekolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Ginekologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/abilova-muqaddasxon.webp" alt="Abilova Muqaddasxon Nematillayevna — akusher-ginekolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Abilova Muqaddasxon Nematillayevna</h3><p>Akusher-ginekolog</p></div>
       </article>
       <article class="doc" data-cat="surg" data-name="Holikov Sherzodbek" data-role="Oliy toifali urolog va endourolog" data-facts="Oliy toifali shifokor|Urolog va endourolog" data-img="img/doctors/holikov-sherzodbek.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/holikov-sherzodbek.webp" alt="Holikov Sherzodbek — urolog, endourolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Urologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/holikov-sherzodbek.webp" alt="Holikov Sherzodbek — urolog, endourolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Holikov Sherzodbek</h3><p>Urolog, endourolog</p></div>
       </article>
       <article class="doc" data-cat="surg" data-name="Axmadjonov Dilshodbek Anvar o'g'li" data-role="Otorinolaringolog, LOR xirurg" data-facts="Otorinolaringolog (LOR shifokor)|LOR xirurg" data-img="img/doctors/axmadjonov-dilshodbek.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/axmadjonov-dilshodbek.webp" alt="Axmadjonov Dilshodbek Anvar o'g'li — otorinolaringolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">LOR</span></div>
+        <div class="doc-photo"><img src="img/doctors/axmadjonov-dilshodbek.webp" alt="Axmadjonov Dilshodbek Anvar o'g'li — otorinolaringolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Axmadjonov Dilshodbek Anvar o'g'li</h3><p>Otorinolaringolog</p></div>
       </article>
       <article class="doc" data-cat="surg" data-name="Dedaxonov Azizbek Oltmishboyevich" data-role="Oliy toifali xirurg va plastik xirurg" data-facts="Oliy toifali xirurg|Plastik xirurg" data-img="img/doctors/dedaxonov-azizbek.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/dedaxonov-azizbek.webp" alt="Dedaxonov Azizbek Oltmishboyevich — xirurg, plastik xirurg" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Jarrohlik</span></div>
+        <div class="doc-photo"><img src="img/doctors/dedaxonov-azizbek.webp" alt="Dedaxonov Azizbek Oltmishboyevich — xirurg, plastik xirurg" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Dedaxonov Azizbek Oltmishboyevich</h3><p>Xirurg, plastik xirurg</p></div>
       </article>
       <article class="doc" data-cat="surg" data-name="Koriyev Abduraxmon Siddikjon o'g'li" data-role="Oliy toifali xirurg, flebolog — varikozni zamonaviy davolash" data-facts="Oliy toifali xirurg|Flebolog|Varikozni zamonaviy davolash bo'yicha" data-img="img/doctors/koriyev-abduraxmon.webp" tabindex="0" role="button" aria-haspopup="dialog">
-        <div class="doc-photo"><img src="img/doctors/koriyev-abduraxmon.webp" alt="Koriyev Abduraxmon Siddikjon o'g'li — xirurg, flebolog" width="560" height="700" loading="lazy" decoding="async"><span class="doc-tag">Flebologiya</span></div>
+        <div class="doc-photo"><img src="img/doctors/koriyev-abduraxmon.webp" alt="Koriyev Abduraxmon Siddikjon o'g'li — xirurg, flebolog" width="560" height="700" loading="lazy" decoding="async"></div>
         <div class="doc-info"><h3>Koriyev Abduraxmon Siddikjon o'g'li</h3><p>Xirurg, flebolog</p></div>
       </article>
     </div>
   </div>
 </section>
 
-<!-- AFZALLIKLAR -->
-<section class="section red" id="afzalliklar">
-  <div class="container why">
-    <div class="why-intro">
-      <span class="eyebrow">Nega Saydana</span>
-      <h2>Ishonch, qulaylik va e'tibor</h2>
-      <p>Biz tibbiy xizmatni insoniy munosabat bilan uyg'unlashtiramiz — har bir bemor o'zini qulay va xavfsiz his qilishi uchun.</p>
-      <a class="btn btn-white" href="#aloqa">Bog'lanish<svg class="ic"><use href="#i-arrow"/></svg></a>
-    </div>
-    <div class="why-list">
-      <div class="why-item"><svg class="ic"><use href="#i-scan"/></svg><h3>Bir joyda to'liq tekshiruv</h3><p>MRT, MSKT, rentgen, UZI va laboratoriya — turli joyga borib yurmaysiz.</p></div>
-      <div class="why-item"><svg class="ic"><use href="#i-stetho"/></svg><h3>Mutaxassislar maslahati</h3><p>Kardiolog, nevrolog, urolog, ginekolog va boshqa yo'nalishlar bo'yicha qabul.</p></div>
-      <div class="why-item"><svg class="ic"><use href="#i-pin"/></svg><h3>Shahar markazida</h3><p>Namangan shahrida, Nodira ko'chasida — yetib borish oson.</p></div>
-      <div class="why-item"><svg class="ic"><use href="#i-clock"/></svg><h3>Qulay ish vaqti</h3><p>Dushanbadan shanbagacha ochiq, yakshanba kuni kardiolog qabuli.</p></div>
-    </div>
-  </div>
-</section>
-
 <!-- STATSIONAR -->
-<section class="section dark" id="statsionar">
-  <div class="container inpatient">
-    <div class="ip-main">
+<section class="section soft" id="statsionar">
+  <div class="container ip">
+    <div>
       <span class="eyebrow">Statsionar</span>
-      <h2>Shifoxonada yotib davolaning</h2>
-      <p>Eng zamonaviy jihozlangan statsionar sharoitida yotib davolaning va kasallikdan xalos bo'ling. Davolanish jarayoni doimiy vrach va hamshira nazorati ostida o'tadi.</p>
-      <div class="ip-nums">
-        <div><b data-count="9">9</b><span>yotib davolash yo'nalishi</span></div>
-        <div><b>3<em>x</em></b><span>mahal issiq ovqat</span></div>
-      </div>
-      <div class="amen">
-        <div class="amen-i"><svg class="ic"><use href="#i-stetho"/></svg><h3>Doimiy nazorat</h3><p>Vrach va hamshira nazorati</p></div>
-        <div class="amen-i"><svg class="ic"><use href="#i-meal"/></svg><h3>3 mahal ovqat</h3><p>Mazali va issiq ovqat</p></div>
-        <div class="amen-i"><svg class="ic"><use href="#i-bolt"/></svg><h3>Fizioterapiya</h3><p>Davolanish qulayligi</p></div>
-        <div class="amen-i"><svg class="ic"><use href="#i-hand"/></svg><h3>Massaj</h3><p>Davolanish qulayligi</p></div>
-      </div>
+      <h2>Shifoxonada yotib davolanish</h2>
+      <p class="ip-lead">Eng zamonaviy jihozlangan statsionar sharoitida davolaning va kasallikdan xalos bo'ling. Davolanish doimiy vrach va hamshira nazorati ostida o'tadi.</p>
+      <ul class="amen">
+        <li><svg class="ic"><use href="#i-stetho"/></svg>Doimiy vrach va hamshira nazorati</li>
+        <li><svg class="ic"><use href="#i-meal"/></svg>3 mahal mazali va issiq ovqat</li>
+        <li><svg class="ic"><use href="#i-bolt"/></svg>Fizioterapiya</li>
+        <li><svg class="ic"><use href="#i-hand"/></svg>Massaj</li>
+      </ul>
       <div class="ip-cta">
-        <button class="btn btn-primary btn-lg" type="button" data-apply="Statsionarda davolanish" data-note="Statsionarda yotib davolanish bo'yicha"><svg class="ic"><use href="#i-bed"/></svg>Statsionarga yozilish</button>
-        <a class="btn btn-line btn-lg" href="tel:+998782231111"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-11-11</a>
+        <button class="btn btn-primary" type="button" data-apply="Statsionarda davolanish" data-note="Statsionarda yotib davolanish bo'yicha">Statsionarga yozilish</button>
+        <a class="btn btn-ghost" href="tel:+998782231111"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-11-11</a>
       </div>
       <p class="fine">Yotib davolanish shartlari va narxlarni qo'ng'iroq qilib aniqlang.</p>
     </div>
-    <div class="ip-dirs">
-      <h3 class="ip-sub">Yotib davolash yo'nalishlari</h3>
-      <ul class="dirs"><li><svg class="ic"><use href="#i-check"/></svg>Terapevtik</li><li><svg class="ic"><use href="#i-check"/></svg>Kardiologik</li><li><svg class="ic"><use href="#i-check"/></svg>Nevropatologik</li><li><svg class="ic"><use href="#i-check"/></svg>Gastroenterologik</li><li><svg class="ic"><use href="#i-check"/></svg>Endokrinologik</li><li><svg class="ic"><use href="#i-check"/></svg>Ginekologik</li><li><svg class="ic"><use href="#i-check"/></svg>Urologik</li><li><svg class="ic"><use href="#i-check"/></svg>Neyroxirurgik</li><li><svg class="ic"><use href="#i-check"/></svg>LOR</li></ul>
-      <p class="ip-quote">Saydana — malakali mutaxassislar markazi. <b>Hayot davom etadi.</b></p>
+    <div>
+      <h3 class="sub">Yotib davolash yo'nalishlari</h3>
+      <ul class="dirs"><li>Terapevtik</li><li>Kardiologik</li><li>Nevropatologik</li><li>Gastroenterologik</li><li>Endokrinologik</li><li>Ginekologik</li><li>Urologik</li><li>Neyroxirurgik</li><li>LOR</li></ul>
     </div>
   </div>
 </section>
@@ -322,11 +229,11 @@
 </section>
 
 <!-- JARAYON -->
-<section class="section paper" id="jarayon">
+<section class="section soft" id="jarayon">
   <div class="container">
     <div class="sec-head">
       <span class="eyebrow">Qabulga yozilish</span>
-      <h2>Uch oddiy qadamda</h2>
+      <h2>Uch oddiy qadam</h2>
     </div>
     <ol class="steps">
       <li class="step"><span class="step-n">1</span><h3>Qo'ng'iroq qiling</h3><p>Quyidagi raqamlardan biriga bog'laning va muammoingizni ayting.</p></li>
@@ -337,28 +244,29 @@
 </section>
 
 <!-- ARIZA -->
-<section class="section dark" id="ariza">
+<section class="section" id="ariza">
   <div class="container apply">
     <div class="apply-copy">
       <span class="eyebrow">Ariza</span>
       <h2>Qabulga ariza qoldiring</h2>
       <p>Ma'lumotlaringizni kiriting. Ariza matni tayyorlanib, markazning elektron pochtasiga yuborish uchun ochiladi. Shoshilinch bo'lsa, to'g'ridan-to'g'ri qo'ng'iroq qiling.</p>
-      <ul class="checks col">
+      <ul class="checks">
         <li><svg class="ic"><use href="#i-check"/></svg>Ish vaqtida operator aloqaga chiqadi</li>
         <li><svg class="ic"><use href="#i-check"/></svg>Narx va tayyorgarlikni aniqlashtirasiz</li>
         <li><svg class="ic"><use href="#i-check"/></svg>Hech qanday to'lov so'ralmaydi</li>
       </ul>
-      <a class="btn btn-line" href="tel:+998782231010"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-10-10</a>
     </div>
-    <form class="card form" id="form" novalidate>
+    <form class="form" id="form" novalidate>
       <div class="field"><label for="f-name">Ismingiz</label><input id="f-name" name="name" type="text" autocomplete="name" placeholder="Masalan, Aziza Karimova" required><small class="err" id="e-name"></small></div>
       <div class="field"><label for="f-phone">Telefon raqamingiz</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998 90 123 45 67" required><small class="err" id="e-phone"></small></div>
-      <div class="field"><label for="f-svc">Xizmat</label>
-        <select id="f-svc" name="svc">
-          <option>Mutaxassis maslahati</option><option>MRT</option><option>MSKT</option><option>Rentgen</option><option>UZI</option><option>Exokardiografiya</option><option>EKG</option><option>FGDS</option><option>Laboratoriya</option><option>Statsionarda davolanish</option><option>Boshqa / bilmayman</option>
-        </select></div>
-      <div class="field"><label for="f-time">Qulay vaqt</label>
-        <select id="f-time" name="time"><option>Ertalab (8:00–12:00)</option><option>Kunduzi (12:00–17:00)</option><option>Farqi yo'q</option></select></div>
+      <div class="field-row">
+        <div class="field"><label for="f-svc">Xizmat</label>
+          <select id="f-svc" name="svc">
+            <option>Mutaxassis maslahati</option><option>MRT</option><option>MSKT</option><option>Rentgen</option><option>UZI</option><option>Exokardiografiya</option><option>EKG</option><option>FGDS</option><option>Laboratoriya</option><option>Statsionarda davolanish</option><option>Boshqa / bilmayman</option>
+          </select></div>
+        <div class="field"><label for="f-time">Qulay vaqt</label>
+          <select id="f-time" name="time"><option>Ertalab (8:00–12:00)</option><option>Kunduzi (12:00–17:00)</option><option>Farqi yo'q</option></select></div>
+      </div>
       <div class="field"><label for="f-note">Izoh (ixtiyoriy)</label><textarea id="f-note" name="note" rows="3" placeholder="Qo'shimcha ma'lumot"></textarea></div>
       <button class="btn btn-primary btn-lg" type="submit"><svg class="ic"><use href="#i-mail"/></svg>Ariza matnini tayyorlash</button>
       <div class="result" id="result" hidden>
@@ -372,7 +280,7 @@
 </section>
 
 <!-- SAVOL-JAVOB -->
-<section class="section" id="savollar">
+<section class="section soft" id="savollar">
   <div class="container narrow">
     <div class="sec-head">
       <span class="eyebrow">Savol-javob</span>
@@ -384,18 +292,6 @@
       <details><summary>Qabulga qanday yozilaman?</summary><p>+998 (78) 223-10-10 yoki +998 (78) 223-11-11 raqamiga qo'ng'iroq qiling, yoki info@saydanamed.uz manziliga yozing.</p></details>
       <details><summary>Tekshiruv narxi qancha?</summary><p>Narxlar tekshiruv turiga qarab farq qiladi. Aniq narxni qo'ng'iroq qilib bilib oling.</p></details>
       <details><summary>MRT yoki MSKT uchun tayyorgarlik kerakmi?</summary><p>Ba'zi tekshiruvlarga oldindan tayyorlanish talab qilinadi. Yozilayotganda operatordan so'rang.</p></details>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta">
-  <div class="container cta-in">
-    <span class="eyebrow">Savollaringiz bormi?</span>
-    <a class="cta-num" href="tel:+998782231010">+998 (78) 223-10-10</a>
-    <div class="cta-row">
-      <p>Bizga qo'ng'iroq qiling — yordam berishdan mamnun bo'lamiz.</p>
-      <a class="btn btn-ink" href="tel:+998782231111"><svg class="ic"><use href="#i-phone"/></svg>+998 (78) 223-11-11</a>
     </div>
   </div>
 </section>
@@ -444,7 +340,7 @@
     </div>
     <div class="foot-col">
       <h4>Sahifalar</h4>
-      <a href="#haqida">Markaz haqida</a><a href="#xizmatlar">Xizmatlar</a><a href="#shifokorlar">Shifokorlar</a><a href="#statsionar">Statsionar</a><a href="#tayyorgarlik">Tayyorgarlik</a><a href="#ariza">Ariza qoldirish</a><a href="#savollar">Savollar</a>
+      <a href="#haqida">Markaz haqida</a><a href="#xizmatlar">Xizmatlar</a><a href="#shifokorlar">Shifokorlar</a><a href="#statsionar">Statsionar</a><a href="#tayyorgarlik">Tayyorgarlik</a><a href="#ariza">Ariza qoldirish</a>
     </div>
     <div class="foot-col">
       <h4>Aloqa</h4>
@@ -453,7 +349,6 @@
     </div>
     <p class="copy">© <span id="year"></span> Saydana. Barcha huquqlar himoyalangan. Sayt ma'lumotlari ochiq manbalardan olingan; aniq xizmat va narxlarni markazdan so'rang.</p>
   </div>
-  <div class="wordmark" aria-hidden="true">saydana</div>
 </footer>
 
 <div class="sheet" id="sheet" hidden>
@@ -476,7 +371,7 @@
   <div class="sheet-bg" data-close></div>
   <div class="sheet-box svc-box" role="dialog" aria-modal="true" aria-labelledby="svcTitle">
     <div class="svc-head">
-      <div class="svc-ph" id="svcPh" hidden><img id="svcImg" alt="" width="96" height="120"><canvas id="svcCv" width="120" height="120" hidden></canvas></div>
+      <div class="svc-ph" id="svcPh" hidden><img id="svcImg" alt="" width="96" height="120"></div>
       <div class="ico" id="svcIco"><svg class="ic"><use id="svcIcon" href="#i-scan"/></svg></div>
       <div><h3 id="svcTitle"></h3><p id="svcDesc"></p></div>
     </div>
@@ -518,9 +413,6 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   </g>
 </svg>
-<script src="vendor/three.min.js"></script>
-<script src="scan.js"></script>
-<script src="stage3d.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -62,18 +62,6 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
 
   // Xizmat kartochkasini bosganda ma'lumot oynasi
-  var KIND_OF = { mri: 'mr', mskt: 'ct', xray: 'xray', uzi: 'us', echo: 'echo', ecg: 'ecg', fgds: 'endo', lab: 'lab' };
-  var CAP = {
-    mri: "MRT — bosh miya kesimi (T2). Kesimlar avtomatik almashib turadi.",
-    mskt: "MSKT — bosh miya kesimi. Suyaklar yorqin, yumshoq to'qimalar kulrang ko'rinadi.",
-    xray: "Rentgen — ko'krak qafasi: o'pka, yurak soyasi va qovurg'alar.",
-    uzi: "UZI — qorin bo'shlig'i, sektor tasvir.",
-    echo: "Exokardiografiya — yurakning to'rt kamerali ko'rinishi, yurak urishi bilan.",
-    ecg: "EKG — yurak ritmini yozib olish chizig'i.",
-    fgds: "FGDS — qizilo'ngach ichki yuzasining endoskopik ko'rinishi.",
-    lab: "Laboratoriya — qon tahlili namunalari."
-  };
-  var svcScan = null;
   var SVC = {
     mri:  { icon: 'i-scan', t: 'MRT', d: 'Magnit-rezonans tomografiya — a\'zolarning batafsil qatlamli tasviri.', f: ['Bosh miya, umurtqa, bo\'g\'imlar va ichki a\'zolar tekshiruvi', 'Rentgen nurlanishi ishlatilmaydi', 'Og\'riqsiz, lekin apparat ichida bir joyda yotish kerak bo\'ladi'], n: 'Metall buyumlar, implant yoki yurak stimulyatori bo\'lsa, yozilishda albatta ayting.' },
     mskt: { icon: 'i-ring', t: 'MSKT', d: 'Multispiral kompyuter tomografiya — tezkor va aniq qatlamli tasvir.', f: ['Bir necha daqiqada qatlamli tasvir olinadi', 'Rentgen nurlari yordamida bajariladi', 'Shifokor yo\'llanmasi bilan kelish qulay'], n: 'Kontrast modda kerak bo\'lsa, tayyorgarlik haqida operatordan so\'rang.' },
@@ -97,11 +85,7 @@
   function openSvc(key, isDept) {
     var s = (isDept ? DEPT : SVC)[key]; if (!s) return;
     if (svc.hidden) svcFocus = document.activeElement;
-    var phEl = document.getElementById('svcPh'), cvm = document.getElementById('svcCv');
-    if (!isDept && window.Scan && cvm) {
-      phEl.hidden = false; phEl.classList.add('scan'); document.getElementById('svcImg').hidden = true; cvm.hidden = false; document.getElementById('svcIco').hidden = true;
-      if (svcScan) svcScan.setKind(KIND_OF[key]); else svcScan = Scan.mount(cvm, KIND_OF[key], { N: 120 });
-    } else { phEl.hidden = true; phEl.classList.remove('scan'); document.getElementById('svcIco').hidden = false; }
+    document.getElementById('svcPh').hidden = true; document.getElementById('svcIco').hidden = false;
     document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
     document.getElementById('svcTitle').textContent = s.t;
     document.getElementById('svcDesc').textContent = s.d;
@@ -124,14 +108,11 @@
     svc.querySelector('.svc-call').focus({ preventScroll: true });
   }
   function closeSvc() { svc.hidden = true; if (sheet.hidden) document.body.classList.remove('lock'); if (svcFocus && svcFocus.focus) svcFocus.focus(); }
-  var arrow = '<svg class="ic"><use href="#i-arrow"/></svg>';
   document.querySelectorAll('.b[data-svc]').forEach(function (card) {
-    var more = document.createElement('span'); more.className = 'more'; more.innerHTML = 'Batafsil ' + arrow; card.appendChild(more);
     card.addEventListener('click', function () { openSvc(card.dataset.svc); });
     card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.svc); } });
   });
   document.querySelectorAll('.dept[data-dept]').forEach(function (card) {
-    var more = document.createElement('span'); more.className = 'more'; more.innerHTML = 'Batafsil ' + arrow; card.appendChild(more);
     card.addEventListener('click', function () { openSvc(card.dataset.dept, true); });
     card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.dept, true); } });
   });
@@ -222,9 +203,8 @@
   function openDoc(card) {
     if (svc.hidden) svcFocus = document.activeElement;
     var name = card.dataset.name;
-    var phD = document.getElementById('svcPh'); phD.hidden = false; phD.classList.remove('scan'); document.getElementById('svcIco').hidden = true;
-    var cvD = document.getElementById('svcCv'); if (cvD) cvD.hidden = true;
-    var img = document.getElementById('svcImg'); img.hidden = false; img.src = card.dataset.img; img.alt = name;
+    document.getElementById('svcPh').hidden = false; document.getElementById('svcIco').hidden = true;
+    var img = document.getElementById('svcImg'); img.src = card.dataset.img; img.alt = name;
     document.getElementById('svcTitle').textContent = name;
     document.getElementById('svcDesc').textContent = card.dataset.role;
     document.getElementById('svcSub').textContent = 'Shifokor haqida';
@@ -269,25 +249,6 @@
     });
   });
 
-  // Xizmatlar paneli va galereya (namunaviy tasvirlar)
-  if (window.Scan) {
-    var pvc = document.getElementById('pvCanvas'), pvCtl = pvc ? Scan.mount(pvc, 'mr', { N: 224 }) : null;
-    var pvCode = document.getElementById('pvCode'), pvCap = document.getElementById('pvCap');
-    var rows = document.querySelectorAll('.b[data-svc]');
-    function showPv(row) {
-      if (!pvCtl) return;
-      var key = row.dataset.svc, kd = KIND_OF[key], info = Scan.kinds[kd];
-      pvCtl.setKind(kd); pvCode.textContent = info.code + ' · ' + info.label.toUpperCase(); pvCap.textContent = CAP[key];
-      Array.prototype.forEach.call(rows, function (r) { r.classList.toggle('is-active', r === row); });
-    }
-    Array.prototype.forEach.call(rows, function (r) {
-      r.addEventListener('mouseenter', function () { showPv(r); });
-      r.addEventListener('focus', function () { showPv(r); });
-    });
-    if (rows[0]) showPv(rows[0]);
-    Array.prototype.forEach.call(document.querySelectorAll('.tile canvas'), function (c) { Scan.mount(c, c.dataset.kind, { N: 160 }); });
-  }
-
   document.getElementById('year').textContent = new Date().getFullYear();
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -306,45 +267,12 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    document.querySelectorAll('.card,.b,.why-item,.step,.chips li,.faq details,.sec-head,.rating,.fact,.dept,.statement,.doc,.amen-i,.dirs li,.ip-nums>div').forEach(function (el) {
+    document.querySelectorAll('.card,.b,.dept,.doc,.step,.sec-head,.faq details,.info-row>div,.amen li,.dirs li').forEach(function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.07 + 's');
       el.classList.add('reveal'); io.observe(el);
     });
   }
-
-  // Raqamlar sanash animatsiyasi
-  var counters = document.querySelectorAll('[data-count]');
-  if (hasIO && !reduce) {
-    var cio = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        var el = e.target, end = parseInt(el.dataset.count, 10), start = null; cio.unobserve(el);
-        function tick(ts) {
-          if (start === null) start = ts;
-          var p = Math.min((ts - start) / 900, 1);
-          el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
-          if (p < 1) requestAnimationFrame(tick); else el.textContent = end;
-        }
-        el.textContent = '0'; requestAnimationFrame(tick);
-      });
-    }, { threshold: .6 });
-    counters.forEach(function (c) { cio.observe(c); });
-  }
-
-  // Sarlavha soyasi va o'qish chizig'i
-  var header = document.getElementById('top');
-  var bar = document.getElementById('progress');
-  var ticking = false;
-  function onScroll() {
-    var y = window.scrollY || document.documentElement.scrollTop;
-    var h = document.documentElement.scrollHeight - window.innerHeight;
-    header.classList.toggle('scrolled', y > 8);
-    bar.style.transform = 'scaleX(' + (h > 0 ? Math.min(y / h, 1) : 0) + ')';
-    ticking = false;
-  }
-  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
-  onScroll();
 
   // Menyuda joriy bo'limni ajratib ko'rsatish
   if (hasIO) {
@@ -357,17 +285,6 @@
       });
     }, { rootMargin: '-40% 0px -55% 0px' });
     Object.keys(links).forEach(function (k) { var s = document.getElementById(k); if (s) sio.observe(s); });
-  }
-
-  // Kartalarda kursor yorug'ligi
-  if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
-    document.addEventListener('pointermove', function (e) {
-      var el = e.target.closest && e.target.closest('.spot');
-      if (!el) return;
-      var r = el.getBoundingClientRect();
-      el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-      el.style.setProperty('--my', (e.clientY - r.top) + 'px');
-    }, { passive: true });
   }
 
 })();

@@ -17,7 +17,3 @@
   Cache-Control: public, max-age=0, must-revalidate
 /img/*
   Cache-Control: public, max-age=0, must-revalidate
-
-# Tashqi kutubxona (o'zgarmaydi): 1 hafta keshlanadi.
-/vendor/*
-  Cache-Control: public, max-age=604800
