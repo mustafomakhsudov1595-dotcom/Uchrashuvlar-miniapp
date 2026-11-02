@@ -2,6 +2,7 @@
 const S = require('./_shared');
 const { STR } = require('./i18n');
 const proj = require('./proj');
+const voice = require('./voice');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -302,8 +303,8 @@ async function onMessage(st, m) {
   u.name = [from.first_name, from.last_name].filter(Boolean).join(' ');
   let text = (m.text || '').trim();
   if (BTN[text]) text = BTN[text];
-  const cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '';
-  const args = cmd ? text.slice(text.indexOf(cmd) + cmd.length).replace(/^@\S+/, '').trim() : '';
+  let cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '';
+  let args = cmd ? text.slice(text.indexOf(cmd) + cmd.length).replace(/^@\S+/, '').trim() : '';
   const ctx = { chat };
 
   // birinchi marta: til tanlash (taklif havolasi saqlanadi)
@@ -313,6 +314,18 @@ async function onMessage(st, m) {
     return S.saveUser(st, u);
   }
   const T = S.Tof(u);
+
+  // Ovozli xabar: matnga aylantirib, oddiy matn sifatida qayta ishlaymiz
+  let fromVoice = false;
+  if (m.voice && !text) {
+    const tr = await voice.transcribe(m.voice, u.lang);
+    if (tr.error === 'long') { await send(chat, T.p.voiceLong); return S.saveUser(st, u); }
+    if (!tr.text) { await send(chat, T.p.voiceFail); return S.saveUser(st, u); }
+    await send(chat, `🎙 «${esc(tr.text)}»`);
+    text = tr.text; fromVoice = true;
+    const pm = text.match(/^(?:loyiha|loyihasi|проект|project)[\s,:.-]+(.+)$/i);
+    if (pm && !u.state) { cmd = '/loyiha'; args = pm[1].trim(); text = `/loyiha ${args}`; }
+  }
 
   // Telegram joylashuvi / venue
   if (m.location || m.venue) {
@@ -365,6 +378,7 @@ async function onMessage(st, m) {
   else if (u.state && u.state.step && u.state.step !== 'confirm') {
     if (!text) await send(chat, T.pleaseText); else await handleFlowText(chat, u, text);
   } else if (text && await quickAdd(chat, u, text)) { /* tez qo'shish */ }
+  else if (fromVoice) { await startFlow(chat, u, { name: text.slice(0, 120) }); }
   else { await send(chat, T.useMenu, kbFor(T)); }
   await S.saveUser(st, u);
 }

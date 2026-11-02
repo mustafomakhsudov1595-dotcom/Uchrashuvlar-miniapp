@@ -10,7 +10,7 @@ import { t } from '../lib/i18n.js';
 const R = 28;
 const C = 2 * Math.PI * R;
 
-export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, onStatus, onToggleTask, onRemoveTask, onAddTask, onShift, onPay }) {
+export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, onStatus, onToggleTask, onRemoveTask, onAddTask, onShift, onPay, onReport, busy }) {
   const [text, setText] = useState('');
   const [pay, setPay] = useState('');
   const g = progress(p);
@@ -75,6 +75,10 @@ export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, o
             {t('pStatus')[s]}
           </button>
         ))}
+      </div>
+
+      <div className="shift-row" style={{ marginTop: 14 }}>
+        <button type="button" className="act-chip" onClick={onReport} disabled={busy}>📤 {t('pjReport')}</button>
       </div>
 
       <div className="section-title"><h4>{t('pjShiftLabel')}</h4></div>

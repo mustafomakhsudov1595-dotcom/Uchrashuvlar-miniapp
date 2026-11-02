@@ -16,7 +16,9 @@ const uz = {
   digWeekState: (at) => `📊 Haftalik xulosa: ${at ? `yakshanba <b>${at}</b> da` : '<b>oʻchirilgan</b>'}`,
   wkTitle: '📊 <b>Haftalik xulosa</b>', wkDone: (n) => `✅ Tugagan loyihalar: <b>${n}</b>`, wkMoney: (s) => `💰 Bu hafta tushgan pul: <b>${s}</b>`, wkDebt: (n, s) => `🧾 Hozirgi qarz: <b>${s}</b> (${n} ta loyiha)`,
   wkActive: (n, o) => `📁 Faol loyiha: <b>${n}</b>${o ? ` · kechikkan: <b>${o}</b>` : ''}`, wkNext: '🗓 Kelasi hafta muddatlari', wkMeet: (n) => `🤝 Uchrashuvlar: <b>${n}</b>`, wkEmpty: 'Bu hafta tinch oʻtdi.',
-  helpLine2: '🧾 /qarz — kim qancha qarz · ☀️ Ertalab 08:00 da bugungi reja avtomatik keladi',
+  bReport: '📤 Mijozga hisobot', reportMsg: (n, l) => `📤 <b>${n}</b> — mijoz uchun holat sahifasi:\n${l}\n\nMijoz progress, vazifalar va muddatni koʻradi. Narx va toʻlovlar koʻrinmaydi.`, reportRevoke: '🔒 Havolani oʻchirish', reportOff: '🔒 Havola oʻchirildi, endi ochilmaydi.',
+  voiceLong: '🎙 Ovozli xabar juda uzun (1,5 daqiqagacha). Qisqaroq yozib yuboring.', voiceFail: '🎙 Ovozni tushuna olmadim. Yana bir bor, aniqroq gapiring yoki matn yozing.',
+  helpLine2: '🎙 Ovozli xabar yuboring — bot oʻzi yozib qoʻyadi · 🧾 /qarz — kim qancha qarz · ☀️ Ertalab 08:00 da bugungi reja avtomatik keladi',
 };
 const ru = {
   ...uz,
@@ -33,7 +35,9 @@ const ru = {
   digWeekState: (at) => `📊 Недельная сводка: ${at ? `воскресенье в <b>${at}</b>` : '<b>выключена</b>'}`,
   wkTitle: '📊 <b>Итоги недели</b>', wkDone: (n) => `✅ Завершено проектов: <b>${n}</b>`, wkMoney: (s) => `💰 Получено за неделю: <b>${s}</b>`, wkDebt: (n, s) => `🧾 Текущий долг: <b>${s}</b> (проектов: ${n})`,
   wkActive: (n, o) => `📁 Активных проектов: <b>${n}</b>${o ? ` · просрочено: <b>${o}</b>` : ''}`, wkNext: '🗓 Сроки на следующей неделе', wkMeet: (n) => `🤝 Встреч: <b>${n}</b>`, wkEmpty: 'Неделя прошла спокойно.',
-  helpLine2: '🧾 /qarz — кто сколько должен · ☀️ Каждое утро в 08:00 приходит план на сегодня',
+  bReport: '📤 Отчёт клиенту', reportMsg: (n, l) => `📤 <b>${n}</b> — страница статуса для клиента:\n${l}\n\nКлиент видит прогресс, задачи и срок. Цена и оплаты не показываются.`, reportRevoke: '🔒 Отключить ссылку', reportOff: '🔒 Ссылка отключена, больше не открывается.',
+  voiceLong: '🎙 Голосовое слишком длинное (до 1,5 минуты). Отправьте покороче.', voiceFail: '🎙 Не удалось разобрать голос. Скажите ещё раз чётче или напишите текстом.',
+  helpLine2: '🎙 Отправьте голосовое — бот сам запишет · 🧾 /qarz — кто сколько должен · ☀️ Каждое утро в 08:00 приходит план на сегодня',
 };
 const en = {
   ...uz,
@@ -50,6 +54,8 @@ const en = {
   digWeekState: (at) => `📊 Weekly summary: ${at ? `Sunday at <b>${at}</b>` : '<b>off</b>'}`,
   wkTitle: '📊 <b>Weekly summary</b>', wkDone: (n) => `✅ Projects finished: <b>${n}</b>`, wkMoney: (s) => `💰 Received this week: <b>${s}</b>`, wkDebt: (n, s) => `🧾 Outstanding: <b>${s}</b> (${n} project${n > 1 ? 's' : ''})`,
   wkActive: (n, o) => `📁 Active projects: <b>${n}</b>${o ? ` · overdue: <b>${o}</b>` : ''}`, wkNext: '🗓 Deadlines next week', wkMeet: (n) => `🤝 Meetings: <b>${n}</b>`, wkEmpty: 'A quiet week.',
-  helpLine2: '🧾 /qarz — who owes how much · ☀️ Every morning at 08:00 your plan for today arrives',
+  bReport: '📤 Client report', reportMsg: (n, l) => `📤 <b>${n}</b> — status page for your client:\n${l}\n\nThe client sees progress, tasks and deadline. Price and payments stay hidden.`, reportRevoke: '🔒 Disable link', reportOff: '🔒 Link disabled, it no longer opens.',
+  voiceLong: '🎙 Voice message is too long (up to 1.5 minutes). Please send a shorter one.', voiceFail: '🎙 Could not understand the voice. Try again more clearly or type it.',
+  helpLine2: '🎙 Send a voice message — the bot writes it down · 🧾 /qarz — who owes how much · ☀️ Every morning at 08:00 your plan for today arrives',
 };
 module.exports = { uz, ru, en };

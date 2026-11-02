@@ -178,6 +178,15 @@ function deadlineTag(p, today, T) {
   return d < 0 ? T.p.overdue(-d) : d === 0 ? T.p.today : d === 1 ? T.p.tomorrow : T.p.left(d);
 }
 const owed = (p) => (p.price !== null && p.price !== undefined ? Math.max(0, p.price - (p.paid || 0)) : 0);
+// Mijozga ochiq hisobot havolasi (narx koʻrsatilmaydi); /r/<kalit>
+async function reportLink(st, u, pid, revoke = false) {
+  const p = u.projects.find((x) => x.id === pid);
+  if (!p) return null;
+  u.reports = u.reports || {};
+  if (revoke) { u.reports[pid] = null; return ''; }
+  if (!u.reports[pid]) { u.reports[pid] = newId().replace(/-/g, '').slice(0, 20); await st.set(`rep/${u.reports[pid]}`, `${u.id}:${pid}`); }
+  return `${SITE()}/r/${u.reports[pid]}`;
+}
 const money = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 function projectText(p, u, now = Date.now()) {
   const T = Tof(u), today = todayISO(u.tz, now), { done, total } = projProgress(p), pc = total ? Math.round((done / total) * 100) : 0;
@@ -315,6 +324,7 @@ function parseQuick(input, tz, now = Date.now()) {
   }
   rest = rest.replace(/(?:^|[\s,;])(ertalab|kechqurun|kech|tushdan keyin|утром|вечером|днём|днем|ночью|morning|evening|afternoon|tonight)(?=[\s,;.]|$)/gi, ' ');
 
+  if (out.found.time) rest = rest.replace(/(?:^|[\s,;])(?:soat|час(?:ов|а)?)(?=[\s,;.]|$)/gi, ' ');
   // qolgani: nom, joy, izoh (vergul bilan ajratilgan)
   const parts = rest.split(/[,;\n]/).map((x) => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
   let name = (parts[0] || '').replace(/\s+(bilan|с|with)$/i, '').replace(/^da\s+/i, '').replace(/^(uchrashuv|meeting|встреча)\s*[:\-—]?\s*/i, '').trim();
@@ -328,5 +338,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

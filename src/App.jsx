@@ -13,7 +13,7 @@ import TabBar from './components/TabBar.jsx';
 import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
-  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, getCalendarToken, signature,
+  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, getCalendarToken, signature,
   loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
@@ -352,6 +352,27 @@ export default function App() {
     }
   };
 
+  const handleReport = async (p) => {
+    setInviting(true);
+    try {
+      clearTimeout(syncTimer.current);
+      syncing.current = false;
+      await doSync();
+      const link = await createReport(p.id);
+      if (isTelegram) openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(p.name)}`);
+      else {
+        await navigator.clipboard?.writeText(link);
+        showToast(t('toastCopied'));
+      }
+      haptic.success();
+    } catch {
+      haptic.error();
+      showToast(t('toastInviteErr'));
+    } finally {
+      setInviting(false);
+    }
+  };
+
   const savePlacesList = (list) => {
     const next = { list, at: Date.now() };
     savePlaces(next.list, next.at);
@@ -515,6 +536,8 @@ export default function App() {
           onAddTask={(text) => projAddTask(curProject.id, text)}
           onShift={(n) => projShift(curProject.id, n)}
           onPay={(a) => projPay(curProject.id, a)}
+          onReport={() => handleReport(curProject)}
+          busy={inviting}
         />
       )}
 

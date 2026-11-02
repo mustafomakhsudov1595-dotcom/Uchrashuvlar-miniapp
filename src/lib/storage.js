@@ -193,6 +193,13 @@ export async function createInvite(id) {
   return res.json();
 }
 
+// Mijozga ochiq hisobot havolasi (loyiha serverda bo'lishi kerak)
+export async function createReport(id) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'report', id }) });
+  if (!res.ok) throw new Error(`report ${res.status}`);
+  return (await res.json()).link;
+}
+
 // Kalendar obuna havolasi uchun maxfiy kalit (server yaratadi)
 export async function getCalendarToken() {
   const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'cal' }) });

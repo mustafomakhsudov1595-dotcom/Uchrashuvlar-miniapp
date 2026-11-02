@@ -27,6 +27,13 @@ exports.handler = async (event) => {
     return json(200, { ok: true, token: u.calToken });
   }
 
+  if (b.action === 'report') {
+    const link = await S.reportLink(st, u, String(b.id || ''), b.revoke === true);
+    if (link === null) return json(404, { ok: false, error: 'not found' });
+    await S.saveUser(st, u);
+    return json(200, { ok: true, link });
+  }
+
   if (b.action === 'invite') {
     const m = u.meetings.find((x) => x.id === b.id);
     if (!m) return json(404, { ok: false, error: 'not found' });

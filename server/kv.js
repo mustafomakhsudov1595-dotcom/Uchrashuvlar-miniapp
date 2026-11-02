@@ -3,6 +3,9 @@
 // Foydalanuvchilar ro'yxati `idx/users` kalitida saqlanadi: har daqiqalik cron KV list() limitiga urilmasin.
 let KV = null;
 const setKV = (ns) => { KV = ns; };
+let AI = null;
+const setAI = (a) => { AI = a; };
+const getAI = () => AI;
 const IDX = 'idx/users';
 
 async function readIndex() { return (await KV.get(IDX, { type: 'json' })) || []; }
@@ -49,4 +52,4 @@ function openKV() {
   };
 }
 
-module.exports = { openKV, setKV };
+module.exports = { openKV, setKV, setAI, getAI };

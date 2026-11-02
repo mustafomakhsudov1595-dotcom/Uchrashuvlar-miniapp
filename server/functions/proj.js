@@ -38,6 +38,7 @@ function cardMarkup(p, u) {
   rows.push([1, 3, 7].map((n) => ({ text: `🗓 ${P.bPlus(n)}`, callback_data: `pd:${p.id}:${n}` })));
   if (p.price !== null && S.owed(p) > 0) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]);
   else if (p.price !== null) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }]);
+  rows.push([{ text: P.bReport, callback_data: `pr:${p.id}` }]);
   rows.push([{ text: P.bAddTask, callback_data: `pa:${p.id}` }, S.appBtn(P.bApp, `?proj=${p.id}`), { text: P.bDel, callback_data: `px:${p.id}` }]);
   rows.push([{ text: P.backList, callback_data: 'pl:0' }]);
   return { inline_keyboard: rows };
@@ -262,6 +263,13 @@ async function onCallback(ctx, u, act, a, b) {
     const p = find(u, a), n = Number(b) || 1;
     if (p) { const today = S.todayISO(u.tz); p.date = S.addDaysISO(p.date < today ? today : p.date, n); p.r = undefined; p.updatedAt = Date.now(); toast = P.deadlineMoved(S.fmtShort(p.date, T)); }
     await showCard(ctx, u, a);
+  } else if (act === 'pr' || act === 'prx') {
+    const p = find(u, a);
+    if (p) {
+      const st = S.openStore();
+      if (act === 'prx') { await S.reportLink(st, u, a, true); await send(chat, P.reportOff); }
+      else { const link = await S.reportLink(st, u, a); await send(chat, P.reportMsg(esc(p.name), link), { inline_keyboard: [[{ text: P.reportRevoke, callback_data: `prx:${a}` }]] }); }
+    }
   } else if (act === 'pp') {
     const p = find(u, a);
     if (p) { u.state = { kind: 'pay', pid: a }; await send(chat, P.payAsk(esc(p.name), S.owed(p) > 0 ? S.money(S.owed(p)) : ''), { inline_keyboard: [cancelRow(P)] }); }
@@ -335,4 +343,4 @@ async function remind(u, now) {
   return { dirty, sent };
 }
 
-module.exports = { onMessage, onCallback, remind, showList, showTasks, tasksView, showDebts, briefMessage, weeklyMessage, applyPayment, payAmount, ACTS: ['pl', 'pj', 'pt', 'pu', 'ps', 'pd', 'pa', 'px', 'pxy', 'pn', 'pno', 'pnt', 'pnd', 'pk', 'pok', 'ptd', 'pp', 'ppf', 'pq'] };
+module.exports = { onMessage, onCallback, remind, showList, showTasks, tasksView, showDebts, briefMessage, weeklyMessage, applyPayment, payAmount, ACTS: ['pl', 'pj', 'pt', 'pu', 'ps', 'pd', 'pa', 'px', 'pxy', 'pn', 'pno', 'pnt', 'pnd', 'pk', 'pok', 'ptd', 'pp', 'ppf', 'pq', 'pr', 'prx'] };
