@@ -71,6 +71,7 @@
     <div class="sec-head">
       <h2>Xizmatlar</h2>
     </div>
+    <div class="svc-layout">
     <div class="list">
       <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>EKG</h3><p>Elektrokardiografiya</p></article>
       <article data-svc="kolpo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Kolposkopiya</h3><p>Ginekologik ko'rik</p></article>
@@ -81,6 +82,20 @@
       <article data-svc="elasto" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Elastografiya</h3><p>Jigar, ko'krak, qalqonsimon bez</p></article>
       <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Laboratoriya</h3><p>Laboratoriya xizmatlari</p></article>
       <article data-svc="massage" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Bolalar massaji</h3><p>Bolalar uchun massaj</p></article>
+    </div>
+    <aside class="svc-stage" aria-label="Xizmatlar bo'yicha 3D model">
+      <div class="stage" id="stage">
+        <canvas id="gl" role="img" aria-label="Tanlangan xizmatning 3D modeli. Sudrab aylantirish mumkin."></canvas>
+        <span class="vl tl" id="stCap">UZI · Doppler · Exo-EG · Elastografiya</span>
+        <span class="vl br">sudrab aylantiring</span>
+      </div>
+      <div class="stabs" role="group" aria-label="Model turi">
+        <button type="button" class="on" data-m="us" aria-pressed="true">UZI</button>
+        <button type="button" data-m="heart" aria-pressed="false">Yurak</button>
+        <button type="button" data-m="lab" aria-pressed="false">Laboratoriya</button>
+        <button type="button" data-m="colpo" aria-pressed="false">Kolposkopiya</button>
+      </div>
+    </aside>
     </div>
   </div>
 </section>
@@ -194,6 +209,9 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
   </g>
 </svg>
+<script src="vendor/three.min.js"></script>
+<script src="scan.js"></script>
+<script src="stage3d.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
