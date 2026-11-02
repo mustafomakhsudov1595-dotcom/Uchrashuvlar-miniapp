@@ -5,6 +5,9 @@ import StatsView from './components/StatsView.jsx';
 import ProjectsView from './components/ProjectsView.jsx';
 import ProjectDetail from './components/ProjectDetail.jsx';
 import ProjectForm from './components/ProjectForm.jsx';
+import SubSheet from './components/SubSheet.jsx';
+import ClientDetail from './components/ClientDetail.jsx';
+import { clientsOf } from './lib/finance.js';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
@@ -14,7 +17,7 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, getCalendarToken, signature,
-  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
@@ -40,6 +43,8 @@ export default function App() {
   const [meetings, setMeetings] = useState(loadMeetings);
   const [places, setPlaces] = useState(() => loadPlaces());
   const [projects, setProjects] = useState(loadProjects);
+  const [subs, setSubs] = useState(loadSubs);
+  const [confirmSid, setConfirmSid] = useState(null);
   const [confirmPid, setConfirmPid] = useState(null);
   const [tab, setTab] = useState('home');
   const [selectedDate, setSelectedDate] = useState(todayISO);
@@ -59,6 +64,10 @@ export default function App() {
   placesRef.current = places;
   const projectsRef = useRef(projects);
   projectsRef.current = projects;
+  const subsRef = useRef(subs);
+  subsRef.current = subs;
+  const sdeletedRef = useRef(loadSDeleted());
+  const sFromServer = useRef(false);
   const pdeletedRef = useRef(loadPDeleted());
   const pFromServer = useRef(false);
   const deletedRef = useRef(loadDeleted());
@@ -75,6 +84,7 @@ export default function App() {
     try {
       const sentDeleted = [...deletedRef.current];
       const sentPDeleted = [...pdeletedRef.current];
+      const sentSDeleted = [...sdeletedRef.current];
       const remote = await syncRemote({
         meetings: meetingsRef.current,
         deleted: sentDeleted,
@@ -83,12 +93,20 @@ export default function App() {
         placesAt: placesRef.current.at,
         projects: projectsRef.current,
         pdeleted: [...pdeletedRef.current],
+        subs: subsRef.current,
+        sdeleted: sentSDeleted,
       });
       if (remote) {
         deletedRef.current = deletedRef.current.filter((id) => !sentDeleted.includes(id));
         saveDeleted(deletedRef.current);
         pdeletedRef.current = pdeletedRef.current.filter((id) => !sentPDeleted.includes(id));
         savePDeleted(pdeletedRef.current);
+        sdeletedRef.current = sdeletedRef.current.filter((id) => !sentSDeleted.includes(id));
+        saveSDeleted(sdeletedRef.current);
+        if (subsSignature(remote.subs) !== subsSignature(subsRef.current)) {
+          sFromServer.current = true;
+          setSubs(remote.subs);
+        }
         if (projSignature(remote.projects) !== projSignature(projectsRef.current)) {
           pFromServer.current = true;
           setProjects(remote.projects);
@@ -124,6 +142,15 @@ export default function App() {
     }
     scheduleSync();
   }, [meetings, scheduleSync]);
+
+  useEffect(() => {
+    saveSubs(subs);
+    if (sFromServer.current) {
+      sFromServer.current = false;
+      return;
+    }
+    scheduleSync();
+  }, [subs, scheduleSync]);
 
   useEffect(() => {
     saveProjects(projects);
@@ -177,18 +204,23 @@ export default function App() {
   const current = sheet?.id && !String(sheet.type).startsWith('p') ? meetings.find((m) => m.id === sheet.id) : null;
   const curProject = sheet?.id && String(sheet.type).startsWith('p') ? projects.find((x) => x.id === sheet.id) : null;
 
+  const curSub = sheet?.type === 'sub' && sheet.sid ? subs.find((x) => x.id === sheet.sid) : null;
+  const clientList = useMemo(() => clientsOf(projects, subs), [projects, subs]);
+  const clientNames = useMemo(() => clientList.map((c) => c.name), [clientList]);
+  const curClient = sheet?.type === 'client' ? clientList.find((c) => c.key === sheet.ckey) : null;
+
   useEffect(() => {
     if (sheet?.id && !current && !curProject) setSheet(null);
   }, [sheet, current, curProject]);
 
   const closeTop = useCallback(() => {
-    if (confirmId || confirmPid) { setConfirmId(null); setConfirmPid(null); }
+    if (confirmId || confirmPid || confirmSid) { setConfirmId(null); setConfirmPid(null); setConfirmSid(null); }
     else if (sheet?.type === 'pform' && sheet.id) setSheet({ type: 'pdetail', id: sheet.id });
     else if (sheet?.type === 'form' && sheet.id) setSheet({ type: 'detail', id: sheet.id });
     else setSheet(null);
-  }, [confirmId, confirmPid, sheet]);
+  }, [confirmId, confirmPid, confirmSid, sheet]);
 
-  const overlayOpen = Boolean(sheet || confirmId || confirmPid);
+  const overlayOpen = Boolean(sheet || confirmId || confirmPid || confirmSid);
   useBackButton(overlayOpen, closeTop);
 
   useEffect(() => {
@@ -443,6 +475,30 @@ export default function App() {
     touchProject(id, (x) => ({ paid: (x.paid || 0) + amount, pays: [...(x.pays || []), { a: amount, d: todayISO() }].slice(-40) }));
     showToast(t('toastPaid'));
   };
+  const touchSub = (id, fn) => setSubs((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
+  const saveSub = (data) => {
+    if (sheet?.sid) touchSub(sheet.sid, () => data);
+    else setSubs((list) => [...list, { id: newId(), active: true, last: '', pays: [], createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
+    setSheet(null);
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
+  const paySubNow = (id) => {
+    haptic.success();
+    const d = todayISO();
+    touchSub(id, (x) => ({ last: d.slice(0, 7), pays: [...(x.pays || []), { a: x.amount, d }].slice(-60) }));
+    showToast(t('toastPaid'));
+  };
+  const toggleSub = (id) => touchSub(id, (x) => ({ active: !x.active }));
+  const handleSubDelete = () => {
+    const id = confirmSid;
+    sdeletedRef.current = [...sdeletedRef.current, id];
+    saveSDeleted(sdeletedRef.current);
+    setSubs((list) => list.filter((x) => x.id !== id));
+    setConfirmSid(null);
+    setSheet(null);
+    haptic.success();
+  };
   const projShift = (id, n) => {
     haptic.select();
     touchProject(id, (x) => ({ date: shiftDate(x.date < todayISO() && n > 0 ? todayISO() : x.date, n) }));
@@ -487,9 +543,9 @@ export default function App() {
         <CalendarView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} />
       )}
       {tab === 'projects' && (
-        <ProjectsView projects={projects} now={now} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
+        <ProjectsView projects={projects} subs={subs} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
-      {tab === 'stats' && <StatsView meetings={meetings} now={now} onSettings={openSettings} />}
+      {tab === 'stats' && <StatsView meetings={meetings} projects={projects} subs={subs} now={now} onSettings={openSettings} />}
 
       <TabBar tab={tab} onTab={changeTab} onAdd={() => (tab === 'projects' ? openProjectForm() : openAdd(tab === 'calendar' ? selectedDate : undefined))} />
 
@@ -545,12 +601,38 @@ export default function App() {
         <ProjectForm key={sheet.id ?? 'pnew'} initial={curProject} presetType={sheet.ptype} onSave={saveProject} onClose={closeTop} />
       )}
 
+      {sheet?.type === 'sub' && (!sheet.sid || curSub) && (
+        <SubSheet
+          key={sheet.sid ?? 'snew'}
+          sub={curSub}
+          clientNames={clientNames}
+          onSave={saveSub}
+          onPay={() => paySubNow(sheet.sid)}
+          onToggle={() => toggleSub(sheet.sid)}
+          onDelete={() => setConfirmSid(sheet.sid)}
+          onClose={closeTop}
+        />
+      )}
+
+      {sheet?.type === 'client' && curClient && (
+        <ClientDetail
+          client={curClient}
+          onOpenProject={(id) => setSheet({ type: 'pdetail', id })}
+          onOpenSub={(id) => setSheet({ type: 'sub', sid: id })}
+          onClose={closeTop}
+        />
+      )}
+
       {sheet?.type === 'settings' && (
         <SettingsSheet places={places.list} onLang={changeLang} onRemovePlace={(p) => savePlacesList(places.list.filter((x) => x !== p))} onCalendarLink={calendarLink} onClose={closeTop} />
       )}
 
       {confirmId && (
         <ConfirmDialog title={t('cDelTitle')} text={t('cDelText')} confirmLabel={t('cDelYes')} onConfirm={handleDelete} onCancel={() => setConfirmId(null)} />
+      )}
+
+      {confirmSid && (
+        <ConfirmDialog title={t('subDelTitle')} text={t('subDelText')} confirmLabel={t('cDelYes')} onConfirm={handleSubDelete} onCancel={() => setConfirmSid(null)} />
       )}
 
       {confirmPid && (

@@ -1,0 +1,58 @@
+'use strict';
+// Oylik toʻlovlar, mijozlar bazasi, daromad hisoboti (uz / ru / en)
+const fm = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const uz = {
+  bClients: '👥 Mijozlar', bSubs: '🔁 Oylik', bIncome: '💹 Daromad', back: '⬅️ Orqaga',
+  subTitle: (n, s) => `🔁 <b>Oylik toʻlovlar</b> (${n}) — oyiga <b>${s}</b>`, subNone: 'Hali oylik toʻlov yoʻq. Hosting, bot yoki sayt xizmati uchun mijoz har oy toʻlasa, shu yerga qoʻshing.',
+  subAdd: '➕ Qoʻshish', subAsk: '🔁 <b>Yangi oylik toʻlov</b>\n\nBitta xabarda yozing:\n<code>mijoz, xizmat, summa, kun</code>\n\nMasalan: <code>Anvar, hosting, 500 000, 5</code>\n(har oyning 5-sanasida 500 000)',
+  subBad: 'Tushunmadim. Format: <code>mijoz, xizmat, summa, kun</code>\nMasalan: <code>Anvar, hosting, 500 000, 5</code>', subSaved: '✅ Oylik toʻlov qoʻshildi.',
+  stPaid: '✅ toʻlangan', stDue: '⏳ kutilmoqda', stWait: (d) => `🗓 ${d}-sana`, stPause: '⏸ toʻxtatilgan',
+  subLine: (st, who, amount) => `${st} <b>${who}</b> — ${amount}`,
+  subCard: (x, st, total) => `🔁 <b>${x.name}</b>${x.client ? `\n👤 ${x.client}` : ''}\n💰 <b>${fm(x.amount)}</b> / oy · har oyning <b>${x.day}-sanasi</b>\n${st}\n📈 Jami olingan: <b>${fm(total)}</b>`,
+  bSubPaid: '✅ Toʻlandi', bSubPause: '⏸ Toʻxtatish', bSubResume: '▶️ Yoqish', bSubDel: '🗑 Oʻchirish', subDelAsk: '🗑 Oylik toʻlovni oʻchirasizmi?', subDeleted: '🗑 Oʻchirildi.', subPaidToast: 'Toʻlov belgilandi',
+  subRem: (who, amount, day) => `🔁 <b>${who}</b> — oylik toʻlov <b>${amount}</b> (${day}-sana). Toʻlov keldimi?`,
+  brSubs: '💳 Oylik toʻlovlar', 
+  clTitle: (n) => `👥 <b>Mijozlar</b> (${n})`, clNone: 'Mijoz yoʻq. Loyihaga mijoz nomini yozsangiz, shu yerda paydo boʻladi.',
+  clCard: (c) => `👤 <b>${c.name}</b>${c.contact ? `\n📞 ${c.contact}` : ''}\n📁 Loyihalar: <b>${c.projects.length}</b> (faol: ${c.active})\n💰 Jami narx: <b>${fm(c.price)}</b>\n✅ Toʻlagan: <b>${fm(c.paid)}</b>\n🧾 Qarz: <b>${fm(c.owed)}</b>${c.monthly ? `\n🔁 Oylik: <b>${fm(c.monthly)}</b>` : ''}`,
+  inTitle: '💹 <b>Daromad</b>', inMonth: (name, s) => `${name}: <b>${s}</b>`, inKinds: { site: '🌐 Sayt', bot: '🤖 Bot', video: '🎬 Video', other: '📦 Boshqa', sub: '🔁 Oylik' },
+  inDebt: (s) => `🧾 Hozirgi qarz: <b>${s}</b>`, inMonthly: (s) => `🔁 Oylik daromad (har oy): <b>${s}</b>`, inAvg: (s) => `📊 Oʻrtacha (6 oy): <b>${s}</b>`, inNone: 'Hali toʻlov yoʻq. Loyihada 💵 Toʻlov tugmasini bosib yozib boring.',
+  inNote: 'Eski toʻlovlar oxirgi yangilangan oyga yoziladi.', bExport: '📤 Excel (CSV)', exCaption: 'Excel/Google Sheets ochadi (UTF-8, ; ajratgich)', exEmpty: 'Eksport uchun maʼlumot yoʻq.',
+  cmdSub: '/obuna — oylik toʻlovlar · /mijozlar · /daromad · /eksport',
+};
+const ru = {
+  ...uz,
+  bClients: '👥 Клиенты', bSubs: '🔁 Ежемес.', bIncome: '💹 Доход', back: '⬅️ Назад',
+  subTitle: (n, s) => `🔁 <b>Ежемесячные платежи</b> (${n}) — в месяц <b>${s}</b>`, subNone: 'Пока нет. Если клиент платит каждый месяц за хостинг, бота или поддержку сайта — добавьте сюда.',
+  subAdd: '➕ Добавить', subAsk: '🔁 <b>Новый ежемесячный платёж</b>\n\nОдним сообщением:\n<code>клиент, услуга, сумма, день</code>\n\nНапример: <code>Анвар, хостинг, 500 000, 5</code>\n(каждого 5-го числа 500 000)',
+  subBad: 'Не понял. Формат: <code>клиент, услуга, сумма, день</code>\nНапример: <code>Анвар, хостинг, 500 000, 5</code>', subSaved: '✅ Ежемесячный платёж добавлен.',
+  stPaid: '✅ оплачено', stDue: '⏳ ожидается', stWait: (d) => `🗓 ${d}-го числа`, stPause: '⏸ приостановлено',
+  subCard: (x, st, total) => `🔁 <b>${x.name}</b>${x.client ? `\n👤 ${x.client}` : ''}\n💰 <b>${fm(x.amount)}</b> / мес · каждого <b>${x.day}-го числа</b>\n${st}\n📈 Всего получено: <b>${fm(total)}</b>`,
+  bSubPaid: '✅ Оплачено', bSubPause: '⏸ Приостановить', bSubResume: '▶️ Включить', bSubDel: '🗑 Удалить', subDelAsk: '🗑 Удалить ежемесячный платёж?', subDeleted: '🗑 Удалено.', subPaidToast: 'Оплата отмечена',
+  subRem: (who, amount, day) => `🔁 <b>${who}</b> — ежемесячный платёж <b>${amount}</b> (${day}-го числа). Оплата пришла?`,
+  brSubs: '💳 Ежемесячные платежи',
+  clTitle: (n) => `👥 <b>Клиенты</b> (${n})`, clNone: 'Клиентов нет. Укажите имя клиента в проекте — он появится здесь.',
+  clCard: (c) => `👤 <b>${c.name}</b>${c.contact ? `\n📞 ${c.contact}` : ''}\n📁 Проекты: <b>${c.projects.length}</b> (активных: ${c.active})\n💰 Сумма: <b>${fm(c.price)}</b>\n✅ Оплатил: <b>${fm(c.paid)}</b>\n🧾 Долг: <b>${fm(c.owed)}</b>${c.monthly ? `\n🔁 Ежемесячно: <b>${fm(c.monthly)}</b>` : ''}`,
+  inTitle: '💹 <b>Доход</b>', inKinds: { site: '🌐 Сайт', bot: '🤖 Бот', video: '🎬 Видео', other: '📦 Другое', sub: '🔁 Ежемес.' },
+  inDebt: (s) => `🧾 Текущий долг: <b>${s}</b>`, inMonthly: (s) => `🔁 Ежемесячный доход: <b>${s}</b>`, inAvg: (s) => `📊 В среднем (6 мес.): <b>${s}</b>`, inNone: 'Оплат пока нет. Записывайте через кнопку 💵 Оплата в проекте.',
+  inNote: 'Старые оплаты записаны на месяц последнего обновления.', bExport: '📤 Excel (CSV)', exCaption: 'Откроется в Excel/Google Sheets (UTF-8, разделитель ;)', exEmpty: 'Нет данных для экспорта.',
+  cmdSub: '/obuna — ежемесячные платежи · /mijozlar · /daromad · /eksport',
+};
+const en = {
+  ...uz,
+  bClients: '👥 Clients', bSubs: '🔁 Monthly', bIncome: '💹 Income', back: '⬅️ Back',
+  subTitle: (n, s) => `🔁 <b>Monthly payments</b> (${n}) — <b>${s}</b> / month`, subNone: 'None yet. If a client pays monthly for hosting, a bot or site support, add it here.',
+  subAdd: '➕ Add', subAsk: '🔁 <b>New monthly payment</b>\n\nIn one message:\n<code>client, service, amount, day</code>\n\nExample: <code>Anvar, hosting, 500 000, 5</code>\n(500 000 on the 5th of every month)',
+  subBad: 'Could not read it. Format: <code>client, service, amount, day</code>\nExample: <code>Anvar, hosting, 500 000, 5</code>', subSaved: '✅ Monthly payment added.',
+  stPaid: '✅ paid', stDue: '⏳ pending', stWait: (d) => `🗓 on the ${d}th`, stPause: '⏸ paused',
+  subCard: (x, st, total) => `🔁 <b>${x.name}</b>${x.client ? `\n👤 ${x.client}` : ''}\n💰 <b>${fm(x.amount)}</b> / month · on the <b>${x.day}th</b>\n${st}\n📈 Received in total: <b>${fm(total)}</b>`,
+  bSubPaid: '✅ Paid', bSubPause: '⏸ Pause', bSubResume: '▶️ Resume', bSubDel: '🗑 Delete', subDelAsk: '🗑 Delete this monthly payment?', subDeleted: '🗑 Deleted.', subPaidToast: 'Payment marked',
+  subRem: (who, amount, day) => `🔁 <b>${who}</b> — monthly payment <b>${amount}</b> (day ${day}). Did it arrive?`,
+  brSubs: '💳 Monthly payments',
+  clTitle: (n) => `👥 <b>Clients</b> (${n})`, clNone: 'No clients yet. Add a client name to a project and it shows up here.',
+  clCard: (c) => `👤 <b>${c.name}</b>${c.contact ? `\n📞 ${c.contact}` : ''}\n📁 Projects: <b>${c.projects.length}</b> (active: ${c.active})\n💰 Total price: <b>${fm(c.price)}</b>\n✅ Paid: <b>${fm(c.paid)}</b>\n🧾 Owed: <b>${fm(c.owed)}</b>${c.monthly ? `\n🔁 Monthly: <b>${fm(c.monthly)}</b>` : ''}`,
+  inTitle: '💹 <b>Income</b>', inKinds: { site: '🌐 Site', bot: '🤖 Bot', video: '🎬 Video', other: '📦 Other', sub: '🔁 Monthly' },
+  inDebt: (s) => `🧾 Outstanding: <b>${s}</b>`, inMonthly: (s) => `🔁 Recurring income: <b>${s}</b>`, inAvg: (s) => `📊 Average (6 months): <b>${s}</b>`, inNone: 'No payments yet. Record them with 💵 Payment in a project.',
+  inNote: 'Older payments are counted in the month of the last update.', bExport: '📤 Excel (CSV)', exCaption: 'Opens in Excel/Google Sheets (UTF-8, ; separator)', exEmpty: 'Nothing to export.',
+  cmdSub: '/obuna — monthly payments · /mijozlar · /daromad · /eksport',
+};
+module.exports = { uz, ru, en };

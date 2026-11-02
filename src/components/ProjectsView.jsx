@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
 import ProjectCard, { TypeIcon } from './ProjectCard.jsx';
 import Illustration from './Illustration.jsx';
+import { ClientsList, SubsList } from './FinanceViews.jsx';
 import { IconSettings } from './Icons.jsx';
 import { byDeadline, PTYPES, urgency, owed, money } from '../lib/projects.js';
 import { toISODate } from '../lib/dates.js';
+import { clientsOf } from '../lib/finance.js';
 import { t } from '../lib/i18n.js';
 
-export default function ProjectsView({ projects, now, onOpen, onAdd, onDone, onDelete, onSettings }) {
+export default function ProjectsView({ projects, subs, now, onOpen, onAdd, onDone, onDelete, onSettings, onOpenClient, onOpenSub, onAddSub, onPaySub }) {
+  const [view, setView] = useState('projects'); // projects | clients | subs
   const [type, setType] = useState('');
   const [flt, setFlt] = useState(''); // '' | soon | over
   const today = toISODate(now);
@@ -16,6 +19,7 @@ export default function ProjectsView({ projects, now, onOpen, onAdd, onDone, onD
   const soon = active.filter((p) => ['soon', 'today'].includes(urgency(p, today).kind)).length;
   const over = active.filter((p) => urgency(p, today).kind === 'over').length;
 
+  const clients = useMemo(() => clientsOf(projects, subs), [projects, subs]);
   const debts = useMemo(() => projects.filter((p) => owed(p) > 0), [projects]);
   const debtSum = debts.reduce((n, p) => n + owed(p), 0);
 
@@ -38,7 +42,16 @@ export default function ProjectsView({ projects, now, onOpen, onAdd, onDone, onD
         </div>
       </header>
 
-      {projects.length === 0 ? (
+      <div className="seg" role="tablist">
+        {[['projects', 'fvProjects'], ['clients', 'fvClients'], ['subs', 'fvSubs']].map(([k, label]) => (
+          <button type="button" key={k} role="tab" aria-selected={view === k} className={view === k ? 'on' : ''} onClick={() => setView(k)}>{t(label)}</button>
+        ))}
+      </div>
+
+      {view === 'clients' && <ClientsList clients={clients} onOpen={onOpenClient} />}
+      {view === 'subs' && <SubsList subs={subs} today={today} onOpen={onOpenSub} onAdd={onAddSub} onPay={onPaySub} />}
+
+      {view === 'projects' && (projects.length === 0 ? (
         <section className="empty-day">
           <Illustration />
           <h3>{t('pjNone')}</h3>
@@ -115,7 +128,7 @@ export default function ProjectsView({ projects, now, onOpen, onAdd, onDone, onD
             </details>
           )}
         </>
-      )}
+      ))}
     </>
   );
 }

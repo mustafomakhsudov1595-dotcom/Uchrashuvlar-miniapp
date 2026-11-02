@@ -603,3 +603,38 @@ button.kpi.sel { border-color: var(--a1); box-shadow: 0 0 0 3px var(--a-soft); }
 .pay-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
 .pay-list li { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: var(--r-md, 14px); background: var(--glass); border: 1px solid var(--line); font-size: 14px; }
 .pay-list b { color: var(--ok); }
+
+/* Mijozlar, oylik toʻlovlar, daromad */
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.seg button { padding: 10px 6px; border-radius: 999px; font-weight: 800; font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.2s, color 0.2s; }
+.seg button.on { background: var(--grad); color: var(--on-a); box-shadow: 0 10px 24px -14px var(--a1); }
+.pcard.mini { grid-template-columns: auto minmax(0, 1fr) auto; padding: 12px 14px; }
+.pc-main { display: grid; gap: 2px; min-width: 0; }
+.pc-main b { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-main small { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--grad); color: var(--on-a); font-family: var(--display); font-weight: 800; font-size: 20px; }
+.cl-hero { text-align: center; justify-items: center; display: grid; gap: 4px; }
+.cl-hero .avatar { width: 64px; height: 64px; font-size: 28px; border-radius: 20px; margin: 0 auto 6px; }
+.owed-chip { padding: 5px 10px; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--danger); background: color-mix(in srgb, var(--danger) 16%, transparent); white-space: nowrap; }
+.kpis, .kpis.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpis .kpi b.sm { font-size: 14px; white-space: nowrap; }
+.kpi { min-width: 0; padding: 12px; }
+.kpi b.ok { color: var(--ok); }
+.ptile.sub { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: #fff; font-size: 20px; }
+.sub-row { display: flex !important; gap: 10px; align-items: center; }
+.sub-row .sub-main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; flex: 1; min-width: 0; text-align: left; }
+.sub-row.due { border-color: color-mix(in srgb, var(--a1) 55%, transparent); }
+.sub-row.off { opacity: 0.6; }
+.sub-sum b { color: var(--tx, inherit); }
+.wide-add { width: 100%; margin-top: 14px; }
+.sub-hero { display: grid; gap: 2px; padding: 16px; margin-bottom: 14px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--line); }
+.sub-hero b { font-family: var(--display); font-size: 28px; line-height: 1.1; }
+.sub-hero span { color: var(--muted); font-size: 14px; }
+.sub-hero em { font-style: normal; font-weight: 800; font-size: 14px; }
+.sub-hero.st-ok em { color: var(--ok); }
+.sub-hero.st-due em { color: var(--danger); }
+.income-card { margin-bottom: 18px; }
+.income-sum b { color: var(--ok); }
+.act-chip.on { background: var(--grad); color: var(--on-a); border-color: transparent; }
+.income-card .auto-note { margin-top: 12px; }
+.income-card .pay-list { margin-top: 14px; }

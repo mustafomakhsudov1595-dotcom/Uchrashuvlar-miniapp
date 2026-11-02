@@ -27,6 +27,7 @@ async function showList(ctx, u, page = 0) {
   if (page < pages - 1) nav.push({ text: '▶️', callback_data: `pl:${page + 1}` });
   if (nav.length) rows.push(nav);
   rows.push([{ text: P.addNew, callback_data: 'pn' }, { text: P.bTasksToday, callback_data: 'ptd' }]);
+  rows.push([{ text: P.bClients, callback_data: 'cl:0' }, { text: P.bSubs, callback_data: 'sl:0' }, { text: P.bIncome, callback_data: 'in:0' }]);
   rows.push([{ text: P.bDebts, callback_data: 'pq:0' }, S.appBtn(T.openAppShort, '?tab=projects')]);
   return show(ctx, text, { inline_keyboard: rows });
 }
@@ -104,14 +105,15 @@ function briefMessage(u, now = Date.now()) {
   const meets = u.meetings.filter((m) => m.date === today && m.status !== 'cancelled' && m.status !== 'done').sort(S.byStart(u.tz));
   const g = collectTasks(u, now);
   const near = S.activeProjects(u).filter((p) => S.daysBetween(today, p.date) <= 3);
-  const dl = debtors(u);
+  const dl = debtors(u), sd = S.subsDue(u, today);
   const parts = [P.brTitle(esc(S.fmtWd(today, T)))];
   if (meets.length) parts.push(`${P.brMeet} (${meets.length})\n${meets.slice(0, 8).map((m) => `• <b>${m.time}</b> — ${esc(m.name)}${m.location ? ' 📍' + esc(m.location) : ''}`).join('\n')}`);
   if (g.over.length) parts.push(`${P.hOver} (${g.over.length})\n${g.over.slice(0, 6).map(line).join('\n')}\n<i>${P.brOverTasks}</i>`);
   if (g.today.length) parts.push(`${P.hToday} (${g.today.length})\n${g.today.slice(0, 8).map(line).join('\n')}`);
   if (near.length) parts.push(`${P.brProj}\n${near.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${S.deadlineTag(p, today, T)}`).join('\n')}`);
+  if (sd.length) parts.push(`${P.brSubs}\n${sd.slice(0, 6).map((x) => `• <b>${esc([x.client, x.name].filter(Boolean).join(' · '))}</b> — ${S.money(x.amount)}`).join('\n')}`);
   if (dl.length) parts.push(P.brDebt(dl.length, S.money(debtSum(dl))));
-  const empty = !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;
+  const empty = !sd.length && !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;
   if (empty) parts.push(P.brNone);
   const rows = [...g.over, ...g.today].slice(0, 6).map((e) => [{ text: `⬜️ ${e.t.text} · ${e.p.name}`.slice(0, 60), callback_data: `pu:${e.p.id}:${e.i}` }]);
   for (const m of meets.slice(0, 4)) rows.push([{ text: `${m.time} · ${m.name}`.slice(0, 60), callback_data: `d:${m.id}` }]);

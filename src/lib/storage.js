@@ -59,6 +59,9 @@ export function saveMeetings(list) {
 // ---- Loyihalar ----
 const PKEY = 'uchrashuvlar:projects:v1';
 const PDEL_KEY = 'uchrashuvlar:pdeleted';
+const SKEY = 'uchrashuvlar:subs:v1';
+const SDEL_KEY = 'uchrashuvlar:sdeleted';
+const YM_RE = /^\d{4}-\d{2}$/;
 const PTYPES = ['site', 'bot', 'video', 'other'];
 const PSTATUS = ['new', 'work', 'review', 'done', 'paused'];
 
@@ -86,6 +89,56 @@ export function cleanProject(p) {
     updatedAt: Number(p.updatedAt) || 0,
   };
 }
+// ---- Oylik toʻlovlar (obunalar) ----
+export function cleanSub(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || typeof x.name !== 'string' || !x.name.trim()) return null;
+  const amount = Number(x.amount);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return {
+    id: x.id,
+    name: x.name.trim(),
+    client: typeof x.client === 'string' ? x.client.trim() : '',
+    amount: Math.round(amount),
+    day: Math.min(28, Math.max(1, Math.round(Number(x.day) || 1))),
+    active: x.active !== false,
+    last: YM_RE.test(x.last) ? x.last : '',
+    pays: Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ a: Math.round(Number(y.a)), d: y.d })) : [],
+    createdAt: Number(x.createdAt) || Date.now(),
+    updatedAt: Number(x.updatedAt) || 0,
+  };
+}
+export function loadSubs() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SKEY) || '[]');
+    return Array.isArray(d) ? d.map(cleanSub).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+export function saveSubs(list) {
+  try {
+    localStorage.setItem(SKEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+export function loadSDeleted() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SDEL_KEY) || '[]');
+    return Array.isArray(d) ? d.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+export const saveSDeleted = (ids) => {
+  try {
+    localStorage.setItem(SDEL_KEY, JSON.stringify(ids));
+  } catch {
+    /* ignore */
+  }
+};
+export const subsSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.name, x.client, x.amount, x.day, x.active, x.last, (x.pays || []).length]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+
 export function loadProjects() {
   try {
     const d = JSON.parse(localStorage.getItem(PKEY) || '[]');
@@ -168,18 +221,19 @@ export function savePlaces(list, at) {
 const headers = () => ({ 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData });
 
 // Serverga yuboradi, birlashtirilgan natijani qaytaradi: { meetings, lang, places, placesAt }
-export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted }) {
+export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted }) {
   if (!isTelegram) return null;
   const res = await fetch('/api/meetings', {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, tz: -new Date().getTimezoneOffset() }),
+    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, tz: -new Date().getTimezoneOffset() }),
   });
   if (!res.ok) throw new Error(`sync ${res.status}`);
   const data = await res.json();
   return {
     meetings: Array.isArray(data.meetings) ? data.meetings.map(clean).filter(Boolean) : [],
     projects: Array.isArray(data.projects) ? data.projects.map(cleanProject).filter(Boolean) : [],
+    subs: Array.isArray(data.subs) ? data.subs.map(cleanSub).filter(Boolean) : [],
     lang: data.lang,
     places: Array.isArray(data.places) ? data.places : [],
     placesAt: Number(data.placesAt) || 0,

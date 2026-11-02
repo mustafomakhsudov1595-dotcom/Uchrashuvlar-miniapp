@@ -2,16 +2,19 @@ import { useMemo, useState } from 'react';
 import { IconChevronLeft, IconChevronRight, IconSettings } from './Icons.jsx';
 import { monthStats } from '../lib/stats.js';
 import { monthTitle } from '../lib/dates.js';
-import { t } from '../lib/i18n.js';
+import { t, getLang } from '../lib/i18n.js';
 import { CATS } from '../lib/meetings.js';
+import { incomeByMonth } from '../lib/finance.js';
+import { money, owed } from '../lib/projects.js';
+import { todayISO } from '../lib/dates.js';
 
-function Bars({ values, labels, hi }) {
+function Bars({ values, labels, hi, fmt }) {
   const max = Math.max(1, ...values);
   return (
     <div className="bars">
       {values.map((v, i) => (
         <div key={i} className={`bar-col${v === max && v > 0 ? ' top' : ''}`}>
-          <span className="bar-val">{v || ''}</span>
+          <span className="bar-val">{v ? (fmt ? fmt(v) : v) : ''}</span>
           <div className="bar-track">
             <i style={{ height: `${(v / max) * 100}%`, animationDelay: `${i * 40}ms` }} />
           </div>
@@ -42,7 +45,7 @@ function Donut({ data, total }) {
   );
 }
 
-export default function StatsView({ meetings, now, onSettings }) {
+export default function StatsView({ meetings, projects = [], subs = [], now, onSettings }) {
   const [cur, setCur] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const s = useMemo(() => monthStats(meetings, cur.y, cur.m, now), [meetings, cur, now]);
   const shift = (d) => {
@@ -75,6 +78,8 @@ export default function StatsView({ meetings, now, onSettings }) {
           </button>
         </div>
       </header>
+
+      <IncomeCard projects={projects} subs={subs} />
 
       {s.total === 0 ? (
         <section className="empty small">
@@ -155,5 +160,44 @@ export default function StatsView({ meetings, now, onSettings }) {
         </>
       )}
     </>
+  );
+}
+
+const UZ_MON = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+const compact = (n) => (n >= 1e6 ? `${Math.round(n / 1e5) / 10}m` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n));
+
+export function IncomeCard({ projects, subs }) {
+  const today = todayISO();
+  const months = useMemo(() => incomeByMonth(projects, subs, 6, today), [projects, subs, today]);
+  const cur = months[months.length - 1];
+  const sum = months.reduce((n, x) => n + x.total, 0);
+  const debt = projects.reduce((n, p) => n + owed(p), 0);
+  const names = t('months');
+  const kinds = Object.entries(cur.k).filter(([, v]) => v > 0);
+  return (
+    <section className="block income-card">
+      <div className="section-title">
+        <h4>{t('stIncome')}</h4>
+        <span className="count">{t('stIncomeSub')}</span>
+      </div>
+      {sum === 0 ? (
+        <p className="empty small">{t('stIncomeNone')}</p>
+      ) : (
+        <>
+          <div className="debt-card income-sum ok">
+            <small>{t('stIncomeThis')}</small>
+            <b>{money(cur.total)}</b>
+            <span>{t('stIncomeAvg')}: {money(sum / 6)}</span>
+          </div>
+          <Bars values={months.map((x) => x.total)} labels={months.map((x) => (getLang() === 'uz' ? UZ_MON[Number(x.m.slice(5)) - 1] : String(names[Number(x.m.slice(5)) - 1]).slice(0, 3)))} hi={months.length - 1} fmt={compact} />
+          {kinds.length > 0 && (
+            <ul className="pay-list">
+              {kinds.map(([k, v]) => <li key={k}><span>{t('stKinds')[k]}</span><b>{money(v)}</b></li>)}
+            </ul>
+          )}
+        </>
+      )}
+      {debt > 0 && <p className="auto-note">🧾 {t('stDebt')}: {money(debt)}</p>}
+    </section>
   );
 }

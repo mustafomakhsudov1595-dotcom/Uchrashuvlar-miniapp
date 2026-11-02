@@ -13,6 +13,9 @@
 - Haftalik xulosa: yakshanba 19:00 — tugagan loyihalar, tushgan pul, qarz, kelasi hafta muddatlari.
 - Toʻlov eslatmasi: tayyor yoki muddati oʻtgan loyiha qoldigʻi boʻyicha har 3 kunda (ko'pi bilan 6 marta).
 
+- `functions/fin.js` — oylik toʻlovlar (`/obuna`, har oyning belgilangan kunida 09:00 dan eslatma, 2 kunda bir, ko'pi bilan 3 marta), mijozlar bazasi (`/mijozlar`, ism boʻyicha birlashadi), daromad (`/daromad`, 6 oy) va CSV eksport (`/eksport`).
+- `functions/voice.js` — ovozli xabar (Workers AI · Whisper), `functions/report.js` — mijozga hisobot sahifasi (`/r/<kalit>`).
+
 ## Deploy
 
 ```bash

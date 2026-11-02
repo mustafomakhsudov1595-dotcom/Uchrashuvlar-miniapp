@@ -3,6 +3,7 @@
 const S = require('./_shared');
 const { reminderRows } = require('./bot');
 const proj = require('./proj');
+const fin = require('./fin');
 
 async function processUser(u, now) {
   const T = S.Tof(u);
@@ -43,7 +44,8 @@ async function processUser(u, now) {
     if (r.ok) sent += 1;
   }
   const pr = await proj.remind(u, now);
-  return { dirty: dirty || pr.dirty, sent: sent + pr.sent };
+  const fr = await fin.remind(u, now);
+  return { dirty: dirty || pr.dirty || fr.dirty, sent: sent + pr.sent + fr.sent };
 }
 
 exports.handler = async (event) => {
