@@ -86,6 +86,19 @@
     Array.prototype.forEach.call(document.querySelectorAll('#hours tr'), function (tr) { if (tr.dataset.d.split(',').indexOf(String(dn)) > -1) tr.classList.add('today'); });
   } catch (e) {}
 
+  // Shifokor suratlari: img/doctors/<nom>.webp (yoki .jpg/.png). Topilmasa bosh harflar qoladi.
+  Array.prototype.forEach.call(document.querySelectorAll('.doc[data-slug]'), function (d) {
+    var exts = ['webp', 'jpg', 'png'], i = 0, box = d.querySelector('.doc-photo');
+    var name = d.querySelector('h3').textContent;
+    (function next() {
+      if (i >= exts.length) return;
+      var im = new Image();
+      im.onload = function () { im.alt = name; im.decoding = 'async'; box.insertBefore(im, box.firstChild); var ini = box.querySelector('.ini'); if (ini) ini.style.display = 'none'; };
+      im.onerror = function () { i++; next(); };
+      im.src = 'img/doctors/' + d.dataset.slug + '.' + exts[i];
+    })();
+  });
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   // Paydo bo'lish
@@ -101,7 +114,7 @@
     });
   }, { threshold: .12 }) : null;
   if (io) {
-    Array.prototype.forEach.call(document.querySelectorAll('.b,.sec-head,.info-row>div,.specs li,.info'), function (el) {
+    Array.prototype.forEach.call(document.querySelectorAll('.b,.sec-head,.info-row>div,.specs li,.info,.doc'), function (el) {
       var sib = Array.prototype.indexOf.call(el.parentNode.children, el);
       el.style.setProperty('--d', Math.min(sib, 6) * 0.06 + 's');
       el.classList.add('reveal'); io.observe(el);
