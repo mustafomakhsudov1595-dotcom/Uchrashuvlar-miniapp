@@ -187,12 +187,12 @@
 
   /* soya va halqa */
   var sc = document.createElement('canvas'); sc.width = sc.height = 256;
-  (function () { var c = sc.getContext('2d'), gr = c.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, 'rgba(20,20,24,.28)'); gr.addColorStop(.6, 'rgba(20,20,24,.08)'); gr.addColorStop(1, 'rgba(20,20,24,0)'); c.fillStyle = gr; c.fillRect(0, 0, 256, 256); })();
+  (function () { var c = sc.getContext('2d'), gr = c.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, 'rgba(236,26,37,.55)'); gr.addColorStop(.55, 'rgba(236,26,37,.14)'); gr.addColorStop(1, 'rgba(236,26,37,0)'); c.fillStyle = gr; c.fillRect(0, 0, 256, 256); })();
   var floor = new THREE.Mesh(new THREE.CircleGeometry(5.2, 64), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -2.47; scene.add(floor);
   var rings = new THREE.Group(); rings.position.y = -2.46; scene.add(rings);
   [[3.9, 3.915, .5], [4.8, 4.81, .25]].forEach(function (r) {
-    var m = new THREE.Mesh(new THREE.RingGeometry(r[0], r[1], 128), new THREE.MeshBasicMaterial({ color: 0xEC1A25, transparent: true, opacity: r[2] * .6, side: THREE.DoubleSide, depthWrite: false }));
+    var m = new THREE.Mesh(new THREE.RingGeometry(r[0], r[1], 128), new THREE.MeshBasicMaterial({ color: 0xEC1A25, transparent: true, opacity: r[2] * 1.2, side: THREE.DoubleSide, depthWrite: false }));
     m.rotation.x = -Math.PI / 2; rings.add(m);
   });
 
