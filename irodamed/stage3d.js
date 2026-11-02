@@ -48,13 +48,13 @@
   camera.position.set(0, 1.5, 14.5); camera.lookAt(0, -.2, 0);
   scene.add(new THREE.HemisphereLight(0xf4f2f0, 0xb9b4af, .62));
   var key = new THREE.DirectionalLight(0xffffff, .95); key.position.set(4, 7, 6); scene.add(key);
-  var rim = new THREE.PointLight(0xD82820, 1.3, 26); rim.position.set(-6, 2, -3); scene.add(rim);
+  var rim = new THREE.PointLight(0xEC1A25, 1.3, 26); rim.position.set(-6, 2, -3); scene.add(rim);
   var fill = new THREE.PointLight(0xffffff, .45, 22); fill.position.set(6, -1, 5); scene.add(fill);
 
   var white = new THREE.MeshStandardMaterial({ color: 0xf6f5f3, roughness: .38, metalness: .06 });
   var gray = new THREE.MeshStandardMaterial({ color: 0xc8c6c3, roughness: .5, metalness: .08 });
-  var dark = new THREE.MeshStandardMaterial({ color: 0x24242a, roughness: .5, metalness: .25 });
-  var redEm = new THREE.MeshStandardMaterial({ color: 0xD82820, emissive: 0xD82820, emissiveIntensity: .55, roughness: .4 });
+  var dark = new THREE.MeshStandardMaterial({ color: 0x191D24, roughness: .5, metalness: .25 });
+  var redEm = new THREE.MeshStandardMaterial({ color: 0xEC1A25, emissive: 0xEC1A25, emissiveIntensity: .55, roughness: .4 });
 
   function rrect(w, h, r) {
     var s = new THREE.Shape(), x = -w / 2, y = -h / 2;
@@ -120,10 +120,10 @@
     s.bezierCurveTo(1.6, .7, 1.6, 0, 1, 0); s.bezierCurveTo(.7, 0, .5, .5, .5, .5);
     var geo = new THREE.ExtrudeGeometry(s, { depth: .5, bevelEnabled: true, bevelThickness: .42, bevelSize: .34, bevelSegments: 12, curveSegments: 48 });
     geo.center();
-    var mat = new THREE.MeshPhysicalMaterial({ color: 0xC8211A, roughness: .32, metalness: .05, clearcoat: 1, clearcoatRoughness: .2, emissive: 0x2a0200 });
+    var mat = new THREE.MeshPhysicalMaterial({ color: 0xD11823, roughness: .32, metalness: .05, clearcoat: 1, clearcoatRoughness: .2, emissive: 0x2a0200 });
     var heart = new THREE.Mesh(geo, mat); heart.rotation.z = Math.PI; heart.scale.setScalar(1.28); heart.position.set(-.55, .55, 0);
     g.add(heart); g.userData.heart = heart; g.userData.hmat = mat;
-    var ring = new THREE.Mesh(new THREE.TorusGeometry(2.2, .016, 12, 120), new THREE.MeshBasicMaterial({ color: 0xD82820, transparent: true, opacity: .55 }));
+    var ring = new THREE.Mesh(new THREE.TorusGeometry(2.2, .016, 12, 120), new THREE.MeshBasicMaterial({ color: 0xEC1A25, transparent: true, opacity: .55 }));
     ring.position.copy(heart.position); ring.rotation.x = Math.PI / 2.3; g.add(ring); g.userData.ring = ring;
     var panel = new THREE.Group();
     panel.add(rbox(2.45, 2.45, .1, .12, dark));
@@ -142,7 +142,7 @@
     var slab = new THREE.Mesh(new THREE.ExtrudeGeometry(top, { depth: .12, bevelEnabled: false, curveSegments: 40 }), white);
     slab.rotation.x = -Math.PI / 2; slab.position.set(0, -.5, .06); g.add(slab);
     var glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: .26, roughness: .05, metalness: 0, side: THREE.DoubleSide, depthWrite: false });
-    var colors = [0xD82820, 0xF07C74, 0xF2B447, 0xB61D17, 0xF5C6C2], liqs = [];
+    var colors = [0xEC1A25, 0xF07C74, 0xF2B447, 0xB61D17, 0xF5C6C2], liqs = [];
     colors.forEach(function (c, i) {
       var x = -1.2 + .6 * i, t = new THREE.Group(); t.position.x = x;
       var body = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, 1.9, 40, 1, true), glass); body.position.y = -.05; t.add(body);
@@ -156,7 +156,7 @@
       g.add(t);
     });
     g.userData.liqs = liqs;
-    var drop = new THREE.Mesh(new THREE.SphereGeometry(.075, 16, 12), new THREE.MeshStandardMaterial({ color: 0xD82820, emissive: 0xD82820, emissiveIntensity: .5 }));
+    var drop = new THREE.Mesh(new THREE.SphereGeometry(.075, 16, 12), new THREE.MeshStandardMaterial({ color: 0xEC1A25, emissive: 0xEC1A25, emissiveIntensity: .5 }));
     drop.position.set(0, 2.4, 0); g.add(drop); g.userData.drop = drop;
     g.position.y = -.82; return g;
   }
@@ -174,7 +174,7 @@
     var lens = new THREE.Mesh(new THREE.CircleGeometry(.3, 40), redEm); lens.rotation.x = Math.PI / 2; lens.position.y = -.53; head.add(lens);
     [-.17, .17].forEach(function (x) { var e = cyl(.085, .085, .55, white, 20); e.position.set(x, .5, .3); e.rotation.x = -.9; head.add(e); head.add(put(cyl(.1, .1, .08, dark, 20), x, .67, .5)); });
     g.add(head);
-    var cone = new THREE.Mesh(new THREE.ConeGeometry(.75, 1.9, 40, 1, true), new THREE.MeshBasicMaterial({ color: 0xD82820, transparent: true, opacity: .12, side: THREE.DoubleSide, depthWrite: false }));
+    var cone = new THREE.Mesh(new THREE.ConeGeometry(.75, 1.9, 40, 1, true), new THREE.MeshBasicMaterial({ color: 0xEC1A25, transparent: true, opacity: .12, side: THREE.DoubleSide, depthWrite: false }));
     cone.position.set(2.0, -.62 - .0, 0); g.add(cone); g.userData.cone = cone;
     g.add(put(rbox(3.0, .3, 1.5, .12, white), 2.0, -1.85, 0));
     g.add(put(rbox(.9, .8, .9, .1, gray), 2.0, -2.3, 0));
@@ -192,7 +192,7 @@
   floor.rotation.x = -Math.PI / 2; floor.position.y = -2.47; scene.add(floor);
   var rings = new THREE.Group(); rings.position.y = -2.46; scene.add(rings);
   [[3.9, 3.915, .5], [4.8, 4.81, .25]].forEach(function (r) {
-    var m = new THREE.Mesh(new THREE.RingGeometry(r[0], r[1], 128), new THREE.MeshBasicMaterial({ color: 0xD82820, transparent: true, opacity: r[2] * .6, side: THREE.DoubleSide, depthWrite: false }));
+    var m = new THREE.Mesh(new THREE.RingGeometry(r[0], r[1], 128), new THREE.MeshBasicMaterial({ color: 0xEC1A25, transparent: true, opacity: r[2] * .6, side: THREE.DoubleSide, depthWrite: false }));
     m.rotation.x = -Math.PI / 2; rings.add(m);
   });
 
