@@ -304,3 +304,9 @@ p{color:var(--muted)}
 .hero.dark :focus-visible{outline-color:#fff}
 
 .fab{background:var(--ink)!important;box-shadow:0 10px 30px rgba(25,29,36,.4)!important;border:2px solid #fff}
+
+/* katta qizil bloklar: chuqur, yumshoq qizil */
+.hero.dark{background:linear-gradient(180deg,#B3161E 0%,#9A1219 100%)}
+.section.red{background:linear-gradient(180deg,#B3161E 0%,#9A1219 100%)}
+.hero.dark .btn-ghost:hover{color:#9A1219}
+.hero.dark .lead{color:rgba(255,255,255,.88)}
