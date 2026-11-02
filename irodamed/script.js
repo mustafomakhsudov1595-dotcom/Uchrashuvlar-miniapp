@@ -19,7 +19,7 @@
   // Manzilni nusxalash
   var copy = document.getElementById('copy');
   copy.addEventListener('click', function () {
-    var txt = "Toshkent shahri, Olmazor tumani, Sebzor, 17–18, 2B-uy";
+    var txt = "Toshkent shahri, Olmazor tumani, Sebzor G'afur G'ulom ko'chasi, Ts-17-18, 2B-uy (mo'ljal: Usta Alim, 2A)";
     (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () {
       copy.textContent = 'Nusxalandi ✓';
     }).catch(function () { copy.textContent = txt; });
@@ -33,7 +33,7 @@
   setApp('app-geo', 'geo:0,0?q=' + encodeURIComponent(Q), isAndroid);
   setApp('app-apple', 'https://maps.apple.com/?q=' + encodeURIComponent(Q), isApple && !isAndroid);
   setApp('app-google', 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(Q), true);
-  setApp('app-yandex', 'https://yandex.com/maps/?text=' + encodeURIComponent(Q), true);
+  setApp('app-yandex', 'https://yandex.uz/maps/-/CTteqKke', true);
   setApp('app-2gis', 'https://2gis.uz/tashkent/firm/70000001041372178', true);
   var lastFocus = null;
   function lockOff() { if (sheet.hidden && svc.hidden && !menu.classList.contains('open')) document.body.classList.remove('lock'); }
