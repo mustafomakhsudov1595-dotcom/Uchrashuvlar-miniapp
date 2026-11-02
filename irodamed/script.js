@@ -19,7 +19,7 @@
   // Manzilni nusxalash
   var copy = document.getElementById('copy');
   copy.addEventListener('click', function () {
-    var txt = "Toshkent shahri, Olmazor tumani, Sebzor, 17–18-uy, 2B";
+    var txt = "Toshkent shahri, Olmazor tumani, Sebzor, 17–18, 2B-uy";
     (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () {
       copy.textContent = 'Nusxalandi ✓';
     }).catch(function () { copy.textContent = txt; });
@@ -46,11 +46,12 @@
   // Xizmat oynasi
   var tick = '<svg class="ic"><use href="#i-check"/></svg>';
   var SVC = {
+    exoeg:   { icon: 'i-scan',  t: 'Exo-EG', d: "Bosh miyaning ultratovush tekshiruvi.", f: ["Nurlanishsiz, og'riqsiz tekshiruv", "Bosh miya tuzilmalarini ultratovush bilan baholaydi"] },
     uzi:     { icon: 'i-wave',  t: 'UZI', d: "Ultratovush tekshiruvi — barcha a'zolar.", f: ["Nurlanishsiz, og'riqsiz tekshiruv", "Natija tekshiruv vaqtida ma'lum bo'ladi"] },
     doppler: { icon: 'i-wave',  t: 'Doppler', d: "Qon oqimini ultratovush bilan tekshirish — barcha a'zolar.", f: ["Qon tomirlardagi qon oqimini baholaydi", "Nurlanishsiz, og'riqsiz tekshiruv"] },
     echo:    { icon: 'i-heart', t: 'Exokardiografiya', d: "Yurak ultratovush tekshiruvi.", f: ["Yurak kameralari va qopqoqlari holatini ko'rsatadi", "Nurlanishsiz, og'riqsiz tekshiruv"] },
     ecg:     { icon: 'i-pulse', t: 'EKG', d: "Elektrokardiografiya — yurak ritmini baholash.", f: ["Bir necha daqiqa davom etadi", "Og'riqsiz va xavfsiz"] },
-    elasto:  { icon: 'i-scan',  t: 'Elastografiya', d: "To'qimalar qattiqligini ultratovush bilan baholash.", f: ["Ultratovush asosida bajariladi", "Jigar va qalqonsimon bez uchun mavjud"] },
+    elasto:  { icon: 'i-scan',  t: 'Elastografiya', d: "Jigar, ko'krak, qalqonsimon bez — to'qimalar qattiqligini baholash.", f: ["Ultratovush asosida bajariladi", "Jigar, ko'krak va qalqonsimon bez uchun"] },
     kolpo:   { icon: 'i-scan',  t: 'Kolposkopiya', d: "Ginekologik ko'rik.", f: ["Bachadon bo'ynini maxsus asbob bilan kattalashtirib ko'rish", "Ginekolog tomonidan o'tkaziladi"] },
     lab:     { icon: 'i-flask', t: 'Laboratoriya', d: "Laboratoriya xizmatlari.", f: ["Qon tahlili va boshqa tekshiruvlar", "Tahlillar ro'yxatini markazdan aniqlang"] },
     massage: { icon: 'i-hand',  t: 'Bolalar massaji', d: "Bolalar uchun massaj.", f: ["Bolalar uchun xizmat", "Qabul vaqtini markazdan aniqlang"] }
@@ -77,6 +78,13 @@
     if (e.key !== 'Escape') return;
     if (!svc.hidden) closeSvc(); else if (!sheet.hidden) closeSheet(); else closeMenu();
   });
+
+  // Bugungi kunni ajratib ko'rsatish (Toshkent vaqti)
+  try {
+    var wd = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tashkent', weekday: 'short' }).format(new Date());
+    var dn = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[wd];
+    Array.prototype.forEach.call(document.querySelectorAll('#hours tr'), function (tr) { if (tr.dataset.d.split(',').indexOf(String(dn)) > -1) tr.classList.add('today'); });
+  } catch (e) {}
 
   document.getElementById('year').textContent = new Date().getFullYear();
 

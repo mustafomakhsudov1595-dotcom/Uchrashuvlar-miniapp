@@ -58,7 +58,7 @@ p{color:var(--muted)}
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px}
 .hero-art{display:grid;place-items:center;color:#EFD2CF}
 .hero-art svg{width:min(100%,300px);height:auto;fill:none;stroke:currentColor;stroke-width:.55}
-.info-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;margin-top:104px;padding-top:56px;background:no-repeat left top/auto 28px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='28' viewBox='0 0 300 28'%3E%3Cpath d='M0 20H70q5-6 10 0H100l6 3 8-20 8 24 5-7H150q8-9 16 0H300' fill='none' stroke='%23EBC9D1' stroke-width='1.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"),linear-gradient(var(--line),var(--line)) no-repeat left 20px/100% 1px}
+.info-row{display:grid;grid-template-columns:repeat(4,1fr);gap:40px;margin-top:104px;padding-top:56px;background:no-repeat left top/auto 28px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='28' viewBox='0 0 300 28'%3E%3Cpath d='M0 20H70q5-6 10 0H100l6 3 8-20 8 24 5-7H150q8-9 16 0H300' fill='none' stroke='%23EBC9D1' stroke-width='1.2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"),linear-gradient(var(--line),var(--line)) no-repeat left 20px/100% 1px}
 .info-row dt{font-size:.7rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
 .info-row dd{font-size:1rem;line-height:1.75;color:var(--ink)}
 .info-row a{transition:color .3s}
@@ -111,6 +111,7 @@ p{color:var(--muted)}
 .foot p{color:var(--muted)}
 .foot a:not(.logo){color:var(--ink);transition:color .3s}
 .foot a:not(.logo):hover{color:var(--red)}
+.foot-tag{color:var(--ink)!important;font-weight:500}
 .footer .copy{border-top:1px solid var(--line);padding-top:22px;margin-top:14px;width:100%;font-size:.8rem;color:var(--faint)}
 .fab{display:none;position:fixed;right:18px;bottom:18px;width:54px;height:54px;border-radius:50%;background:var(--ink);color:#fff;place-items:center;box-shadow:0 10px 30px rgba(17,17,20,.25);z-index:40}
 .fab .ic{width:22px;height:22px}
