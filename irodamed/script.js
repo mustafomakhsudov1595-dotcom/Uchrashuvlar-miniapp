@@ -3,6 +3,7 @@
   var menu = document.getElementById('menu');
   var sheet = document.getElementById('sheet');
   var svc = document.getElementById('svc');
+  var T = function (k) { return window.I18N ? window.I18N.t(k) : k; };
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hasIO = 'IntersectionObserver' in window;
 
@@ -19,11 +20,11 @@
   // Manzilni nusxalash
   var copy = document.getElementById('copy');
   copy.addEventListener('click', function () {
-    var txt = "Toshkent shahri, Olmazor tumani, Sebzor G'afur G'ulom ko'chasi, Ts-17-18, 2B-uy (mo'ljal: Usta Alim, 2A)";
+    var txt = T('addr.copy');
     (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () {
-      copy.textContent = 'Nusxalandi ✓';
+      copy.textContent = T('copied');
     }).catch(function () { copy.textContent = txt; });
-    setTimeout(function () { copy.textContent = 'Manzilni nusxalash'; }, 2500);
+    setTimeout(function () { copy.textContent = T('copy'); }, 2500);
   });
 
   // Xarita ilovasini tanlash
@@ -46,24 +47,29 @@
   // Xizmat oynasi
   var tick = '<svg class="ic"><use href="#i-check"/></svg>';
   var SVC = {
-    exoeg:   { icon: 'i-scan',  t: 'Exo-EG', d: "Bosh miyaning ultratovush tekshiruvi.", f: ["Nurlanishsiz, og'riqsiz tekshiruv", "Bosh miya tuzilmalarini ultratovush bilan baholaydi"] },
-    uzi:     { icon: 'i-wave',  t: 'UZI', d: "Ultratovush tekshiruvi — barcha a'zolar.", f: ["Nurlanishsiz, og'riqsiz tekshiruv", "Natija tekshiruv vaqtida ma'lum bo'ladi"] },
-    doppler: { icon: 'i-wave',  t: 'Doppler', d: "Qon oqimini ultratovush bilan tekshirish — barcha a'zolar.", f: ["Qon tomirlardagi qon oqimini baholaydi", "Nurlanishsiz, og'riqsiz tekshiruv"] },
-    echo:    { icon: 'i-heart', t: 'Exokardiografiya', d: "Yurak ultratovush tekshiruvi.", f: ["Yurak kameralari va qopqoqlari holatini ko'rsatadi", "Nurlanishsiz, og'riqsiz tekshiruv"] },
-    ecg:     { icon: 'i-pulse', t: 'EKG', d: "Elektrokardiografiya — yurak ritmini baholash.", f: ["Bir necha daqiqa davom etadi", "Og'riqsiz va xavfsiz"] },
-    elasto:  { icon: 'i-scan',  t: 'Elastografiya', d: "Jigar, ko'krak, qalqonsimon bez — to'qimalar qattiqligini baholash.", f: ["Ultratovush asosida bajariladi", "Jigar, ko'krak va qalqonsimon bez uchun"] },
-    kolpo:   { icon: 'i-scan',  t: 'Kolposkopiya', d: "Ginekologik ko'rik.", f: ["Bachadon bo'ynini maxsus asbob bilan kattalashtirib ko'rish", "Ginekolog tomonidan o'tkaziladi"] },
-    lab:     { icon: 'i-flask', t: 'Laboratoriya', d: "Laboratoriya xizmatlari.", f: ["Qon tahlili va boshqa tekshiruvlar", "Tahlillar ro'yxatini markazdan aniqlang"] },
-    massage: { icon: 'i-hand',  t: 'Bolalar massaji', d: "Bolalar uchun massaj.", f: ["Bolalar uchun xizmat", "Qabul vaqtini markazdan aniqlang"] }
+    exoeg:   { icon: 'i-scan',  g: 'func' },
+    uzi:     { icon: 'i-wave',  g: 'us' },
+    doppler: { icon: 'i-wave',  g: 'us' },
+    echo:    { icon: 'i-heart', g: 'us' },
+    ecg:     { icon: 'i-pulse', g: 'func' },
+    elasto:  { icon: 'i-scan',  g: 'us' },
+    kolpo:   { icon: 'i-scan',  g: 'doc', c: 'gyn' },
+    lab:     { icon: 'i-flask', g: 'lab' },
+    massage: { icon: 'i-hand',  g: 'mas' }
   };
+  var curSvc = null;
+  function fillSvc(key) {
+    var s = SVC[key], p = 'svc.' + key + '.';
+    document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
+    document.getElementById('svcTitle').textContent = T(p + 't');
+    document.getElementById('svcDesc').textContent = T(p + 'd');
+    document.getElementById('svcFacts').innerHTML = [T(p + 'f1'), T(p + 'f2')].map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
+  }
   var svcFocus = null;
   function openSvc(key) {
     var s = SVC[key]; if (!s) return;
     if (svc.hidden) svcFocus = document.activeElement;
-    document.getElementById('svcIcon').setAttribute('href', '#' + s.icon);
-    document.getElementById('svcTitle').textContent = s.t;
-    document.getElementById('svcDesc').textContent = s.d;
-    document.getElementById('svcFacts').innerHTML = s.f.map(function (x) { return '<li>' + tick + '<span>' + x + '</span></li>'; }).join('');
+    curSvc = key; fillSvc(key);
     svc.hidden = false; document.body.classList.add('lock');
     svc.querySelector('.svc-box').scrollTop = 0;
     svc.querySelector('.svc-call').focus({ preventScroll: true });
@@ -74,6 +80,16 @@
     card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSvc(card.dataset.svc); } });
   });
   svc.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeSvc(); });
+  // "Narxlarni ko'rish": oynani yopib, narxlar bo'limini tegishli bo'lim bilan ochadi
+  document.getElementById('svcPrice').addEventListener('click', function () {
+    var s = SVC[curSvc]; closeSvc();
+    if (window.IrodamedPrices && s) window.IrodamedPrices.show(s.g, s.c);
+    var sec = document.getElementById('narxlar'); if (sec) sec.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+  document.addEventListener('irodamed:lang', function () {
+    if (!svc.hidden && curSvc) fillSvc(curSvc);
+    Array.prototype.forEach.call(document.querySelectorAll('.doc-photo img'), function (im) { var h = im.closest('.doc').querySelector('h3'); if (h) im.alt = h.textContent; });
+  });
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (!svc.hidden) closeSvc(); else if (!sheet.hidden) closeSheet(); else closeMenu();

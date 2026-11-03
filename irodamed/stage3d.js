@@ -17,13 +17,16 @@
   var capEl = document.getElementById('stCap');
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.stabs [data-m]'));
   var rows = Array.prototype.slice.call(document.querySelectorAll('.b[data-svc]'));
+  capKey(mode);
 
+  function capKey(m) { if (capEl) capEl.textContent = window.I18N ? window.I18N.t('cap.' + m) : MODELS[m].cap; }
+  document.addEventListener('irodamed:lang', function () { capKey(mode); });
   function setMode(m, row) {
     if (!MODELS[m]) return;
     mode = m;
     tabs.forEach(function (b) { var on = b.dataset.m === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     rows.forEach(function (r) { r.classList.toggle('is-active', r === row); });
-    if (capEl) capEl.textContent = MODELS[m].cap;
+    capKey(m);
     if (gl3) gl3.wake();
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.m, null); }); });

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Irodamed — Medical Clinic Center | Toshkent</title>
-<meta name="description" content="Irodamed — tibbiyot markazi (Toshkent, Olmazor tumani, Sebzor): UZI, Doppler, exokardiografiya, EKG, elastografiya, kolposkopiya, laboratoriya va mutaxassislar qabuli. Tel: +998 95 170-10-11, +998 90 021-46-46.">
+<meta name="description" content="Irodamed — tibbiyot markazi (Toshkent, Olmazor tumani, Sebzor): UZI, Doppler, exokardiografiya, EKG, elastografiya, kolposkopiya, laboratoriya va mutaxassislar qabuli. Narxlar ro'yxati. Tel: +998 95 170-10-11, +998 90 021-46-46.">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='white'/%3E%3Cg fill='none' stroke='%23EC1A25' stroke-width='2.4'%3E%3Cellipse cx='24' cy='24' rx='19' ry='7.5'/%3E%3Cellipse cx='24' cy='24' rx='19' ry='7.5' transform='rotate(60 24 24)'/%3E%3Cellipse cx='24' cy='24' rx='19' ry='7.5' transform='rotate(120 24 24)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,20 +23,30 @@
 
 <header class="header" id="top">
   <div class="container nav">
-    <a href="#top" class="logo" aria-label="Irodamed — bosh sahifa">
+    <a href="#top" class="logo" aria-label="Irodamed — bosh sahifa" data-i18n-attr="aria-label:aria.logo">
       <svg class="logo-mark"><use href="#logo-mark"/></svg>
       <span class="logo-text"><b>irodamed</b><small>medical clinic center</small></span>
     </a>
-    <nav class="menu" id="menu" aria-label="Asosiy menyu">
-      <a href="#xizmatlar">Xizmatlar</a>
-      <a href="#shifokorlar">Shifokorlar</a>
-      <a href="#mutaxassislar">Mutaxassislar</a>
-      <a href="#aloqa">Aloqa</a>
+    <nav class="menu" id="menu" aria-label="Asosiy menyu" data-i18n-attr="aria-label:aria.menu">
+      <a href="#xizmatlar" data-i18n="nav.svc">Xizmatlar</a>
+      <a href="#shifokorlar" data-i18n="nav.docs">Shifokorlar</a>
+      <a href="#narxlar" data-i18n="nav.price">Narxlar</a>
+      <a href="#mutaxassislar" data-i18n="nav.spec">Mutaxassislar</a>
+      <a href="#aloqa" data-i18n="nav.contact">Aloqa</a>
     </nav>
+    <div class="lang" id="lang">
+      <button class="lang-btn" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Tilni tanlash" data-i18n-attr="aria-label:aria.lang"><svg class="ic"><use href="#i-globe"/></svg><span id="langCur">UZ</span><svg class="ic lang-chev"><use href="#i-down"/></svg></button>
+      <ul class="lang-menu" id="langMenu" hidden>
+        <li><button type="button" data-lang="uz" lang="uz">O'zbekcha</button></li>
+        <li><button type="button" data-lang="ru" lang="ru">Русский</button></li>
+        <li><button type="button" data-lang="kk" lang="kk">Қазақша</button></li>
+        <li><button type="button" data-lang="en" lang="en">English</button></li>
+      </ul>
+    </div>
     <a class="btn btn-primary nav-cta" href="tel:+998951701011">
       <svg class="ic"><use href="#i-phone"/></svg><span>+998 95 170-10-11</span>
     </a>
-    <button class="burger" id="burger" aria-label="Menyuni ochish" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    <button class="burger" id="burger" aria-label="Menyuni ochish" data-i18n-attr="aria-label:aria.burger" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
   </div>
 </header>
 
@@ -45,20 +55,20 @@
 <section class="hero dark">
   <div class="container hero-grid">
     <div class="hero-copy">
-      <h1>Tibbiyot va diagnostika markazi</h1>
-      <p class="lead">UZI, Doppler, exokardiografiya, EKG, laboratoriya va tor mutaxassislar qabuli.</p>
+      <h1 data-i18n="hero.h1">Tibbiyot va diagnostika markazi</h1>
+      <p class="lead" data-i18n="hero.lead">UZI, Doppler, exokardiografiya, EKG, laboratoriya va tor mutaxassislar qabuli.</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="tel:+998951701011"><svg class="ic"><use href="#i-phone"/></svg>Qo'ng'iroq qilish</a>
-        <a class="btn btn-ghost" href="#aloqa">Manzil va aloqa</a>
+        <a class="btn btn-primary" href="tel:+998951701011"><svg class="ic"><use href="#i-phone"/></svg><span data-i18n="hero.call">Qo'ng'iroq qilish</span></a>
+        <a class="btn btn-ghost" href="#aloqa" data-i18n="hero.addr">Manzil va aloqa</a>
       </div>
     </div>
     
   </div>
   <div class="container">
     <dl class="info-row">
-      <div><dt>Manzil</dt><dd>Toshkent shahri, Olmazor tumani<br>Sebzor G'afur G'ulom ko'chasi,<br>Ts-17-18, 2B-uy</dd></div>
-      <div><dt>Ish vaqti</dt><dd>Du–Ju 8:00–17:00<br>Shanba 8:00–16:00<br>Yakshanba — dam olish kuni</dd></div>
-      <div><dt>Telefon</dt><dd><a href="tel:+998951701011">+998 95 170-10-11</a><br><a href="tel:+998900214646">+998 90 021-46-46</a><br><a href="tel:+998950528778">+998 95 052-87-78</a></dd></div>
+      <div><dt data-i18n="lbl.addr">Manzil</dt><dd data-i18n="addr.hero">Toshkent shahri, Olmazor tumani<br>Sebzor G'afur G'ulom ko'chasi,<br>Ts-17-18, 2B-uy</dd></div>
+      <div><dt data-i18n="lbl.hours">Ish vaqti</dt><dd data-i18n="hours.hero">Du–Ju 8:00–17:00<br>Shanba 8:00–16:00<br>Yakshanba — dam olish kuni</dd></div>
+      <div><dt data-i18n="lbl.phone">Telefon</dt><dd><a href="tel:+998951701011">+998 95 170-10-11</a><br><a href="tel:+998900214646">+998 90 021-46-46</a><br><a href="tel:+998950528778">+998 95 052-87-78</a></dd></div>
       <div><dt>Instagram</dt><dd><a href="https://www.instagram.com/irodamed.uz/" target="_blank" rel="noopener">@irodamed.uz</a></dd></div>
     </dl>
   </div>
@@ -68,31 +78,31 @@
 <section class="section soft" id="xizmatlar">
   <div class="container">
     <div class="sec-head">
-      <h2>Xizmatlar</h2>
+      <h2 data-i18n="svc.h2">Xizmatlar</h2>
     </div>
     <div class="svc-layout">
     <div class="list">
-      <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>EKG</h3><p>Elektrokardiografiya</p></article>
-      <article data-svc="kolpo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Kolposkopiya</h3><p>Ginekologik ko'rik</p></article>
-      <article data-svc="exoeg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Exo-EG</h3><p>Bosh miyaning ultratovush tekshiruvi</p></article>
-      <article data-svc="uzi" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>UZI</h3><p>Ultratovush tekshiruvi — barcha a'zolar</p></article>
-      <article data-svc="doppler" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Doppler</h3><p>Qon oqimini tekshirish — barcha a'zolar</p></article>
-      <article data-svc="echo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Exokardiografiya</h3><p>Yurak ultratovush tekshiruvi</p></article>
-      <article data-svc="elasto" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Elastografiya</h3><p>Jigar, ko'krak, qalqonsimon bez</p></article>
-      <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Laboratoriya</h3><p>Laboratoriya xizmatlari</p></article>
-      <article data-svc="massage" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3>Bolalar massaji</h3><p>Bolalar uchun massaj</p></article>
+      <article data-svc="ecg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.ecg.t">EKG</h3><p data-i18n="svc.ecg.p">Elektrokardiografiya</p></article>
+      <article data-svc="kolpo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.kolpo.t">Kolposkopiya</h3><p data-i18n="svc.kolpo.p">Ginekologik ko'rik</p></article>
+      <article data-svc="exoeg" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.exoeg.t">Exo-EG</h3><p data-i18n="svc.exoeg.p">Bosh miyaning ultratovush tekshiruvi</p></article>
+      <article data-svc="uzi" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.uzi.t">UZI</h3><p data-i18n="svc.uzi.p">Ultratovush tekshiruvi — barcha a'zolar</p></article>
+      <article data-svc="doppler" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.doppler.t">Doppler</h3><p data-i18n="svc.doppler.p">Qon oqimini tekshirish — barcha a'zolar</p></article>
+      <article data-svc="echo" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.echo.t">Exokardiografiya</h3><p data-i18n="svc.echo.p">Yurak ultratovush tekshiruvi</p></article>
+      <article data-svc="elasto" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.elasto.t">Elastografiya</h3><p data-i18n="svc.elasto.p">Jigar, ko'krak, qalqonsimon bez</p></article>
+      <article data-svc="lab" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.lab.t">Laboratoriya</h3><p data-i18n="svc.lab.p">Laboratoriya xizmatlari</p></article>
+      <article data-svc="massage" tabindex="0" role="button" aria-haspopup="dialog" class="b"><h3 data-i18n="svc.massage.t">Bolalar massaji</h3><p data-i18n="svc.massage.p">Bolalar uchun massaj</p></article>
     </div>
-    <aside class="svc-stage" aria-label="Xizmatlar bo'yicha 3D model">
+    <aside class="svc-stage" aria-label="Xizmatlar bo'yicha 3D model" data-i18n-attr="aria-label:stage.aria">
       <div class="stage" id="stage">
-        <canvas id="gl" role="img" aria-label="Tanlangan xizmatning 3D modeli. Sudrab aylantirish mumkin."></canvas>
+        <canvas id="gl" role="img" aria-label="Tanlangan xizmatning 3D modeli. Sudrab aylantirish mumkin." data-i18n-attr="aria-label:stage.canvas"></canvas>
         <span class="vl tl" id="stCap">UZI · Doppler · Exo-EG · Elastografiya</span>
-        <span class="vl br">sudrab aylantiring</span>
+        <span class="vl br" data-i18n="stage.hint">sudrab aylantiring</span>
       </div>
-      <div class="stabs" role="group" aria-label="Model turi">
-        <button type="button" class="on" data-m="us" aria-pressed="true">UZI</button>
-        <button type="button" data-m="heart" aria-pressed="false">Yurak</button>
-        <button type="button" data-m="lab" aria-pressed="false">Laboratoriya</button>
-        <button type="button" data-m="colpo" aria-pressed="false">Kolposkopiya</button>
+      <div class="stabs" role="group" aria-label="Model turi" data-i18n-attr="aria-label:stage.tabs">
+        <button type="button" class="on" data-m="us" aria-pressed="true" data-i18n="tab.us">UZI</button>
+        <button type="button" data-m="heart" aria-pressed="false" data-i18n="tab.heart">Yurak</button>
+        <button type="button" data-m="lab" aria-pressed="false" data-i18n="tab.lab">Laboratoriya</button>
+        <button type="button" data-m="colpo" aria-pressed="false" data-i18n="tab.colpo">Kolposkopiya</button>
       </div>
     </aside>
     </div>
@@ -103,83 +113,103 @@
 <section class="section" id="shifokorlar">
   <div class="container">
     <div class="sec-head">
-      <h2>Shifokorlar</h2>
+      <h2 data-i18n="docs.h2">Shifokorlar</h2>
     </div>
     <div class="docs">
       <article class="doc" data-slug="yadgorova-shaxlo">
         <div class="doc-photo"><span class="ini" aria-hidden="true">YS</span></div>
         <div class="doc-body">
-          <h3>Yadgorova Shaxlo Sultanovna</h3>
-          <p class="role">Endokrinolog</p>
-          <ul class="sched"><li>Seshanba, payshanba 8:30–12:30</li></ul>
+          <h3 data-i18n="dn.1">Yadgorova Shaxlo Sultanovna</h3>
+          <p class="role" data-i18n="role.endo">Endokrinolog</p>
+          <ul class="sched"><li data-sch="2,4|8:30–12:30">Se, Pay 8:30–12:30</li></ul>
           <a class="doc-tel" href="tel:+998950528778"><svg class="ic"><use href="#i-phone"/></svg>+998 95 052-87-78</a>
         </div>
       </article>
       <article class="doc" data-slug="nosirova-ziyoda">
         <div class="doc-photo"><span class="ini" aria-hidden="true">NZ</span></div>
         <div class="doc-body">
-          <h3>Nosirova Ziyoda Ulug'bekovna</h3>
-          <p class="role">Endokrinolog</p>
-          <ul class="sched"><li class="muted">Qabul vaqtini aniqlang</li></ul>
+          <h3 data-i18n="dn.2">Nosirova Ziyoda Ulug'bekovna</h3>
+          <p class="role" data-i18n="role.endo">Endokrinolog</p>
+          <ul class="sched"><li class="muted" data-i18n="doc.ask">Qabul vaqtini aniqlang</li></ul>
           <a class="doc-tel" href="tel:+998977247554"><svg class="ic"><use href="#i-phone"/></svg>+998 97 724-75-54</a>
         </div>
       </article>
       <article class="doc" data-slug="seydukova-aliya">
         <div class="doc-photo"><span class="ini" aria-hidden="true">SA</span></div>
         <div class="doc-body">
-          <h3>Seydukova Aliya Faridunovna</h3>
-          <p class="role">LOR</p>
-          <ul class="sched"><li>Du, Chor, Ju 13:30–16:00</li><li>Se, Pay, Sha 9:00–13:00</li></ul>
+          <h3 data-i18n="dn.3">Seydukova Aliya Faridunovna</h3>
+          <p class="role" data-i18n="role.lor">LOR</p>
+          <ul class="sched"><li data-sch="1,3,5|13:30–16:00">Du, Chor, Ju 13:30–16:00</li><li data-sch="2,4,6|9:00–13:00">Se, Pay, Sha 9:00–13:00</li></ul>
           <a class="doc-tel" href="tel:+998903485190"><svg class="ic"><use href="#i-phone"/></svg>+998 90 348-51-90</a>
         </div>
       </article>
       <article class="doc" data-slug="ismoilova-shaxina">
         <div class="doc-photo"><span class="ini" aria-hidden="true">IS</span></div>
         <div class="doc-body">
-          <h3>Ismoilova Shaxina Baxramovna</h3>
-          <p class="role">LOR</p>
-          <ul class="sched"><li>Du, Chor 9:00–13:00</li><li>Se, Pay, Sha 13:30–16:00</li></ul>
+          <h3 data-i18n="dn.4">Ismoilova Shaxina Baxramovna</h3>
+          <p class="role" data-i18n="role.lor">LOR</p>
+          <ul class="sched"><li data-sch="1,3|9:00–13:00">Du, Chor 9:00–13:00</li><li data-sch="2,4,6|13:30–16:00">Se, Pay, Sha 13:30–16:00</li></ul>
           <a class="doc-tel" href="tel:+998935955365"><svg class="ic"><use href="#i-phone"/></svg>+998 93 595-53-65</a>
         </div>
       </article>
       <article class="doc" data-slug="xolmanova-dildora">
         <div class="doc-photo"><span class="ini" aria-hidden="true">XD</span></div>
         <div class="doc-body">
-          <h3>Xolmanova Dildora Ismoilovna</h3>
-          <p class="role">Nevrolog-terapevt</p>
-          <ul class="sched"><li>Har kuni 10:00–14:30</li></ul>
+          <h3 data-i18n="dn.5">Xolmanova Dildora Ismoilovna</h3>
+          <p class="role" data-i18n="role.neuro">Nevrolog-terapevt</p>
+          <ul class="sched"><li data-sch="*|10:00–14:30">Har kuni 10:00–14:30</li></ul>
           <a class="doc-tel" href="tel:+998998520207"><svg class="ic"><use href="#i-phone"/></svg>+998 99 852-02-07</a>
         </div>
       </article>
       <article class="doc" data-slug="kosimov-saidakrom">
         <div class="doc-photo"><span class="ini" aria-hidden="true">KS</span></div>
         <div class="doc-body">
-          <h3>Kosimov Saidakrom Olimjonovich</h3>
-          <p class="role">Urolog</p>
-          <ul class="sched"><li>Har kuni 8:30–15:00</li></ul>
+          <h3 data-i18n="dn.6">Kosimov Saidakrom Olimjonovich</h3>
+          <p class="role" data-i18n="role.uro">Urolog</p>
+          <ul class="sched"><li data-sch="*|8:30–15:00">Har kuni 8:30–15:00</li></ul>
           <a class="doc-tel" href="tel:+998909140864"><svg class="ic"><use href="#i-phone"/></svg>+998 90 914-08-64</a>
         </div>
       </article>
       <article class="doc" data-slug="bakayev-iskandarbek">
         <div class="doc-photo"><span class="ini" aria-hidden="true">BI</span></div>
         <div class="doc-body">
-          <h3>Bakayev Iskandarbek Axrorovich</h3>
-          <p class="role">Kardiolog, terapevt</p>
-          <ul class="sched"><li class="muted">Qabul vaqtini aniqlang</li></ul>
+          <h3 data-i18n="dn.7">Bakayev Iskandarbek Axrorovich</h3>
+          <p class="role" data-i18n="role.cardio">Kardiolog, terapevt</p>
+          <ul class="sched"><li class="muted" data-i18n="doc.ask">Qabul vaqtini aniqlang</li></ul>
           <a class="doc-tel" href="tel:+998914070911"><svg class="ic"><use href="#i-phone"/></svg>+998 91 407-09-11</a>
         </div>
       </article>
       <article class="doc" data-slug="kadirova-umida">
         <div class="doc-photo"><span class="ini" aria-hidden="true">KU</span></div>
         <div class="doc-body">
-          <h3>Kadirova Umida Maxmudjonovna</h3>
-          <p class="role">Massaj</p>
-          <ul class="sched"><li class="muted">Qabul vaqtini aniqlang</li></ul>
+          <h3 data-i18n="dn.8">Kadirova Umida Maxmudjonovna</h3>
+          <p class="role" data-i18n="role.massage">Massaj</p>
+          <ul class="sched"><li class="muted" data-i18n="doc.ask">Qabul vaqtini aniqlang</li></ul>
           <a class="doc-tel" href="tel:+998909338780"><svg class="ic"><use href="#i-phone"/></svg>+998 90 933-87-80</a>
         </div>
       </article>
     </div>
-    <p class="specs-note">Qabul vaqtini oldindan aniqlang: <a href="tel:+998951701011">+998 95 170-10-11</a></p>
+    <p class="specs-note" data-i18n="docs.note">Qabul vaqtini oldindan aniqlang: <a href="tel:+998951701011">+998 95 170-10-11</a></p>
+  </div>
+</section>
+
+<!-- NARXLAR -->
+<section class="section soft" id="narxlar">
+  <div class="container">
+    <div class="sec-head">
+      <h2 data-i18n="price.h2">Narxlar</h2>
+      <p data-i18n="price.sub">Narxlar so'mda, 01.06.2026 holatiga.</p>
+    </div>
+    <div class="pr-bar">
+      <label class="pr-search">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <input id="prQ" type="search" autocomplete="off" spellcheck="false" placeholder="Xizmat yoki tahlil qidirish" aria-label="Xizmat yoki tahlil qidirish" data-i18n-attr="placeholder:price.ph;aria-label:price.ph">
+        <button class="pr-clear" id="prClr" type="button" hidden aria-label="Tozalash" data-i18n-attr="aria-label:price.clear"><svg class="ic"><use href="#i-x"/></svg></button>
+      </label>
+      <div class="pr-tabs" id="prTabs" role="group" aria-label="Narxlar bo'limlari" data-i18n-attr="aria-label:price.tabs"></div>
+    </div>
+    <div class="pr-body" id="prBody" aria-live="polite"><p class="pr-nojs" data-i18n="price.nojs">Narxlarni ko'rish uchun JavaScript yoqilgan bo'lishi kerak. Narxlar uchun qo'ng'iroq qiling.</p></div>
+    <p class="pr-note" data-i18n="price.note">Narxlar ma'lumot uchun berilgan va o'zgarishi mumkin. Aniq narx, tayyorgarlik va yozilish: <a href="tel:+998951701011">+998 95 170-10-11</a></p>
   </div>
 </section>
 
@@ -187,19 +217,19 @@
 <section class="section red" id="mutaxassislar">
   <div class="container">
     <div class="sec-head">
-      <h2>Mutaxassislar</h2>
+      <h2 data-i18n="spec.h2">Mutaxassislar</h2>
     </div>
     <ul class="specs">
-      <li>Endokrinolog</li>
-      <li>Ginekolog</li>
-      <li>LOR</li>
-      <li>Urolog</li>
-      <li>Androlog</li>
-      <li>Nevropatolog <small>bolalar va kattalar</small></li>
-      <li>Umumiy terapevt</li>
-      <li>Kardiolog-terapevt</li>
+      <li data-i18n="sp.1">Endokrinolog</li>
+      <li data-i18n="sp.2">Ginekolog</li>
+      <li data-i18n="sp.3">LOR</li>
+      <li data-i18n="sp.4">Urolog</li>
+      <li data-i18n="sp.5">Androlog</li>
+      <li data-i18n="sp.6">Nevropatolog <small>bolalar va kattalar</small></li>
+      <li data-i18n="sp.7">Umumiy terapevt</li>
+      <li data-i18n="sp.8">Kardiolog-terapevt</li>
     </ul>
-    <p class="specs-note">Qabul jadvali va narxlar bo'yicha qo'ng'iroq qiling: <a href="tel:+998951701011">+998 95 170-10-11</a></p>
+    <p class="specs-note" data-i18n="spec.note">Qabul jadvali va yozilish uchun qo'ng'iroq qiling: <a href="tel:+998951701011">+998 95 170-10-11</a> · <a href="#narxlar">Narxlar</a></p>
   </div>
 </section>
 
@@ -207,30 +237,30 @@
 <section class="section soft" id="aloqa">
   <div class="container">
     <div class="sec-head">
-      <h2>Aloqa</h2>
+      <h2 data-i18n="contact.h2">Aloqa</h2>
     </div>
     <div class="contact">
       <div class="contact-info">
-        <div class="info"><span class="lbl">Manzil</span>
-          <div><p>Toshkent shahri, Olmazor tumani,<br>Sebzor G'afur G'ulom ko'chasi,<br>Ts-17-18, 2B-uy</p>
-          <p class="landmark"><svg class="ic"><use href="#i-pin"/></svg>Mo'ljal: Usta Alim, 2A</p>
-          <div class="loc-actions"><a class="yx" href="https://yandex.uz/maps/-/CTteqKke" target="_blank" rel="noopener">Yandex Maps'da aniq joylashuv<svg class="ic"><use href="#i-chev"/></svg></a><button class="link" id="copy" type="button">Manzilni nusxalash</button></div></div></div>
-        <div class="info"><span class="lbl">Telefon</span>
+        <div class="info"><span class="lbl" data-i18n="lbl.addr">Manzil</span>
+          <div><p data-i18n="addr.contact">Toshkent shahri, Olmazor tumani,<br>Sebzor G'afur G'ulom ko'chasi,<br>Ts-17-18, 2B-uy</p>
+          <p class="landmark"><svg class="ic"><use href="#i-pin"/></svg><span data-i18n="landmark">Mo'ljal: Usta Alim, 2A</span></p>
+          <div class="loc-actions"><a class="yx" href="https://yandex.uz/maps/-/CTteqKke" target="_blank" rel="noopener"><span data-i18n="yandex">Yandex Maps'da aniq joylashuv</span><svg class="ic"><use href="#i-chev"/></svg></a><button class="link" id="copy" type="button" data-i18n="copy">Manzilni nusxalash</button></div></div></div>
+        <div class="info"><span class="lbl" data-i18n="lbl.phone">Telefon</span>
           <div><p><a href="tel:+998951701011">+998 95 170-10-11</a><br><a href="tel:+998900214646">+998 90 021-46-46</a><br><a href="tel:+998950528778">+998 95 052-87-78</a></p></div></div>
         <div class="info"><span class="lbl">Instagram</span>
           <div><p><a href="https://www.instagram.com/irodamed.uz/" target="_blank" rel="noopener">@irodamed.uz</a></p></div></div>
-        <div class="info"><span class="lbl">Ish vaqti</span>
+        <div class="info"><span class="lbl" data-i18n="lbl.hours">Ish vaqti</span>
           <div><table class="hours" id="hours">
-            <tr data-d="1,2,3,4,5"><td>Dushanba – Juma</td><td>8:00 – 17:00</td></tr>
-            <tr data-d="6"><td>Shanba</td><td>8:00 – 16:00</td></tr>
-            <tr data-d="0"><td>Yakshanba</td><td>Dam olish kuni</td></tr>
+            <tr data-d="1,2,3,4,5"><td data-i18n="hours.mf">Dushanba – Juma</td><td>8:00 – 17:00</td></tr>
+            <tr data-d="6"><td data-i18n="hours.sat">Shanba</td><td>8:00 – 16:00</td></tr>
+            <tr data-d="0"><td data-i18n="hours.sun">Yakshanba</td><td data-i18n="hours.off">Dam olish kuni</td></tr>
           </table></div></div>
       </div>
       <div class="map">
-        <iframe title="Irodamed xaritada" loading="lazy" tabindex="-1" referrerpolicy="no-referrer-when-downgrade"
+        <iframe title="Irodamed xaritada" data-i18n-attr="title:map.title" loading="lazy" tabindex="-1" referrerpolicy="no-referrer-when-downgrade"
           src="https://www.google.com/maps?q=Irodamed+Sebzor+2B+Toshkent&z=16&output=embed"></iframe>
-        <a class="map-hit" id="mapHit" href="https://www.google.com/maps/search/?api=1&query=Irodamed+Sebzor+2B+Toshkent" target="_blank" rel="noopener" aria-label="Xaritani ilovada ochish"></a>
-        <button class="btn btn-primary map-btn" id="mapBtn" type="button"><svg class="ic"><use href="#i-pin"/></svg>Xaritada ochish</button>
+        <a class="map-hit" id="mapHit" href="https://www.google.com/maps/search/?api=1&query=Irodamed+Sebzor+2B+Toshkent" target="_blank" rel="noopener" aria-label="Xaritani ilovada ochish" data-i18n-attr="aria-label:map.hit"></a>
+        <button class="btn btn-primary map-btn" id="mapBtn" type="button"><svg class="ic"><use href="#i-pin"/></svg><span data-i18n="map.btn">Xaritada ochish</span></button>
       </div>
     </div>
   </div>
@@ -241,8 +271,8 @@
 <footer class="footer">
   <div class="container foot">
     <a href="#top" class="logo"><svg class="logo-mark"><use href="#logo-mark"/></svg><span class="logo-text"><b>irodamed</b><small>medical clinic center</small></span></a>
-    <p class="foot-tag">Biz sizning sog'lig'ingizga g'ayg'uramiz</p>
-    <p class="foot-addr">Toshkent shahri, Olmazor tumani, Sebzor G'afur G'ulom ko'chasi, Ts-17-18, 2B-uy</p>
+    <p class="foot-tag" data-i18n="foot.tag">Biz sizning sog'lig'ingizga g'ayg'uramiz</p>
+    <p class="foot-addr" data-i18n="addr.full">Toshkent shahri, Olmazor tumani, Sebzor G'afur G'ulom ko'chasi, Ts-17-18, 2B-uy</p>
     <p class="foot-contact"><a href="tel:+998951701011">+998 95 170-10-11</a> · <a href="tel:+998900214646">+998 90 021-46-46</a> · <a href="tel:+998950528778">+998 95 052-87-78</a> · <a href="https://www.instagram.com/irodamed.uz/" target="_blank" rel="noopener">@irodamed.uz</a></p>
     <p class="copy">© <span id="year"></span> Irodamed</p>
   </div>
@@ -251,16 +281,16 @@
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-bg" data-close></div>
   <div class="sheet-box" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-    <h3 id="sheetTitle">Xaritada ochish</h3>
-    <p>Irodamed — Sebzor G'afur G'ulom ko'chasi, Ts-17-18, 2B-uy, Toshkent</p>
+    <h3 id="sheetTitle" data-i18n="sheet.title">Xaritada ochish</h3>
+    <p data-i18n="addr.sheet">Irodamed — Sebzor G'afur G'ulom ko'chasi, Ts-17-18, 2B-uy, Toshkent</p>
     <div class="sheet-list">
-      <a class="app" id="app-geo" hidden href="#"><b>Telefondagi xarita</b><small>Standart ilova</small></a>
+      <a class="app" id="app-geo" hidden href="#"><b data-i18n="app.geo">Telefondagi xarita</b><small data-i18n="app.geo.s">Standart ilova</small></a>
       <a class="app" id="app-apple" hidden target="_blank" rel="noopener" href="#"><b>Apple Maps</b><small>iPhone / Mac</small></a>
-      <a class="app" id="app-google" target="_blank" rel="noopener" href="#"><b>Google Maps</b><small>Brauzer yoki ilova</small></a>
-      <a class="app" id="app-yandex" target="_blank" rel="noopener" href="#"><b>Yandex Maps</b><small>Aniq joylashuv</small></a>
-      <a class="app" id="app-2gis" target="_blank" rel="noopener" href="#"><b>2GIS</b><small>Brauzer yoki ilova</small></a>
+      <a class="app" id="app-google" target="_blank" rel="noopener" href="#"><b>Google Maps</b><small data-i18n="app.browser">Brauzer yoki ilova</small></a>
+      <a class="app" id="app-yandex" target="_blank" rel="noopener" href="#"><b>Yandex Maps</b><small data-i18n="app.exact">Aniq joylashuv</small></a>
+      <a class="app" id="app-2gis" target="_blank" rel="noopener" href="#"><b>2GIS</b><small data-i18n="app.browser">Brauzer yoki ilova</small></a>
     </div>
-    <button class="btn btn-ghost sheet-close" type="button" data-close>Yopish</button>
+    <button class="btn btn-ghost sheet-close" type="button" data-close data-i18n="close">Yopish</button>
   </div>
 </div>
 
@@ -272,14 +302,15 @@
       <div><h3 id="svcTitle"></h3><p id="svcDesc"></p></div>
     </div>
     <ul class="svc-facts" id="svcFacts"></ul>
-    <p class="svc-note">Narx va tayyorgarlik bo'yicha qo'ng'iroq qiling.</p>
+    <p class="svc-note" data-i18n="svc.note">Tayyorgarlik bo'yicha qo'ng'iroq qiling yoki narxlarni ko'ring.</p>
+    <button class="btn btn-ghost svc-call svc-price" id="svcPrice" type="button"><svg class="ic"><use href="#i-tag"/></svg><span data-i18n="svc.prices">Narxlarni ko'rish</span></button>
     <a class="btn btn-primary svc-call" href="tel:+998951701011"><svg class="ic"><use href="#i-phone"/></svg>+998 95 170-10-11</a>
     <a class="btn btn-ghost svc-call" href="tel:+998900214646"><svg class="ic"><use href="#i-phone"/></svg>+998 90 021-46-46</a>
-    <button class="btn btn-ghost sheet-close" type="button" data-close>Yopish</button>
+    <button class="btn btn-ghost sheet-close" type="button" data-close data-i18n="close">Yopish</button>
   </div>
 </div>
 
-<a class="fab" href="tel:+998951701011" aria-label="Qo'ng'iroq qilish"><svg class="ic"><use href="#i-phone"/></svg></a>
+<a class="fab" href="tel:+998951701011" aria-label="Qo'ng'iroq qilish" data-i18n-attr="aria-label:aria.call"><svg class="ic"><use href="#i-phone"/></svg></a>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -293,11 +324,19 @@
   <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11m0-5.5a1.5 1.5 0 0 1 3 0V11m0-3.5a1.5 1.5 0 0 1 3 0V15c0 3.5-2.2 6-5.5 6-2.6 0-4.3-1.3-5.4-3.4l-2-3.7a1.5 1.5 0 0 1 2.6-1.5L8 14"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9S14.6 18.4 12 21c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5v-8a1 1 0 0 1 1-1h8l8 8-9 9z"/><circle cx="8.5" cy="8.5" r="1.2"/></symbol>
   </g>
 </svg>
 <script src="vendor/three.min.js"></script>
 <script src="scan.js"></script>
+<script src="i18n.js"></script>
 <script src="stage3d.js"></script>
+<script src="prices.js"></script>
+<script src="narxlar.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
