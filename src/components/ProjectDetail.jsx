@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Sheet from './Sheet.jsx';
 import { TypeIcon, urgencyText } from './ProjectCard.jsx';
 import { IconCheck, IconClose, IconEdit, IconPhone, IconTrash } from './Icons.jsx';
-import { progress, PSTATUS, urgency, owed, money } from '../lib/projects.js';
+import { progress, PSTATUS, urgency, owed, money, daysBetween } from '../lib/projects.js';
 import { formatFull, formatShort } from '../lib/dates.js';
 import { todayISO } from '../lib/dates.js';
 import { t } from '../lib/i18n.js';
@@ -67,6 +67,14 @@ export default function ProjectDetail({ project: p, onClose, onEdit, onDelete, o
           {formatFull(p.date)} · {urgencyText(u)}
         </p>
       </div>
+
+      {p.url && (
+        <div className={`site-chip ${p.mon && p.mon.at ? (p.mon.ok ? 'up' : 'down') : ''}`}>
+          <span>{p.mon && p.mon.at ? (p.mon.ok ? '🟢' : '🔴') : '⚪️'}</span>
+          <a href={/^https?:\/\//i.test(p.url) ? p.url : `https://${p.url}`} target="_blank" rel="noreferrer">{p.url.replace(/^https?:\/\//, '')}</a>
+          {p.domExp && <small>{t('pjDomain', daysBetween(todayISO(), p.domExp))}</small>}
+        </div>
+      )}
 
       <div className="section-title"><h4>{t('lblStatus')}</h4></div>
       <div className="status-row" role="radiogroup" aria-label={t('lblStatus')}>

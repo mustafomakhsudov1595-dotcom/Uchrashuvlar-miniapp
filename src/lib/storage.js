@@ -61,6 +61,10 @@ const PKEY = 'uchrashuvlar:projects:v1';
 const PDEL_KEY = 'uchrashuvlar:pdeleted';
 const SKEY = 'uchrashuvlar:subs:v1';
 const SDEL_KEY = 'uchrashuvlar:sdeleted';
+const EKEY = 'uchrashuvlar:expenses:v1';
+const EDEL_KEY = 'uchrashuvlar:edeleted';
+const GOAL_KEY = 'uchrashuvlar:goal';
+export const EXCATS = ['ads', 'team', 'host', 'tools', 'other'];
 const YM_RE = /^\d{4}-\d{2}$/;
 const PTYPES = ['site', 'bot', 'video', 'other'];
 const PSTATUS = ['new', 'work', 'review', 'done', 'paused'];
@@ -81,6 +85,9 @@ export function cleanProject(p) {
     price: n(p.price),
     paid: n(p.paid),
     notes: typeof p.notes === 'string' ? p.notes : '',
+    url: typeof p.url === 'string' ? p.url.trim().slice(0, 200) : '',
+    domExp: DATE_RE.test(p.domExp) ? p.domExp : '',
+    mon: p.mon && typeof p.mon === 'object' ? { ok: Boolean(p.mon.ok), code: p.mon.code ?? '', at: Number(p.mon.at) || 0 } : undefined,
     pays: Array.isArray(p.pays) ? p.pays.filter((x) => x && Number(x.a) > 0 && DATE_RE.test(x.d)).slice(-40).map((x) => ({ a: Math.round(Number(x.a)), d: x.d })) : [],
     tasks: Array.isArray(p.tasks)
       ? p.tasks.filter((t) => t && typeof t.text === 'string').map((t) => ({ id: String(t.id ?? newId()), text: t.text, done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' }))
@@ -89,6 +96,60 @@ export function cleanProject(p) {
     updatedAt: Number(p.updatedAt) || 0,
   };
 }
+// ---- Xarajatlar va oylik maqsad ----
+export function cleanExpense(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !DATE_RE.test(x.d)) return null;
+  const a = Number(x.a);
+  if (!Number.isFinite(a) || a <= 0) return null;
+  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+}
+export function loadExpenses() {
+  try {
+    const d = JSON.parse(localStorage.getItem(EKEY) || '[]');
+    return Array.isArray(d) ? d.map(cleanExpense).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+export function saveExpenses(list) {
+  try {
+    localStorage.setItem(EKEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+export function loadEDeleted() {
+  try {
+    const d = JSON.parse(localStorage.getItem(EDEL_KEY) || '[]');
+    return Array.isArray(d) ? d.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+export const saveEDeleted = (ids) => {
+  try {
+    localStorage.setItem(EDEL_KEY, JSON.stringify(ids));
+  } catch {
+    /* ignore */
+  }
+};
+export const expensesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.a, x.d, x.cat, x.note, x.pid]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+export function loadGoal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(GOAL_KEY) || '{}');
+    return { goal: Number(d.goal) > 0 ? Number(d.goal) : 0, at: Number(d.at) || 0 };
+  } catch {
+    return { goal: 0, at: 0 };
+  }
+}
+export function saveGoal(goal, at) {
+  try {
+    localStorage.setItem(GOAL_KEY, JSON.stringify({ goal, at }));
+  } catch {
+    /* ignore */
+  }
+}
+
 // ---- Oylik toʻlovlar (obunalar) ----
 export function cleanSub(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || typeof x.name !== 'string' || !x.name.trim()) return null;
@@ -170,7 +231,7 @@ export const savePDeleted = (ids) => {
   }
 };
 export const projSignature = (list) =>
-  JSON.stringify(list.map((p) => [p.id, p.updatedAt, p.name, p.status, p.date, p.time, p.price, p.paid, (p.pays || []).length, p.tasks.map((t) => [t.id, t.done, t.text, t.due])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+  JSON.stringify(list.map((p) => [p.id, p.updatedAt, p.name, p.status, p.date, p.time, p.price, p.paid, (p.pays || []).length, p.url, p.domExp, p.mon ? [p.mon.ok, p.mon.at] : 0, p.tasks.map((t) => [t.id, t.done, t.text, t.due])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 
 // ---- Server bilan sinxronlash (faqat Telegram ichida) ----
 // Uchrashuvlar serverda ham saqlanadi: shu sabab bot buyruqlari va eslatmalar ishlaydi,
@@ -221,12 +282,12 @@ export function savePlaces(list, at) {
 const headers = () => ({ 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData });
 
 // Serverga yuboradi, birlashtirilgan natijani qaytaradi: { meetings, lang, places, placesAt }
-export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted }) {
+export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, goal, goalAt }) {
   if (!isTelegram) return null;
   const res = await fetch('/api/meetings', {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, tz: -new Date().getTimezoneOffset() }),
+    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, goal, goalAt, tz: -new Date().getTimezoneOffset() }),
   });
   if (!res.ok) throw new Error(`sync ${res.status}`);
   const data = await res.json();
@@ -234,6 +295,9 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     meetings: Array.isArray(data.meetings) ? data.meetings.map(clean).filter(Boolean) : [],
     projects: Array.isArray(data.projects) ? data.projects.map(cleanProject).filter(Boolean) : [],
     subs: Array.isArray(data.subs) ? data.subs.map(cleanSub).filter(Boolean) : [],
+    expenses: Array.isArray(data.expenses) ? data.expenses.map(cleanExpense).filter(Boolean) : [],
+    goal: Number(data.goal) || 0,
+    goalAt: Number(data.goalAt) || 0,
     lang: data.lang,
     places: Array.isArray(data.places) ? data.places : [],
     placesAt: Number(data.placesAt) || 0,

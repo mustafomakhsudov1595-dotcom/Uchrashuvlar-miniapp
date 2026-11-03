@@ -2,6 +2,7 @@
 // Loyihalar: sayt, bot, Instagram video — muddat, vazifalar, eslatmalar
 const S = require('./_shared');
 const { tg, esc } = S;
+const aiButtons = (p, P) => (p.type === 'video' ? [['v', P.aiBtnScript], ['i', P.aiBtnInsta]] : p.type === 'site' ? [['s', P.aiBtnSite], ['i', P.aiBtnInsta]] : [['i', P.aiBtnInsta]]);
 
 const send = (chat, text, markup) => tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', reply_markup: markup, disable_web_page_preview: true });
 const show = (ctx, text, markup) => (ctx.mid
@@ -39,7 +40,9 @@ function cardMarkup(p, u) {
   rows.push([1, 3, 7].map((n) => ({ text: `🗓 ${P.bPlus(n)}`, callback_data: `pd:${p.id}:${n}` })));
   if (p.price !== null && S.owed(p) > 0) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]);
   else if (p.price !== null) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }]);
-  rows.push([{ text: P.bReport, callback_data: `pr:${p.id}` }]);
+  rows.push([{ text: P.bReport, callback_data: `pr:${p.id}` }, { text: P.bExpenses, callback_data: `xp:${p.id}` }]);
+  rows.push([{ text: P.bSite, callback_data: `mu:${p.id}` }, ...(p.url ? [{ text: P.bCheck, callback_data: `mc:${p.id}` }, { text: '🗑', callback_data: `mx:${p.id}` }] : [])]);
+  rows.push(aiButtons(p, P).map(([k, label]) => ({ text: label, callback_data: `ai:${k}:${p.id}` })));
   rows.push([{ text: P.bAddTask, callback_data: `pa:${p.id}` }, S.appBtn(P.bApp, `?proj=${p.id}`), { text: P.bDel, callback_data: `px:${p.id}` }]);
   rows.push([{ text: P.backList, callback_data: 'pl:0' }]);
   return { inline_keyboard: rows };
@@ -113,6 +116,8 @@ function briefMessage(u, now = Date.now()) {
   if (near.length) parts.push(`${P.brProj}\n${near.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${S.deadlineTag(p, today, T)}`).join('\n')}`);
   if (sd.length) parts.push(`${P.brSubs}\n${sd.slice(0, 6).map((x) => `• <b>${esc([x.client, x.name].filter(Boolean).join(' · '))}</b> — ${S.money(x.amount)}`).join('\n')}`);
   if (dl.length) parts.push(P.brDebt(dl.length, S.money(debtSum(dl))));
+  const gl = S.goalLine(u, today);
+  if (gl) parts.push(gl);
   const empty = !sd.length && !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;
   if (empty) parts.push(P.brNone);
   const rows = [...g.over, ...g.today].slice(0, 6).map((e) => [{ text: `⬜️ ${e.t.text} · ${e.p.name}`.slice(0, 60), callback_data: `pu:${e.p.id}:${e.i}` }]);
@@ -132,8 +137,10 @@ function weeklyMessage(u, now = Date.now()) {
   const meets = u.meetings.filter((m) => m.date >= from && m.date <= today && m.status !== 'cancelled').length;
   const upcoming = act.filter((p) => p.date > today && p.date <= next);
   if (!done.length && !money && !dl.length && !act.length && !meets) return null;
-  const parts = [P.wkTitle, [P.wkDone(done.length), P.wkMoney(S.money(money)), dl.length ? P.wkDebt(dl.length, S.money(debtSum(dl))) : '', P.wkActive(act.length, over), P.wkMeet(meets)].filter(Boolean).join('\n')];
+  const exp = S.expenseSum(S.expensesIn(u, from, today)), gl = S.goalLine(u, today);
+  const parts = [P.wkTitle, [P.wkDone(done.length), P.wkMoney(S.money(money)), exp ? P.inExp(S.money(exp)) : '', exp ? P.inNet(S.money(money - exp)) : '', dl.length ? P.wkDebt(dl.length, S.money(debtSum(dl))) : '', P.wkActive(act.length, over), P.wkMeet(meets)].filter(Boolean).join('\n')];
   if (upcoming.length) parts.push(`${P.wkNext}\n${upcoming.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${esc(S.fmtWd(p.date, T))}`).join('\n')}`);
+  if (gl) parts.push(gl);
   const rows = [[S.appBtn(T.openAppShort, '?tab=projects')]];
   if (dl.length) rows.unshift([{ text: P.bDebts, callback_data: 'pq:0' }]);
   return { text: parts.join('\n\n'), markup: { inline_keyboard: rows } };

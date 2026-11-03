@@ -7,6 +7,7 @@ import ProjectDetail from './components/ProjectDetail.jsx';
 import ProjectForm from './components/ProjectForm.jsx';
 import SubSheet from './components/SubSheet.jsx';
 import ClientDetail from './components/ClientDetail.jsx';
+import ExpenseSheet from './components/ExpenseSheet.jsx';
 import { clientsOf } from './lib/finance.js';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
@@ -17,7 +18,7 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, getCalendarToken, signature,
-  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
@@ -44,6 +45,8 @@ export default function App() {
   const [places, setPlaces] = useState(() => loadPlaces());
   const [projects, setProjects] = useState(loadProjects);
   const [subs, setSubs] = useState(loadSubs);
+  const [expenses, setExpenses] = useState(loadExpenses);
+  const [goalState, setGoalState] = useState(loadGoal);
   const [confirmSid, setConfirmSid] = useState(null);
   const [confirmPid, setConfirmPid] = useState(null);
   const [tab, setTab] = useState('home');
@@ -66,6 +69,12 @@ export default function App() {
   projectsRef.current = projects;
   const subsRef = useRef(subs);
   subsRef.current = subs;
+  const expensesRef = useRef(expenses);
+  expensesRef.current = expenses;
+  const edeletedRef = useRef(loadEDeleted());
+  const eFromServer = useRef(false);
+  const goalRef = useRef(goalState);
+  goalRef.current = goalState;
   const sdeletedRef = useRef(loadSDeleted());
   const sFromServer = useRef(false);
   const pdeletedRef = useRef(loadPDeleted());
@@ -85,6 +94,7 @@ export default function App() {
       const sentDeleted = [...deletedRef.current];
       const sentPDeleted = [...pdeletedRef.current];
       const sentSDeleted = [...sdeletedRef.current];
+      const sentEDeleted = [...edeletedRef.current];
       const remote = await syncRemote({
         meetings: meetingsRef.current,
         deleted: sentDeleted,
@@ -95,6 +105,10 @@ export default function App() {
         pdeleted: [...pdeletedRef.current],
         subs: subsRef.current,
         sdeleted: sentSDeleted,
+        expenses: expensesRef.current,
+        edeleted: sentEDeleted,
+        goal: goalRef.current.goal,
+        goalAt: goalRef.current.at,
       });
       if (remote) {
         deletedRef.current = deletedRef.current.filter((id) => !sentDeleted.includes(id));
@@ -103,6 +117,16 @@ export default function App() {
         savePDeleted(pdeletedRef.current);
         sdeletedRef.current = sdeletedRef.current.filter((id) => !sentSDeleted.includes(id));
         saveSDeleted(sdeletedRef.current);
+        edeletedRef.current = edeletedRef.current.filter((id) => !sentEDeleted.includes(id));
+        saveEDeleted(edeletedRef.current);
+        if (expensesSignature(remote.expenses) !== expensesSignature(expensesRef.current)) {
+          eFromServer.current = true;
+          setExpenses(remote.expenses);
+        }
+        if (remote.goalAt > goalRef.current.at) {
+          saveGoal(remote.goal, remote.goalAt);
+          setGoalState({ goal: remote.goal, at: remote.goalAt });
+        }
         if (subsSignature(remote.subs) !== subsSignature(subsRef.current)) {
           sFromServer.current = true;
           setSubs(remote.subs);
@@ -142,6 +166,15 @@ export default function App() {
     }
     scheduleSync();
   }, [meetings, scheduleSync]);
+
+  useEffect(() => {
+    saveExpenses(expenses);
+    if (eFromServer.current) {
+      eFromServer.current = false;
+      return;
+    }
+    scheduleSync();
+  }, [expenses, scheduleSync]);
 
   useEffect(() => {
     saveSubs(subs);
@@ -475,6 +508,25 @@ export default function App() {
     touchProject(id, (x) => ({ paid: (x.paid || 0) + amount, pays: [...(x.pays || []), { a: amount, d: todayISO() }].slice(-40) }));
     showToast(t('toastPaid'));
   };
+  const addExpense = (data) => {
+    setExpenses((list) => [{ id: newId(), createdAt: Date.now(), updatedAt: Date.now(), ...data }, ...list]);
+    setSheet(null);
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
+  const deleteExpense = (id) => {
+    edeletedRef.current = [...edeletedRef.current, id];
+    saveEDeleted(edeletedRef.current);
+    setExpenses((list) => list.filter((x) => x.id !== id));
+    haptic.select();
+  };
+  const setGoal = (n) => {
+    const next = { goal: n, at: Date.now() };
+    saveGoal(next.goal, next.at);
+    setGoalState(next);
+    scheduleSync();
+    haptic.success();
+  };
   const touchSub = (id, fn) => setSubs((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
   const saveSub = (data) => {
     if (sheet?.sid) touchSub(sheet.sid, () => data);
@@ -545,7 +597,7 @@ export default function App() {
       {tab === 'projects' && (
         <ProjectsView projects={projects} subs={subs} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
-      {tab === 'stats' && <StatsView meetings={meetings} projects={projects} subs={subs} now={now} onSettings={openSettings} />}
+      {tab === 'stats' && <StatsView meetings={meetings} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} now={now} onSettings={openSettings} />}
 
       <TabBar tab={tab} onTab={changeTab} onAdd={() => (tab === 'projects' ? openProjectForm() : openAdd(tab === 'calendar' ? selectedDate : undefined))} />
 
@@ -600,6 +652,8 @@ export default function App() {
       {sheet?.type === 'pform' && (sheet.id ? curProject : true) && (
         <ProjectForm key={sheet.id ?? 'pnew'} initial={curProject} presetType={sheet.ptype} onSave={saveProject} onClose={closeTop} />
       )}
+
+      {sheet?.type === 'expense' && <ExpenseSheet projects={projects} onSave={addExpense} onClose={closeTop} />}
 
       {sheet?.type === 'sub' && (!sheet.sid || curSub) && (
         <SubSheet

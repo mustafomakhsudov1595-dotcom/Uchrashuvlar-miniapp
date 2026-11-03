@@ -44,14 +44,14 @@ const openStore = () => openKV();
 const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
-  quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00' }, dsent: { m: '', e: '', p: '', b: '', w: '' },
-  meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, places: [], placesAt: 0, state: null,
+  quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
+  meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
   if (!u) return blankUser(id);
   const d = blankUser(id);
-  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
+  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
 }
 const saveUser = (st, u) => st.setJSON(userKey(u.id), u);
 const Tof = (u) => getT(u.lang);
@@ -151,6 +151,19 @@ const SICON = { new: '🆕', work: '🛠', review: '🔎', done: '✅', paused: 
 const TEMPLATES = require('../../shared/templates.json');
 const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
 
+// Sayt manzili: faqat http(s), maxfiy/ichki manzillar yoʻq
+function cleanUrl(v) {
+  if (typeof v !== 'string') return '';
+  let t = v.trim().slice(0, 200);
+  if (!t) return '';
+  if (!/^https?:\/\//i.test(t)) t = `https://${t}`;
+  try {
+    const u = new URL(t);
+    const h = u.hostname.toLowerCase();
+    if (!/^https?:$/.test(u.protocol) || !h.includes('.') || /^(localhost|.*\.local|.*\.internal)$/.test(h) || /^(\d{1,3}\.){3}\d{1,3}$/.test(h) || h.includes(':') || u.username || u.password) return '';
+    return u.origin + (u.pathname === '/' ? '' : u.pathname);
+  } catch { return ''; }
+}
 function cleanProject(p) {
   if (!p || typeof p !== 'object') return null;
   if (typeof p.id !== 'string' || p.id.length > 64 || typeof p.name !== 'string' || !p.name.trim()) return null;
@@ -161,6 +174,7 @@ function cleanProject(p) {
     type: PTYPES.includes(p.type) ? p.type : 'other', status: PSTATUS.includes(p.status) ? p.status : 'new', date: p.date, time: TIME_RE.test(p.time) ? p.time : '18:00',
     price: price !== null && price >= 0 ? price : null, paid: paid !== null && paid >= 0 ? paid : null, notes: typeof p.notes === 'string' ? p.notes.slice(0, 1500) : '',
     pays: Array.isArray(p.pays) ? p.pays.filter((x) => x && Number(x.a) > 0 && DATE_RE.test(x.d)).slice(-40).map((x) => ({ a: Math.round(Number(x.a)), d: x.d })) : [],
+    url: cleanUrl(p.url), domExp: DATE_RE.test(p.domExp) ? p.domExp : '', mon: p.mon && typeof p.mon === 'object' ? p.mon : undefined,
     tasks: Array.isArray(p.tasks) ? p.tasks.filter((t) => t && typeof t.text === 'string' && t.text.trim()).slice(0, 80).map((t) => ({ id: String(t.id || newId()).slice(0, 64), text: t.text.trim().slice(0, 120), done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' })) : [],
     createdAt: Number(p.createdAt) || Date.now(), updatedAt: Number(p.updatedAt) || 0, r: p.r,
   };
@@ -197,6 +211,9 @@ function projectText(p, u, now = Date.now()) {
   if (p.price !== null) t += `\n💰 ${T.p.lblPrice}: <b>${money(p.price)}</b>${p.paid !== null ? ` · ${T.p.lblPaid}: ${money(p.paid)}` : ''}`;
   if (owed(p) > 0) t += `\n🧾 ${T.p.lblOwed}: <b>${money(owed(p))}</b>`;
   else if (p.price !== null && p.price > 0 && owed(p) === 0) t += ` ✅`;
+  const pe = projectExpense(u, p.id);
+  if (pe > 0) t += `\n💸 ${T.p.lblExpense}: <b>${money(pe)}</b>${p.paid ? ` · ${T.p.lblProfit}: <b>${money((p.paid || 0) - pe)}</b>` : ''}`;
+  if (p.url) t += `\n🔗 ${esc(p.url.replace(/^https?:\/\//, ''))}${p.mon && p.mon.at ? (p.mon.ok ? ' 🟢' : ' 🔴') : ''}`;
   if (total) t += `\n\n${barText(done, total)} <b>${done}/${total}</b> (${pc}%)`;
   if (p.notes) t += `\n📝 ${esc(p.notes)}`;
   return t;
@@ -210,8 +227,8 @@ function mergeProjects(u, clientList, clientDeleted) {
     const c = cleanProject(raw);
     if (!c || tomb[c.id]) continue;
     const s = byId.get(c.id);
-    if (!s) { byId.set(c.id, { ...c, r: undefined }); continue; }
-    if (c.updatedAt >= (s.updatedAt || 0)) byId.set(c.id, { ...c, r: s.date !== c.date ? undefined : s.r });
+    if (!s) { byId.set(c.id, { ...c, r: undefined, mon: undefined }); continue; }
+    if (c.updatedAt >= (s.updatedAt || 0)) byId.set(c.id, { ...c, r: s.date !== c.date ? undefined : s.r, mon: c.url === s.url ? s.mon : undefined });
   }
   for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
   u.pdeleted = tomb; u.projects = [...byId.values()];
@@ -268,9 +285,10 @@ function paymentsOf(u) {
 const prevYM = (ym, n) => { let [y, m] = ym.split('-').map(Number); m -= n; while (m < 1) { m += 12; y -= 1; } return `${y}-${pad(m)}`; };
 function incomeByMonth(u, months, today) {
   const cur = today.slice(0, 7), list = [];
-  for (let i = months - 1; i >= 0; i--) list.push({ m: prevYM(cur, i), total: 0, k: { site: 0, bot: 0, video: 0, other: 0, sub: 0 } });
+  for (let i = months - 1; i >= 0; i--) list.push({ m: prevYM(cur, i), total: 0, exp: 0, k: { site: 0, bot: 0, video: 0, other: 0, sub: 0 } });
   const idx = new Map(list.map((x) => [x.m, x]));
   for (const x of paymentsOf(u)) { const e = idx.get(x.d.slice(0, 7)); if (e) { e.total += x.a; e.k[x.k in e.k ? x.k : 'other'] += x.a; } }
+  for (const x of u.expenses || []) { const e = idx.get(x.d.slice(0, 7)); if (e) e.exp += x.a; }
   return list;
 }
 function clientsOf(u) {
@@ -289,6 +307,52 @@ function clientsOf(u) {
 const activeDebt = (u) => u.projects.reduce((n, p) => n + owed(p), 0);
 const clientHash = (key) => { let h = 5381; for (const ch of key) h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0; return h.toString(36); };
 
+/* ---------- xarajatlar, sof foyda, oylik maqsad ---------- */
+const EXCATS = ['ads', 'team', 'host', 'tools', 'other'];
+function cleanExpense(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || !DATE_RE.test(x.d)) return null;
+  const a = num(x.a);
+  if (a === null || a <= 0) return null;
+  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+}
+function mergeExpenses(u, clientList, clientDeleted) {
+  const tomb = u.edeleted || {}, now = Date.now();
+  const byId = new Map(u.expenses.map((x) => [x.id, x]));
+  for (const id of clientDeleted) { byId.delete(id); tomb[id] = now; }
+  for (const raw of clientList) {
+    const c = cleanExpense(raw);
+    if (!c || tomb[c.id]) continue;
+    const x = byId.get(c.id);
+    if (!x || c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, c);
+  }
+  for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
+  u.edeleted = tomb; u.expenses = [...byId.values()].sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 1500);
+  return u;
+}
+const expensesIn = (u, from, to) => u.expenses.filter((x) => x.d >= from && x.d <= to);
+const expenseSum = (list) => list.reduce((n, x) => n + x.a, 0);
+const monthRange = (ym) => [`${ym}-01`, `${ym}-31`];
+const incomeIn = (u, from, to) => paymentsOf(u).filter((x) => x.d >= from && x.d <= to).reduce((n, x) => n + x.a, 0);
+const projectExpense = (u, pid) => expenseSum(u.expenses.filter((x) => x.pid === pid));
+// Oylik maqsad: { goal, got, pct, left, days, debt }
+function goalInfo(u, today) {
+  const goal = Number(u.goal) || 0;
+  if (goal <= 0) return null;
+  const [f, t] = monthRange(today.slice(0, 7)), got = incomeIn(u, f, t);
+  const [y, m] = today.split('-').map(Number), last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return { goal, got, pct: Math.min(100, Math.round((got / goal) * 100)), left: Math.max(0, goal - got), days: last - Number(today.slice(8, 10)), debt: activeDebt(u) };
+}
+
+// Maqsad qatori (ertalabki karta, haftalik xulosa, daromad): '' agar maqsad yoʻq
+function goalLine(u, today) {
+  const i = goalInfo(u, today);
+  if (!i) return '';
+  const P = Tof(u).p;
+  let t = P.goLine(i, money(i.got), money(i.goal), money(i.left));
+  if (i.left === 0) t += `\n${P.goDone}`;
+  else if (i.debt >= i.left) t += `\n${P.goHint(money(i.debt))}`;
+  return t;
+}
 /* ---------- xarita ---------- */
 function mapLinks(m) {
   if (m.lat !== null && m.lat !== undefined && m.lon !== null && m.lon !== undefined) {
@@ -409,5 +473,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, projectExpense, goalInfo, goalLine, cleanUrl, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

@@ -80,27 +80,30 @@ async function showIncome(ctx, u) {
     const kinds = Object.entries(cur.k).filter(([, v]) => v > 0);
     if (kinds.length) text += '\n' + kinds.map(([k, v]) => `   ${P.inKinds[k]}: ${S.money(v)}`).join('\n');
     text += `\n${P.inAvg(S.money(months.reduce((n, x) => n + x.total, 0) / 6))}`;
+    if (cur.exp) text += `\n${P.inExp(S.money(cur.exp))}\n${P.inNet(S.money(cur.total - cur.exp))}`;
   }
   const debt = S.activeDebt(u);
   if (debt) text += `\n${P.inDebt(S.money(debt))}`;
   if (S.subsMonthly(u)) text += `\n${P.inMonthly(S.money(S.subsMonthly(u)))}`;
+  const gl = S.goalLine(u, today);
+  if (gl) text += `\n\n${gl}`;
   text += `\n\n<i>${P.inNote}</i>`;
-  return show(ctx, text, { inline_keyboard: [[{ text: P.bExport, callback_data: 'ex:0' }], [{ text: P.bDebts, callback_data: 'pq:0' }, { text: P.backList, callback_data: 'pl:0' }]] });
+  return show(ctx, text, { inline_keyboard: [[{ text: P.bExport, callback_data: 'ex:0' }, { text: P.bExpenses, callback_data: 'xl:0' }, { text: '🎯', callback_data: 'gl:0' }], [{ text: P.bDebts, callback_data: 'pq:0' }, { text: P.backList, callback_data: 'pl:0' }]] });
 }
 
 /* ---------- CSV eksport (Excel) ---------- */
 const csvCell = (v) => { const s = String(v ?? ''); return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 const csv = (rows) => '\uFEFF' + rows.map((r) => r.map(csvCell).join(';')).join('\r\n');
-async function sendDoc(chat, name, content, caption) {
+async function sendDoc(chat, name, content, caption, mime = 'text/csv') {
   const fd = new FormData();
   fd.append('chat_id', String(chat)); if (caption) fd.append('caption', caption);
-  fd.append('document', new Blob([content], { type: 'text/csv' }), name);
+  fd.append('document', new Blob([content], { type: mime }), name);
   const r = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd });
   return r.json().catch(() => ({}));
 }
 async function exportCsv(chat, u) {
   const T = S.Tof(u), P = T.p;
-  if (!u.projects.length && !u.subs.length) return send(chat, P.exEmpty);
+  if (!u.projects.length && !u.subs.length && !u.expenses.length) return send(chat, P.exEmpty);
   const projects = [['Loyiha', 'Mijoz', 'Aloqa', 'Turi', 'Holat', 'Muddat', 'Narx', 'Toʻlandi', 'Qoldiq', 'Vazifalar']];
   for (const p of u.projects) projects.push([p.name, p.client, p.contact, T.p.types[p.type], T.p.status[p.status], p.date, p.price ?? '', p.paid ?? '', S.owed(p), `${p.tasks.filter((t) => t.done).length}/${p.tasks.length}`]);
   const pays = [['Sana', 'Summa', 'Manba', 'Mijoz', 'Tur']];
@@ -112,6 +115,7 @@ async function exportCsv(chat, u) {
   await sendDoc(chat, 'loyihalar.csv', csv(projects), P.exCaption);
   if (pays.length > 1) await sendDoc(chat, 'tolovlar.csv', csv(pays));
   if (subs.length > 1) await sendDoc(chat, 'oylik.csv', csv(subs));
+  if (u.expenses.length) await sendDoc(chat, 'xarajatlar.csv', csv([['Sana', 'Summa', 'Tur', 'Izoh', 'Loyiha'], ...u.expenses.map((x) => [x.d, x.a, P.exCats[x.cat].replace(/^\S+\s/, ''), x.note, (u.projects.find((p) => p.id === x.pid) || {}).name || ''])]));
 }
 
 /* ---------- yoʻnaltirgichlar ---------- */
@@ -170,4 +174,4 @@ async function remind(u, now) {
   return { dirty, sent };
 }
 
-module.exports = { onMessage, onCallback, remind, showSubs, showClients, showIncome, exportCsv, parseSub, ACTS: ['sl', 'sj', 'sa', 'sno', 'sp', 'sg', 'sx', 'sxy', 'cl', 'cj', 'in', 'ex'] };
+module.exports = { sendDoc, csv, onMessage, onCallback, remind, showSubs, showClients, showIncome, exportCsv, parseSub, ACTS: ['sl', 'sj', 'sa', 'sno', 'sp', 'sg', 'sx', 'sxy', 'cl', 'cj', 'in', 'ex'] };

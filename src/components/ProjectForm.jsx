@@ -17,6 +17,8 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
     price: initial?.price ?? '',
     paid: initial?.paid ?? '',
     notes: initial?.notes ?? '',
+    url: initial?.url ?? '',
+    domExp: initial?.domExp ?? '',
   }));
   const [errors, setErrors] = useState({});
   const set = (k) => (e) => {
@@ -31,7 +33,7 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     const num = (v) => (v === '' || v === null || !Number.isFinite(Number(v)) ? null : Math.max(0, Number(v)));
-    onSave({ name: f.name.trim(), type: f.type, client: f.client.trim(), contact: f.contact.trim(), date: f.date, time: f.time || '18:00', price: num(f.price), paid: num(f.paid), notes: f.notes.trim() });
+    onSave({ name: f.name.trim(), type: f.type, client: f.client.trim(), contact: f.contact.trim(), date: f.date, time: f.time || '18:00', price: num(f.price), paid: num(f.paid), notes: f.notes.trim(), url: f.url.trim(), domExp: f.domExp || '' });
   };
   const formId = `${uid}-form`;
 
@@ -99,6 +101,19 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
             <input id={`${uid}-pd`} className="input" type="number" inputMode="numeric" min="0" value={f.paid} onChange={set('paid')} placeholder="0" />
           </div>
         </div>
+
+        {f.type === 'site' && (
+          <div className="row2">
+            <div className="field">
+              <label htmlFor={`${uid}-u`}>{t('pfUrl')}</label>
+              <input id={`${uid}-u`} className="input" type="url" inputMode="url" autoCapitalize="none" value={f.url} onChange={set('url')} placeholder="kafenavo.uz" maxLength={200} />
+            </div>
+            <div className="field">
+              <label htmlFor={`${uid}-de`}>{t('pfDomExp')}</label>
+              <input id={`${uid}-de`} className="input" type="date" value={f.domExp} onChange={set('domExp')} />
+            </div>
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor={`${uid}-no`}>{t('pfNotes')}</label>

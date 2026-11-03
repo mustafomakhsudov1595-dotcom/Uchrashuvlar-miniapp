@@ -16,6 +16,9 @@
 - `functions/fin.js` — oylik toʻlovlar (`/obuna`, har oyning belgilangan kunida 09:00 dan eslatma, 2 kunda bir, ko'pi bilan 3 marta), mijozlar bazasi (`/mijozlar`, ism boʻyicha birlashadi), daromad (`/daromad`, 6 oy) va CSV eksport (`/eksport`).
 - `functions/voice.js` — ovozli xabar (Workers AI · Whisper), `functions/report.js` — mijozga hisobot sahifasi (`/r/<kalit>`).
 
+- `functions/ext.js` — xarajatlar va sof foyda (`/xarajat`, `/xarajatlar`), oylik maqsad (`/maqsad`), sayt kuzatuvi (`/saytlar`; har soatda tekshiradi, ochilmasa xabar beradi, domen muddati 30/7/1 kun oldin), zaxira (`/zaxira`; har dushanba 10:00 da avtomatik, JSON faylni botga yuborsangiz tiklaydi) va AI yordamchi (`/ai`, loyiha kartasidagi tugmalar; Workers AI, kuniga 30 ta).
+- Sayt tekshiruvi sekin boʻlishi mumkin, shuning uchun `remind.js` saqlashdan oldin foydalanuvchini qayta oʻqib birlashtiradi.
+
 ## Deploy
 
 ```bash
