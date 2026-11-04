@@ -38,12 +38,12 @@ export const PRODUCTS = [
   { id: 21, cat: 'soni', name: 'Soni AAA (kichik) · Premium', desc: 'Pult, o‘yinchoq, soat, fonar va boshqalar uchun. Barqaror va uzoq muddatli energiya.', size: '60 dona', price: 42000, img: 'soni-aaa.jpg', hidden: true },
   { id: 22, cat: 'soni', name: 'Soni AA (katta) · Oddiy', desc: 'Katta qadoq — ko‘proq son. Arzon variant.', size: '60 dona', price: 26000, img: 'soni-aa.jpg', hidden: true },
 
-  { id: 30, cat: 'lamp', name: 'Veral LED lampochka 5 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '5 W', price: 5000 },
-  { id: 31, cat: 'lamp', name: 'Veral LED lampochka 7 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '7 W', price: 6000 },
-  { id: 32, cat: 'lamp', name: 'Veral LED lampochka 10 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '10 W', price: 7000 },
-  { id: 33, cat: 'lamp', name: 'Veral LED lampochka 12 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '12 W', price: 7500 },
-  { id: 34, cat: 'lamp', name: 'Veral LED lampochka 15 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '15 W', price: 9000 },
-  { id: 35, cat: 'lamp', name: 'Veral LED lampochka 18 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '18 W', price: 12500 },
+  { id: 30, cat: 'lamp', name: 'Veral LED lampochka 5 W', desc: 'Veral electric LED lampochka: elektrni tejaydi, 30 000 soat xizmat qiladi, 2 yil kafolat.', size: '5 W', price: 5000, img: 'veral-5w.jpg' },
+  { id: 31, cat: 'lamp', name: 'Veral LED lampochka 7 W', desc: 'Veral electric LED lampochka: elektrni tejaydi, 30 000 soat xizmat qiladi, 2 yil kafolat.', size: '7 W', price: 6000, img: 'veral-7w.jpg' },
+  { id: 32, cat: 'lamp', name: 'Veral LED lampochka 10 W', desc: 'Veral electric LED lampochka: elektrni tejaydi, 30 000 soat xizmat qiladi, 2 yil kafolat.', size: '10 W', price: 7000, img: 'veral-10w.jpg' },
+  { id: 33, cat: 'lamp', name: 'Veral LED lampochka 12 W', desc: 'Veral electric LED lampochka: elektrni tejaydi, 30 000 soat xizmat qiladi, 2 yil kafolat.', size: '12 W', price: 7500, img: 'veral-12w.jpg' },
+  { id: 34, cat: 'lamp', name: 'Veral LED lampochka 15 W', desc: 'Veral electric LED lampochka: elektrni tejaydi, 30 000 soat xizmat qiladi, 2 yil kafolat.', size: '15 W', price: 9000, img: 'veral-15w.jpg' },
+  { id: 35, cat: 'lamp', name: 'Veral LED lampochka 18 W', desc: 'Veral electric LED lampochka: elektrni tejaydi, 30 000 soat xizmat qiladi, 2 yil kafolat.', size: '18 W', price: 12500, img: 'veral-18w.jpg' },
 
   { id: 18, cat: 'glue', name: 'G2 sichqonlar uchun yelimli tuzoq', desc: 'Zaharlarsiz, hidsiz, foydalanishga qulay. Uy va ombor uchun.', size: '1 dona', price: 7000, img: 'g2-glue.jpg' },
   { id: 19, cat: 'glue', name: 'Chilling Bet universal yelim', desc: 'Aniq surtish uchun ingichka uchli yelim. Tez va qulay.', size: '4 dona', price: 14000, img: 'chilling-glue.jpg', isNew: true },
