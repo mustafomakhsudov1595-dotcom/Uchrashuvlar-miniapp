@@ -17,7 +17,7 @@ export async function onRequestPost({ request, env }) {
   for (const it of b.items) {
     const p = PRODUCTS.find((x) => x.id === Number(it.id));
     const q = Math.floor(Number(it.q));
-    if (!p || !(q > 0) || q > 999 || ov[p.id]?.hidden) continue;
+    if (!p || !(q > 0) || q > 999 || (ov[p.id]?.hidden ?? p.hidden)) continue;
     items.push({ id: p.id, name: p.name, size: p.size, price: ov[p.id]?.price ?? p.price, q });
   }
   if (!items.length) return json({ error: 'bad' }, 400);

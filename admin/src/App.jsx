@@ -25,7 +25,7 @@ export default function App() {
     setOrders(d.orders);
     setRows(Object.fromEntries(PRODUCTS.map((p) => {
       const o = d.overrides[p.id] || {};
-      return [p.id, { price: o.price ?? p.price, oldPrice: o.oldPrice || p.oldPrice || '', hidden: !!o.hidden }];
+      return [p.id, { price: o.price ?? p.price, oldPrice: o.oldPrice || p.oldPrice || '', hidden: o.hidden ?? !!p.hidden }];
     })));
   }, [api]);
 

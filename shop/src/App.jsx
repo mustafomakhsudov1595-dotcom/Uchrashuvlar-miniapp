@@ -166,7 +166,7 @@ function Checkout({ items, total, onChange, onClose, onDone }) {
 export default function App() {
   const [overrides, setOverrides] = useState({});
   useEffect(() => { fetch('/api/products').then((r) => r.json()).then(setOverrides).catch(() => {}); }, []);
-  const products = useMemo(() => PRODUCTS.filter((p) => !overrides[p.id]?.hidden).map((p) => {
+  const products = useMemo(() => PRODUCTS.filter((p) => !(overrides[p.id]?.hidden ?? p.hidden)).map((p) => {
     const o = overrides[p.id]; return o ? { ...p, price: o.price, oldPrice: o.oldPrice || undefined } : p; }), [overrides]);
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
