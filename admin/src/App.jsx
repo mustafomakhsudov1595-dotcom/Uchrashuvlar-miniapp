@@ -1,8 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PRODUCTS } from '../../shop/src/products.js';
-import { IBox, ICheck, IClose, ILock, IOut, IPhone, IPin, IRefresh, ISearch, ITag } from '../../shop/src/Icons.jsx';
+import { CATEGORIES, PRODUCTS } from '../../shop/src/products.js';
+import { buildCatalog } from '../../shop/src/lib/pricing.js';
+import { IBox, ICamera, ICheck, IClose, IEdit, ILock, IOut, IPercent, IPhone, IPin, IPlus, IRefresh, ISearch, ITag, ITrash } from '../../shop/src/Icons.jsx';
 
-const SHOP = 'https://chilling-shop.pages.dev/img/';
+const ORIGIN = 'https://chilling-shop.pages.dev';
+const imgUrl = (f) => (f.startsWith('data:') ? f : f.startsWith('/') ? ORIGIN + f : `${ORIGIN}/img/${f}`);
+const EMPTY = { id: 0, name: '', cat: 'other', size: '', price: '', oldPrice: '', desc: '', hit: false, isNew: false, hidden: false, img: '' };
+
+// rasmni brauzerda kichraytirish (max 900px, JPEG)
+const shrink = (file) => new Promise((res, rej) => {
+  const fr = new FileReader();
+  fr.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, 900 / Math.max(im.width, im.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+      res(c.toDataURL('image/jpeg', 0.82));
+    };
+    im.onerror = rej; im.src = fr.result;
+  };
+  fr.onerror = rej; fr.readAsDataURL(file);
+});
 const fmt = (n) => Number(n).toLocaleString('ru-RU').replace(/ /g, ' ') + " so'm";
 const ST = { new: ['Yangi', 'amber'], done: ['Bajarildi', 'green'], cancel: ['Bekor', 'red'] };
 const FILTERS = [['new', 'Yangi'], ['done', 'Bajarilgan'], ['cancel', 'Bekor'], ['all', 'Hammasi']];
@@ -16,6 +36,11 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [base, setBase] = useState({});
   const [rows, setRows] = useState({});
+  const [raw, setRaw] = useState({ overrides: {}, custom: [], sales: [], promos: [] });
+  const [sales, setSales] = useState([]);
+  const [promos, setPromos] = useState([]);
+  const [edit, setEdit] = useState(null);
+  const [toast, setToast] = useState('');
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState('new');
   const [q, setQ] = useState('');
@@ -28,13 +53,12 @@ export default function App() {
 
   const load = useCallback(async () => {
     const d = await api({ action: 'get' });
-    setOrders(d.orders);
-    const r = Object.fromEntries(PRODUCTS.map((p) => {
-      const o = d.overrides[p.id] || {};
-      return [p.id, { price: String(o.price ?? p.price), oldPrice: String(o.oldPrice || p.oldPrice || ''), hidden: o.hidden ?? !!p.hidden }];
-    }));
+    setOrders(d.orders); setRaw(d); setSales(d.sales); setPromos(d.promos);
+    const cat = buildCatalog(PRODUCTS, d.overrides, d.custom, []);
+    const r = Object.fromEntries(cat.map((p) => [p.id, { price: String(p.price), oldPrice: String(p.oldPrice || ''), hidden: !!p.hidden }]));
     setRows(r); setBase(r);
   }, [api]);
+  const flash = (t) => { setToast(t); setTimeout(() => setToast(''), 2200); };
 
   const login = async () => {
     setErr(''); setBusy(true);
@@ -50,11 +74,18 @@ export default function App() {
   }, [authed, api]);
 
   const setStatus = async (id, status) => { await api({ action: 'status', id, status }); const d = await api({ action: 'get' }); setOrders(d.orders); };
-  const changed = useMemo(() => PRODUCTS.filter((p) => rows[p.id] && JSON.stringify(rows[p.id]) !== JSON.stringify(base[p.id])).length, [rows, base]);
+  const catalog = useMemo(() => buildCatalog(PRODUCTS, raw.overrides, raw.custom, []), [raw]);
+  const changed = useMemo(() => catalog.filter((p) => rows[p.id] && JSON.stringify(rows[p.id]) !== JSON.stringify(base[p.id])).length, [catalog, rows, base]);
   const savePrices = async () => {
     setMsg('Saqlanmoqda...');
-    try { await api({ action: 'prices', overrides: rows }); setBase(rows); setMsg('Saqlandi ✓'); setTimeout(() => setMsg(''), 2200); } catch (e) { setMsg(e.message); }
+    try { await api({ action: 'prices', overrides: rows }); await load(); setMsg('Saqlandi ✓'); setTimeout(() => setMsg(''), 2200); } catch (e) { setMsg(e.message); }
   };
+  const saveProduct = async (p, image) => {
+    await api({ action: 'product_save', product: p, image }); await load(); setEdit(null); flash(p.id ? 'Saqlandi ✓' : "Mahsulot qo'shildi ✓");
+  };
+  const delProduct = async (id) => { await api({ action: 'product_delete', id }); await load(); setEdit(null); flash("O'chirildi"); };
+  const saveSales = async () => { try { await api({ action: 'sales_save', sales }); await load(); flash('Skidkalar saqlandi ✓'); } catch (e) { flash(e.message); } };
+  const savePromos = async () => { try { await api({ action: 'promos_save', promos }); await load(); flash('Promokodlar saqlandi ✓'); } catch (e) { flash(e.message); } };
   const setRow = (id, k, v) => setRows((r) => ({ ...r, [id]: { ...r[id], [k]: v } }));
 
   if (!authed) return (
@@ -75,7 +106,7 @@ export default function App() {
   const newCount = orders.filter((o) => st(o) === 'new').length;
   const revenue = orders.filter((o) => st(o) !== 'cancel').reduce((s, o) => s + o.total, 0);
   const shown = orders.filter((o) => filter === 'all' || st(o) === filter);
-  const plist = PRODUCTS.filter((p) => p.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const plist = catalog.filter((p) => p.name.toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
     <div className="app">
@@ -119,6 +150,7 @@ export default function App() {
                     <div className="it" key={i.id}><span>{i.name} <em>{i.size}</em></span><span>{i.q} × {fmt(i.price)}</span></div>
                   ))}
                 </div>
+                {o.discount > 0 && <div className="odisc"><span>🎟 Promokod {o.promo}</span><b>−{fmt(o.discount)}</b></div>}
                 <div className="otot"><span>Jami</span><b>{fmt(o.total)}</b></div>
                 <div className="oact">
                   {st(o) !== 'done' && <button className="btn ok" onClick={() => setStatus(o.id, 'done')}><ICheck size={17} /> Bajarildi</button>}
@@ -129,16 +161,18 @@ export default function App() {
             );
           })}
         </>
-      ) : (
+      ) : tab === 'products' ? (
         <>
-          <div className="ptitle"><h2>Narxlar</h2><p>Narx, eski narx (chegirma) va mahsulotni yashirish</p></div>
+          <div className="ptitle"><h2>Mahsulotlar</h2><p>Narxni shu yerning o'zida o'zgartiring yoki ✎ bilan to'liq tahrirlang</p></div>
+          <button className="btn addp" onClick={() => setEdit({ ...EMPTY })}><IPlus size={19} /> Mahsulot qo'shish</button>
           <div className="searchbox"><ISearch size={19} /><input placeholder="Mahsulot qidirish..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="plist">
             {plist.map((p) => rows[p.id] && (
               <div className={'prow' + (rows[p.id].hidden ? ' off' : '') + (JSON.stringify(rows[p.id]) !== JSON.stringify(base[p.id]) ? ' dirty' : '')} key={p.id}>
                 <div className="ptop">
-                  {p.img ? <img src={SHOP + p.img} alt="" loading="lazy" /> : <div className="ph">💡</div>}
-                  <div className="pn"><b>{p.name}</b><span>{p.size}</span></div>
+                  {p.img ? <img src={imgUrl(p.img)} alt="" loading="lazy" /> : <div className="ph">💡</div>}
+                  <div className="pn"><b>{p.name}</b><span>{p.size}{p.id >= 1000 ? ' · yangi qo\'shilgan' : ''}</span></div>
+                  <button className="editb" onClick={() => setEdit({ ...EMPTY, ...p, price: String(p.price), oldPrice: String(p.oldPrice || '') })} aria-label="Tahrirlash"><IEdit size={18} /></button>
                   <label className="sw"><input type="checkbox" checked={!rows[p.id].hidden} onChange={(e) => setRow(p.id, 'hidden', !e.target.checked)} /><i /></label>
                 </div>
                 <div className="pin">
@@ -155,12 +189,125 @@ export default function App() {
             </div>
           )}
         </>
+      ) : (
+        <>
+          <div className="ptitle"><h2>Aksiyalar</h2><p>Skidkalar va promokodlar</p></div>
+
+          <div className="sechead"><h3>🏷️ Skidkalar</h3>
+            <button className="mini" onClick={() => setSales([...sales, { id: Math.random().toString(36).slice(2, 9), name: '', percent: 10, scope: 'all', ends: '', active: true }])}><IPlus size={15} /> Qo'shish</button></div>
+          <p className="hint">Tanlangan bo'limdagi (yoki hamma) mahsulotlarga foizli chegirma. Eski narx avtomatik chiziladi.</p>
+          {sales.length === 0 && <div className="emptyst small">Skidka yo'q</div>}
+          {sales.map((s, i) => {
+            const set = (k, v) => setSales(sales.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
+            return (
+              <div className={'acard' + (s.active ? '' : ' off')} key={s.id}>
+                <div className="arow1">
+                  <input className="tinp" placeholder="Nomi (masalan: Yangi yil)" value={s.name} onChange={(e) => set('name', e.target.value)} />
+                  <label className="sw"><input type="checkbox" checked={s.active} onChange={(e) => set('active', e.target.checked)} /><i /></label>
+                </div>
+                <div className="agrid">
+                  <label>Foiz (%)<input type="number" inputMode="numeric" value={s.percent} onChange={(e) => set('percent', e.target.value)} /></label>
+                  <label>Qayerga<select value={s.scope} onChange={(e) => set('scope', e.target.value)}><option value="all">Hamma mahsulot</option>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></label>
+                  <label>Tugash sanasi<input type="date" value={s.ends} onChange={(e) => set('ends', e.target.value)} /></label>
+                </div>
+                <button className="del" onClick={() => setSales(sales.filter((_, j) => j !== i))}><ITrash size={16} /> O'chirish</button>
+              </div>
+            );
+          })}
+          <button className="btn" onClick={saveSales}>Skidkalarni saqlash</button>
+
+          <div className="sechead" style={{ marginTop: 28 }}><h3>🎟 Promokodlar</h3>
+            <button className="mini" onClick={() => setPromos([...promos, { code: '', type: 'percent', value: 10, min: 0, maxUses: 0, used: 0, ends: '', active: true }])}><IPlus size={15} /> Qo'shish</button></div>
+          <p className="hint">Mijoz savatda kodni kiritsa, chegirma beriladi. Limit 0 — cheksiz.</p>
+          {promos.length === 0 && <div className="emptyst small">Promokod yo'q</div>}
+          {promos.map((p, i) => {
+            const set = (k, v) => setPromos(promos.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
+            return (
+              <div className={'acard' + (p.active ? '' : ' off')} key={i}>
+                <div className="arow1">
+                  <input className="tinp code" placeholder="KOD" value={p.code} onChange={(e) => set('code', e.target.value.toUpperCase())} />
+                  <label className="sw"><input type="checkbox" checked={p.active} onChange={(e) => set('active', e.target.checked)} /><i /></label>
+                </div>
+                <div className="agrid">
+                  <label>Turi<select value={p.type} onChange={(e) => set('type', e.target.value)}><option value="percent">Foiz (%)</option><option value="fixed">Summa (so'm)</option></select></label>
+                  <label>{p.type === 'percent' ? 'Foiz' : "Summa (so'm)"}<input type="number" inputMode="numeric" value={p.value} onChange={(e) => set('value', e.target.value)} /></label>
+                  <label>Minimal buyurtma<input type="number" inputMode="numeric" value={p.min} onChange={(e) => set('min', e.target.value)} /></label>
+                  <label>Limit (marta)<input type="number" inputMode="numeric" value={p.maxUses} onChange={(e) => set('maxUses', e.target.value)} /></label>
+                  <label>Tugash sanasi<input type="date" value={p.ends} onChange={(e) => set('ends', e.target.value)} /></label>
+                  <label>Ishlatilgan<div className="used">{p.used || 0} marta</div></label>
+                </div>
+                <button className="del" onClick={() => setPromos(promos.filter((_, j) => j !== i))}><ITrash size={16} /> O'chirish</button>
+              </div>
+            );
+          })}
+          <button className="btn" onClick={savePromos}>Promokodlarni saqlash</button>
+        </>
       )}
 
+      {toast && <div className="toast">{toast}</div>}
+      {edit && <Editor p={edit} onClose={() => setEdit(null)} onSave={saveProduct} onDelete={delProduct} />}
+
       <nav className="tabbar">
-        <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}><span className="ti"><IBox size={22} />{newCount > 0 && <i>{newCount}</i>}</span><span className="tl">Buyurtmalar</span></button>
-        <button className={tab === 'prices' ? 'on' : ''} onClick={() => setTab('prices')}><span className="ti"><ITag size={22} /></span><span className="tl">Narxlar</span></button>
+        <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}><span className="ti"><IBox size={22} />{newCount > 0 && <i>{newCount}</i>}</span><span className="tl">Buyurtma</span></button>
+        <button className={tab === 'products' ? 'on' : ''} onClick={() => setTab('products')}><span className="ti"><ITag size={22} /></span><span className="tl">Mahsulot</span></button>
+        <button className={tab === 'promo' ? 'on' : ''} onClick={() => setTab('promo')}><span className="ti"><IPercent size={22} /></span><span className="tl">Aksiya</span></button>
       </nav>
+    </div>
+  );
+}
+
+/* ---------- Mahsulot tahrirlash oynasi ---------- */
+function Editor({ p, onClose, onSave, onDelete }) {
+  const [f, setF] = useState(p);
+  const [image, setImage] = useState(null); // yangi rasm (dataURL)
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
+  const isNew = !f.id;
+  const pick = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    try { setImage(await shrink(file)); } catch { setErr("Rasmni o'qib bo'lmadi"); }
+  };
+  const save = async () => {
+    setErr('');
+    if (!f.name.trim() || !(Number(f.price) > 0)) { setErr('Nom va narxni kiriting'); return; }
+    setBusy(true);
+    try { await onSave({ ...f, id: f.id || 0 }, image); } catch (e) { setErr(e.message); setBusy(false); }
+  };
+  const preview = image || (f.img ? imgUrl(f.img) : '');
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="grab" />
+        <div className="shead"><h3>{isNew ? "Yangi mahsulot" : 'Tahrirlash'}</h3><button className="xb" onClick={onClose}><IClose size={18} /></button></div>
+        <div className="sbody">
+          <label className="upl">
+            {preview ? <img src={preview} alt="" /> : <div className="upl-ph"><ICamera size={34} /><span>Rasm yuklash</span></div>}
+            <input type="file" accept="image/*" onChange={pick} hidden />
+            {preview && <em>Almashtirish</em>}
+          </label>
+          <label>Nomi<input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Masalan: Persil 3 kg" /></label>
+          <div className="two">
+            <label>Kategoriya<select value={f.cat} onChange={(e) => set('cat', e.target.value)}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></label>
+            <label>Hajmi / soni<input value={f.size} onChange={(e) => set('size', e.target.value)} placeholder="3 kg, 60 dona..." /></label>
+          </div>
+          <div className="two">
+            <label>Narx (so'm)<input type="number" inputMode="numeric" value={f.price} onChange={(e) => set('price', e.target.value)} /></label>
+            <label>Eski narx<input type="number" inputMode="numeric" value={f.oldPrice} onChange={(e) => set('oldPrice', e.target.value)} placeholder="—" /></label>
+          </div>
+          <label>Tavsif<textarea rows="3" value={f.desc} onChange={(e) => set('desc', e.target.value)} placeholder="Mahsulot haqida qisqacha..." /></label>
+          <div className="chips">
+            <label className={'chip' + (f.hit ? ' on' : '')}><input type="checkbox" checked={f.hit} onChange={(e) => set('hit', e.target.checked)} hidden />🔥 Hit</label>
+            <label className={'chip' + (f.isNew ? ' on' : '')}><input type="checkbox" checked={f.isNew} onChange={(e) => set('isNew', e.target.checked)} hidden />✨ Yangi</label>
+            <label className={'chip' + (!f.hidden ? ' on' : '')}><input type="checkbox" checked={!f.hidden} onChange={(e) => set('hidden', !e.target.checked)} hidden />👁 Ko'rinadi</label>
+          </div>
+          {err && <div className="err">{err}</div>}
+        </div>
+        <div className="sbar">
+          {!isNew && f.id >= 1000 && <button className="btn ghost" onClick={() => confirm("Mahsulot o'chirilsinmi?") && onDelete(f.id)}><ITrash size={17} /></button>}
+          <button className="btn" onClick={save} disabled={busy}>{busy ? 'Saqlanmoqda...' : 'Saqlash'}</button>
+        </div>
+      </div>
     </div>
   );
 }

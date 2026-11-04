@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, PRODUCTS } from './products.js';
 import { CURRENCY, INFO, SHOP_NAME } from './config.js';
+import { buildCatalog } from './lib/pricing.js';
 import { IBack, IBox, ICart, IChev, ICheck, IClose, IGrid, IHome, IInfo, IMinus, IPlus, ISearch } from './Icons.jsx';
 
 const tg = window.Telegram?.WebApp;
 const fmt = (n) => Number(n).toLocaleString('ru-RU').replace(/ /g, ' ') + ' ' + CURRENCY;
 const haptic = (t = 'light') => { try { tg?.HapticFeedback?.impactOccurred(t); } catch {} };
-const img = (f) => `./img/${f}`;
+const img = (f) => (f.startsWith('/') || f.startsWith('http') ? f : `./img/${f}`);
 const ls = {
   get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
   set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
@@ -205,6 +206,21 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
   const [done, setDone] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [code, setCode] = useState('');
+  const [promo, setPromo] = useState(null); // {code, discount, label}
+  const [perr, setPerr] = useState('');
+  const cartKey = items.map((i) => i.id + ':' + i.q + ':' + i.price).join(',');
+  const applyPromo = async (c = code) => {
+    setPerr('');
+    if (!c.trim()) return;
+    try {
+      const r = await (await fetch('/api/promo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: c, items: items.map((i) => ({ id: i.id, q: i.q })) }) })).json();
+      if (r.ok) { setPromo(r); haptic('medium'); } else { setPromo(null); setPerr(r.error || 'Xato'); }
+    } catch { setPerr('Tekshirib bo‘lmadi'); }
+  };
+  useEffect(() => { if (promo) applyPromo(promo.code); /* savat o'zgarsa qayta hisoblaymiz */ }, [cartKey]); // eslint-disable-line
+  const discount = promo?.discount || 0;
+  const payable = Math.max(0, total - discount);
   const [f, setF] = useState(() => {
     const u = tg?.initDataUnsafe?.user;
     return { name: saved.name || [u?.first_name, u?.last_name].filter(Boolean).join(' '), phone: saved.phone || '', address: saved.address || '', note: '' };
@@ -217,7 +233,7 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
       const r = await fetch('/api/order', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-init-data': tg?.initData || '' },
-        body: JSON.stringify({ ...f, items: items.map((i) => ({ id: i.id, q: i.q })) }),
+        body: JSON.stringify({ ...f, items: items.map((i) => ({ id: i.id, q: i.q })), promo: promo?.code || '' }),
       });
       if (!r.ok) throw new Error();
       const d = await r.json();
@@ -262,7 +278,17 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
               <b className="csum">{fmt(i.price * i.q)}</b>
             </div>
           ))}
-          <div className="total"><span>Jami:</span><b>{fmt(total)}</b></div>
+          <div className="promo">
+            <div className="pfield"><input placeholder="Promokod" value={code} onChange={(e) => { setCode(e.target.value.toUpperCase()); setPerr(''); }} disabled={!!promo} />
+              {promo ? <button onClick={() => { setPromo(null); setCode(''); }}>Bekor</button> : <button onClick={() => applyPromo()}>Qo‘llash</button>}</div>
+            {perr && <div className="perr">{perr}</div>}
+            {promo && <div className="pok">🎟 {promo.code} qo‘llandi: {promo.label}</div>}
+          </div>
+          <div className="sumrows">
+            <div><span>Mahsulotlar</span><b>{fmt(total)}</b></div>
+            {discount > 0 && <div className="disc"><span>Promokod chegirmasi</span><b>−{fmt(discount)}</b></div>}
+          </div>
+          <div className="total"><span>To‘lash uchun:</span><b>{fmt(payable)}</b></div>
           <button className="add big wide" onClick={() => setStep('form')}>Rasmiylashtirish</button>
         </>
       ) : (
@@ -271,7 +297,11 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
           <label>Telefon<input type="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="+998 90 123 45 67" /></label>
           <label>Manzil<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} placeholder="Shahar, ko'cha, uy" /></label>
           <label>Izoh (ixtiyoriy)<input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
-          <div className="total"><span>Jami:</span><b>{fmt(total)}</b></div>
+          <div className="sumrows">
+            <div><span>Mahsulotlar</span><b>{fmt(total)}</b></div>
+            {discount > 0 && <div className="disc"><span>Promokod {promo.code}</span><b>−{fmt(discount)}</b></div>}
+          </div>
+          <div className="total"><span>To‘lash uchun:</span><b>{fmt(payable)}</b></div>
           <button className="add big wide" disabled={!ok || busy} onClick={submit}>{busy ? 'Yuborilmoqda...' : 'Buyurtma berish'}</button>
           {err && <p className="desc" style={{ color: '#ef4444', textAlign: 'center' }}>{err}</p>}
           <button className="link" onClick={() => setStep('cart')}>← Savatga qaytish</button>
@@ -307,6 +337,7 @@ function Orders() {
             <div className="ohead"><b>#{o.num}</b><span className={'tag ' + color}>{label}</span>
               <span className="size">{new Date(o.ts).toLocaleDateString('ru-RU')}</span></div>
             <ul>{o.items.map((i) => <li key={i.id}>{i.name} × {i.q}</li>)}</ul>
+            {o.discount > 0 && <div className="size">Promokod {o.promo}: −{fmt(o.discount)}</div>}
             <div className="otot">Jami: <b>{fmt(o.total)}</b></div>
           </div>
         );
@@ -342,12 +373,10 @@ export default function App() {
   const [cat, setCat] = useState('all');
   const [open, setOpen] = useState(null);
   const [cart, change, clear] = useCart();
-  const [overrides, setOverrides] = useState({});
-  useEffect(() => { fetch('/api/products').then((r) => r.json()).then(setOverrides).catch(() => {}); }, []);
+  const [data, setData] = useState({ overrides: {}, custom: [], sales: [] });
+  useEffect(() => { fetch('/api/products').then((r) => r.json()).then(setData).catch(() => {}); }, []);
 
-  const products = useMemo(() => PRODUCTS.filter((p) => !(overrides[p.id]?.hidden ?? p.hidden)).map((p) => {
-    const o = overrides[p.id]; return o ? { ...p, price: o.price, oldPrice: o.oldPrice || undefined } : p;
-  }), [overrides]);
+  const products = useMemo(() => buildCatalog(PRODUCTS, data.overrides, data.custom, data.sales).filter((p) => !p.hidden), [data]);
   const items = products.filter((p) => cart[p.id]).map((p) => ({ ...p, q: cart[p.id] }));
   const count = items.reduce((s, i) => s + i.q, 0);
   const total = items.reduce((s, i) => s + i.q * i.price, 0);

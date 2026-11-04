@@ -1,6 +1,7 @@
 // Buyurtma qabul qilish: narxlar serverda qayta hisoblanadi, KV'ga yoziladi, adminlarga Telegram xabari boradi.
 import { PRODUCTS } from '../../src/products.js';
 import { verifyInitData } from '../../src/lib/tgauth.js';
+import { buildCatalog, promoCheck } from '../../src/lib/pricing.js';
 const ADMIN_URL = 'https://chilling-admin.pages.dev/';
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json' } });
 const esc = (t) => String(t).replace(/[<>&]/g, '');
@@ -14,27 +15,37 @@ export async function onRequestPost({ request, env }) {
   if (!name || phone.replace(/\D/g, '').length < 9 || !address) return json({ error: 'bad' }, 400);
 
   const user = await verifyInitData(request.headers.get('x-init-data'), env.BOT_TOKEN);
-  const ov = JSON.parse((await env.KV.get('overrides')) || '{}');
+  const [ov, cu, sa, promos] = await Promise.all(['overrides', 'custom', 'sales', 'promos'].map((k) => env.KV.get(k, 'json')));
+  const catalog = buildCatalog(PRODUCTS, ov || {}, cu || [], sa || []);
   const items = [];
   for (const it of b.items) {
-    const p = PRODUCTS.find((x) => x.id === Number(it.id));
+    const p = catalog.find((x) => x.id === Number(it.id));
     const q = Math.floor(Number(it.q));
-    if (!p || !(q > 0) || q > 999 || (ov[p.id]?.hidden ?? p.hidden)) continue;
-    items.push({ id: p.id, name: p.name, size: p.size, price: ov[p.id]?.price ?? p.price, q });
+    if (!p || p.hidden || !(q > 0) || q > 999) continue;
+    items.push({ id: p.id, name: p.name, size: p.size, price: p.price, q });
   }
   if (!items.length) return json({ error: 'bad' }, 400);
-  const total = items.reduce((s, i) => s + i.price * i.q, 0);
+  const subtotal = items.reduce((s, i) => s + i.price * i.q, 0);
+  let discount = 0, promoCode = '';
+  if (b.promo) {
+    const r = promoCheck(promos || [], b.promo, subtotal);
+    if (r.ok) {
+      discount = r.discount; promoCode = r.code;
+      await env.KV.put('promos', JSON.stringify((promos || []).map((x) => (x.code === r.code ? { ...x, used: (x.used || 0) + 1 } : x))));
+    }
+  }
+  const total = subtotal - discount;
 
   const num = (Number(await env.KV.get('order_counter')) || 0) + 1;
   await env.KV.put('order_counter', String(num));
   const ts = Date.now();
   const id = `order:${String(9e12 - ts).padStart(13, '0')}-${num}`;
-  await env.KV.put(id, JSON.stringify({ id, num, ts, name, phone, address, note, items, total, status: 'new', tg: user?.id || null }));
+  await env.KV.put(id, JSON.stringify({ id, num, ts, name, phone, address, note, items, subtotal, discount, promo: promoCode, total, status: 'new', tg: user?.id || null }));
   if (user?.id) await env.KV.put(`u:${user.id}:${id}`, id);
 
   const text = `🛒 <b>Yangi buyurtma #${num}</b>\n\n` +
     items.map((i, n) => `${n + 1}. ${esc(i.name)} (${esc(i.size)}) × ${i.q} = ${fmt(i.price * i.q)}`).join('\n') +
-    `\n\n💰 <b>Jami: ${fmt(total)}</b>\n\n👤 ${esc(name)}\n📞 ${esc(phone)}\n📍 ${esc(address)}` + (note ? `\n💬 ${esc(note)}` : '');
+    (discount ? `\n\n🎟 Promokod ${esc(promoCode)}: −${fmt(discount)}` : '') + `\n\n💰 <b>Jami: ${fmt(total)}</b>\n\n👤 ${esc(name)}\n📞 ${esc(phone)}\n📍 ${esc(address)}` + (note ? `\n💬 ${esc(note)}` : '');
   const admins = JSON.parse((await env.KV.get('admins')) || '[]');
   await Promise.all(admins.map((chat_id) => fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
     method: 'POST', headers: { 'content-type': 'application/json' },

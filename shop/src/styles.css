@@ -150,3 +150,13 @@ label input:focus{border-color:var(--p1)}
 .infocard h3{margin:0 0 6px;font-size:16px;font-weight:800}.infocard p{margin:0;color:var(--muted);line-height:1.55;font-size:14.5px;font-weight:500}
 .infocard.hero-info{background:var(--grad);color:#fff}.infocard.hero-info h3{font-size:21px}.infocard.hero-info p{color:#ffffffe6}
 .irow{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px;font-weight:600}.irow:last-child{border:0}.irow a{color:var(--p1);font-weight:800}
+
+.promo{margin:14px 0 0}
+.pfield{display:flex;gap:8px;background:var(--surface);border-radius:16px;padding:6px;box-shadow:var(--shadow)}
+.pfield input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--text);font-size:15px;font-weight:800;letter-spacing:1px;padding:0 10px;text-transform:uppercase}
+.pfield input::placeholder{letter-spacing:0;font-weight:600;color:var(--muted);text-transform:none}
+.pfield button{background:var(--grad);color:#fff;font-weight:800;border-radius:12px;padding:11px 16px;font-size:13.5px}
+.perr{color:var(--sale);font-weight:700;font-size:13px;margin:7px 4px 0}.pok{color:var(--green);font-weight:800;font-size:13.5px;margin:7px 4px 0}
+.sumrows{margin:14px 4px 0;display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:var(--muted)}
+.sumrows div{display:flex;justify-content:space-between}.sumrows b{color:var(--text)}.sumrows .disc b,.sumrows .disc span{color:var(--green)}
+.total{margin-top:10px}

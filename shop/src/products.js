@@ -12,6 +12,7 @@ export const CATEGORIES = [
   { id: 'lamp', name: 'Lampochkalar', icon: '💡', c1: '#fde047', c2: '#f97316' },
   { id: 'glue', name: 'Tuzoq va yelim', icon: '🪤', c1: '#fb7185', c2: '#be123c' },
   { id: 'razor', name: 'Ustara', icon: '🪒', c1: '#94a3b8', c2: '#334155' },
+  { id: 'other', name: 'Boshqa', icon: '📦', c1: '#a78bfa', c2: '#6d28d9' },
 ];
 
 export const PRODUCTS = [
