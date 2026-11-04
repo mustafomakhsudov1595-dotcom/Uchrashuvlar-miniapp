@@ -1,5 +1,6 @@
 // Buyurtma qabul qilish: narxlar serverda qayta hisoblanadi, KV'ga yoziladi, adminlarga Telegram xabari boradi.
 import { PRODUCTS } from '../../src/products.js';
+import { verifyInitData } from '../../src/lib/tgauth.js';
 const ADMIN_URL = 'https://chilling-admin.pages.dev/';
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json' } });
 const esc = (t) => String(t).replace(/[<>&]/g, '');
@@ -12,6 +13,7 @@ export async function onRequestPost({ request, env }) {
   const address = String(b.address || '').trim().slice(0, 200), note = String(b.note || '').trim().slice(0, 300);
   if (!name || phone.replace(/\D/g, '').length < 9 || !address) return json({ error: 'bad' }, 400);
 
+  const user = await verifyInitData(request.headers.get('x-init-data'), env.BOT_TOKEN);
   const ov = JSON.parse((await env.KV.get('overrides')) || '{}');
   const items = [];
   for (const it of b.items) {
@@ -27,7 +29,8 @@ export async function onRequestPost({ request, env }) {
   await env.KV.put('order_counter', String(num));
   const ts = Date.now();
   const id = `order:${String(9e12 - ts).padStart(13, '0')}-${num}`;
-  await env.KV.put(id, JSON.stringify({ id, num, ts, name, phone, address, note, items, total, status: 'new', tg: Number(b.tg) || null }));
+  await env.KV.put(id, JSON.stringify({ id, num, ts, name, phone, address, note, items, total, status: 'new', tg: user?.id || null }));
+  if (user?.id) await env.KV.put(`u:${user.id}:${id}`, id);
 
   const text = `🛒 <b>Yangi buyurtma #${num}</b>\n\n` +
     items.map((i, n) => `${n + 1}. ${esc(i.name)} (${esc(i.size)}) × ${i.q} = ${fmt(i.price * i.q)}`).join('\n') +
