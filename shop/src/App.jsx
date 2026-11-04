@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, PRODUCTS } from './products.js';
+import Admin from './Admin.jsx';
 import { CURRENCY, MANAGER_USERNAME, SHOP_NAME } from './config.js';
 
 const tg = window.Telegram?.WebApp;
@@ -169,18 +170,25 @@ function Checkout({ items, total, onChange, onClose, onDone }) {
 }
 
 export default function App() {
+  const [overrides, setOverrides] = useState({});
+  useEffect(() => { fetch('/api/products').then((r) => r.json()).then(setOverrides).catch(() => {}); }, []);
+  const isAdmin = location.pathname.replace(/\/$/, '').endsWith('/admin') || location.hash === '#admin';
+  const products = useMemo(() => PRODUCTS.filter((p) => !overrides[p.id]?.hidden).map((p) => {
+    const o = overrides[p.id]; return o ? { ...p, price: o.price, oldPrice: o.oldPrice || undefined } : p; }), [overrides]);
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(null);
   const [showCart, setShowCart] = useState(false);
   const [cart, change, clear] = useCart();
 
-  const list = useMemo(() => PRODUCTS.filter((p) =>
-    (cat === 'all' || p.cat === cat) && p.name.toLowerCase().includes(query.trim().toLowerCase())), [cat, query]);
+  const list = useMemo(() => products.filter((p) =>
+    (cat === 'all' || p.cat === cat) && p.name.toLowerCase().includes(query.trim().toLowerCase())), [cat, query, products]);
 
-  const items = PRODUCTS.filter((p) => cart[p.id]).map((p) => ({ ...p, q: cart[p.id] }));
+  const items = products.filter((p) => cart[p.id]).map((p) => ({ ...p, q: cart[p.id] }));
   const count = items.reduce((s, i) => s + i.q, 0);
   const total = items.reduce((s, i) => s + i.q * i.price, 0);
+
+  if (isAdmin) return <Admin overrides={overrides} onSaved={setOverrides} />;
 
   return (
     <div className="app">

@@ -14,3 +14,7 @@ npm run build    # dist/ papkasi
 
 Telegramga ulash: `dist` ni https manzilga joylang (GitHub Pages: repo Settings → Pages → Source: GitHub Actions),
 so'ng @BotFather → `/newapp` yoki Bot Settings → Menu Button → shu https havola.
+
+## Cloudflare Pages (hozirgi joylashuv)
+Sayt: https://chilling-shop.pages.dev — admin panel: `/admin` (parol Cloudflare'dagi `ADMIN_PASSWORD` secret'ida, kodda yo'q).
+Narxlar `functions/api/*` orqali Cloudflare KV'da saqlanadi (`KV` binding). Deploy: `npx wrangler pages deploy dist --project-name chilling-shop`.
