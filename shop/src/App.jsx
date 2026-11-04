@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, PRODUCTS } from './products.js';
 import { CURRENCY, INFO, SHOP_NAME } from './config.js';
+import { IBack, IBox, ICart, IChev, ICheck, IClose, IGrid, IHome, IInfo, IMinus, IPlus, ISearch } from './Icons.jsx';
 
 const tg = window.Telegram?.WebApp;
 const fmt = (n) => Number(n).toLocaleString('ru-RU').replace(/ /g, ' ') + ' ' + CURRENCY;
@@ -25,39 +26,44 @@ function useCart() {
   return [cart, change, () => setCart({})];
 }
 
-const Price = ({ p }) => (
-  <div className="price"><b>{fmt(p.price)}</b>{p.oldPrice && <s>{fmt(p.oldPrice)}</s>}</div>
+const Price = ({ p, big }) => (
+  <div className={'price' + (big ? ' big' : '')}><b>{fmt(p.price)}</b>{p.oldPrice && <s>{fmt(p.oldPrice)}</s>}</div>
 );
 
 const Qty = ({ q, onChange, big }) => (
   <div className={'qty' + (big ? ' big' : '')}>
-    <button onClick={() => onChange(-1)} aria-label="Kamaytirish">−</button>
+    <button onClick={() => onChange(-1)} aria-label="Kamaytirish"><IMinus size={16} /></button>
     <span>{q}</span>
-    <button onClick={() => onChange(1)} aria-label="Ko'paytirish">+</button>
+    <button onClick={() => onChange(1)} aria-label="Ko'paytirish"><IPlus size={16} /></button>
   </div>
 );
 
-const Pic = ({ p, cls = '' }) => p.img
-  ? <img src={img(p.img)} alt={p.name} loading="lazy" />
-  : <div className={'noimg ' + cls}>💡<span>{p.size}</span></div>;
+function Pic({ p }) {
+  const [wide, setWide] = useState(false);
+  if (!p.img) return <div className="noimg"><span className="ni">💡</span><b>{p.size}</b></div>;
+  return <img className={wide ? 'contain' : ''} src={img(p.img)} alt={p.name} loading="lazy"
+    onLoad={(e) => setWide(e.target.naturalWidth / e.target.naturalHeight > 1.15)} />;
+}
 
-function Card({ p, q, onChange, onOpen }) {
+function Card({ p, q, onChange, onOpen, mini }) {
   const disc = p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
   return (
-    <div className="card">
+    <div className={'card' + (mini ? ' mini' : '')}>
       <div className="thumb" onClick={() => onOpen(p)}>
         <Pic p={p} />
         <div className="badges">
-          {disc > 0 && <span className="badge red">-{disc}%</span>}
-          {p.hit && <span className="badge orange">Hit</span>}
-          {p.isNew && <span className="badge green">Yangi</span>}
+          {disc > 0 && <span className="badge sale">−{disc}%</span>}
+          {p.hit && <span className="badge hit">🔥 Hit</span>}
+          {p.isNew && <span className="badge new">Yangi</span>}
         </div>
       </div>
       <div className="info">
         <div className="name" onClick={() => onOpen(p)}>{p.name}</div>
         <div className="size">{p.size}</div>
-        <Price p={p} />
-        {q ? <Qty q={q} onChange={(d) => onChange(p.id, d)} /> : <button className="add" onClick={() => onChange(p.id, 1)}>Savatga</button>}
+        <div className="prow"><Price p={p} /></div>
+        {q ? <Qty q={q} onChange={(d) => onChange(p.id, d)} /> : (
+          <button className="add" onClick={() => onChange(p.id, 1)}><IPlus size={17} /> Savatga</button>
+        )}
       </div>
     </div>
   );
@@ -67,14 +73,23 @@ function Detail({ p, q, onChange, onClose }) {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
-        <button className="close" onClick={onClose} aria-label="Yopish">✕</button>
+        <div className="grab" />
+        <button className="close" onClick={onClose} aria-label="Yopish"><IClose size={18} /></button>
         <div className="dimg"><Pic p={p} /></div>
-        <h2>{p.name}</h2>
-        <div className="size">{p.size}</div>
-        <p className="desc">{p.desc}</p>
-        <div className="drow">
-          <Price p={p} />
-          {q ? <Qty big q={q} onChange={(d) => onChange(p.id, d)} /> : <button className="add big" onClick={() => onChange(p.id, 1)}>Savatga qo'shish</button>}
+        <div className="dbody">
+          <div className="dtags">
+            {p.hit && <span className="badge hit">🔥 Hit</span>}
+            {p.isNew && <span className="badge new">Yangi</span>}
+            <span className="badge plain">{p.size}</span>
+          </div>
+          <h2>{p.name}</h2>
+          <p className="desc">{p.desc}</p>
+        </div>
+        <div className="dbar">
+          <Price p={p} big />
+          {q ? <Qty big q={q} onChange={(d) => onChange(p.id, d)} /> : (
+            <button className="add big" onClick={() => onChange(p.id, 1)}><IPlus size={18} /> Savatga</button>
+          )}
         </div>
       </div>
     </div>
@@ -87,21 +102,76 @@ function Grid({ list, cart, change, setOpen }) {
 }
 
 /* ---------- Bosh ---------- */
-function Home({ products, cart, change, setOpen, cat, setCat }) {
+const BATT = ['duracell', 'raketa', 'soni'];
+const SLIDES = [
+  { id: 'sale', t: 'Chegirmalar', s: 'Tanlangan mahsulotlarda maxsus narxlar', cta: 'Ko‘rish', img: 'ariel-pods.jpg', g: ['#4F46E5', '#0EA5E9'] },
+  { id: 'batt', t: 'Batareykalar', s: 'Duracell, Raketa, Soni — katta qadoqlar', cta: 'Tanlash', img: 'raketa-aa.jpg', g: ['#F59E0B', '#EF4444'] },
+  { id: 'lamp', t: 'LED lampochkalar', s: 'Veral — 5 000 so‘mdan, 2 yil kafolat', cta: 'Ko‘rish', img: 'veral-7w.jpg', g: ['#059669', '#0EA5E9'] },
+];
+const TITLES = { sale: '🏷️ Chegirmalar', batt: '🔋 Batareykalar', ...Object.fromEntries(CATEGORIES.map((c) => [c.id, `${c.icon} ${c.name}`])) };
+
+function Home({ products, cart, change, setOpen, cat, setCat, count, goCart }) {
   const [query, setQuery] = useState('');
-  const list = products.filter((p) => (cat === 'all' || p.cat === cat) && p.name.toLowerCase().includes(query.trim().toLowerCase()));
+  const user = tg?.initDataUnsafe?.user;
+  const q = query.trim().toLowerCase();
+  const filtering = cat !== 'all' || q;
+  const list = products.filter((p) => {
+    const okCat = cat === 'all' || (cat === 'sale' ? p.oldPrice : cat === 'batt' ? BATT.includes(p.cat) : p.cat === cat);
+    return okCat && p.name.toLowerCase().includes(q);
+  });
+  const hits = products.filter((p) => p.hit);
+
   return (
     <>
-      <header>
-        <h1>{SHOP_NAME}</h1>
-        <input className="search" placeholder="🔍 Mahsulot qidirish..." value={query} onChange={(e) => setQuery(e.target.value)} />
-        <div className="cats">
-          {[{ id: 'all', name: 'Hammasi', icon: '✨' }, ...CATEGORIES].map((c) => (
-            <button key={c.id} className={c.id === cat ? 'on' : ''} onClick={() => setCat(c.id)}>{c.icon} {c.name}</button>
-          ))}
+      <header className="top">
+        <div className="brand">
+          <div className="logo">C</div>
+          <div><div className="bname">{SHOP_NAME}</div><div className="hello">{user?.first_name ? `Salom, ${user.first_name} 👋` : 'Xush kelibsiz 👋'}</div></div>
         </div>
+        <button className="iconbtn" onClick={goCart} aria-label="Savat"><ICart />{count > 0 && <i className="cbadge">{count}</i>}</button>
       </header>
-      <Grid list={list} cart={cart} change={change} setOpen={setOpen} />
+
+      <div className="searchbox"><ISearch size={19} /><input placeholder="Mahsulot qidirish..." value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+
+      {!filtering ? (
+        <>
+          <div className="hero">
+            {SLIDES.map((s) => (
+              <div className="slide" key={s.id} style={{ background: `linear-gradient(135deg, ${s.g[0]}, ${s.g[1]})` }} onClick={() => setCat(s.id)}>
+                <div className="stext">
+                  <b>{s.t}</b><span>{s.s}</span>
+                  <em>{s.cta} <IChev size={16} /></em>
+                </div>
+                <img src={img(s.img)} alt="" />
+              </div>
+            ))}
+          </div>
+
+          <div className="cc-row">
+            {CATEGORIES.map((c) => (
+              <button className="cc" key={c.id} onClick={() => setCat(c.id)}>
+                <span className="cc-ic" style={{ background: `linear-gradient(135deg, ${c.c1}, ${c.c2})` }}>{c.icon}</span>
+                <span className="cc-n">{c.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {hits.length > 0 && (
+            <>
+              <div className="sec"><h2>🔥 Ommabop</h2></div>
+              <div className="hrow">{hits.map((p) => <Card mini key={p.id} p={p} q={cart[p.id]} onChange={change} onOpen={setOpen} />)}</div>
+            </>
+          )}
+          <div className="sec"><h2>Barcha mahsulotlar</h2><span className="muted">{products.length} ta</span></div>
+        </>
+      ) : (
+        <div className="sec">
+          <button className="backchip" onClick={() => { setCat('all'); setQuery(''); }}><IBack size={16} /> Orqaga</button>
+          <h2>{q && cat === 'all' ? `“${query}”` : TITLES[cat]}</h2>
+          <span className="muted">{list.length} ta</span>
+        </div>
+      )}
+      <Grid list={filtering ? list : products} cart={cart} change={change} setOpen={setOpen} />
     </>
   );
 }
@@ -110,7 +180,7 @@ function Home({ products, cart, change, setOpen, cat, setCat }) {
 function Categories({ products, onPick }) {
   return (
     <>
-      <header><h1>Kategoriyalar</h1></header>
+      <header className="ptitle"><h1>Kategoriyalar</h1><p>Kerakli bo‘limni tanlang</p></header>
       <div className="cgrid">
         {CATEGORIES.map((c) => {
           const n = products.filter((p) => p.cat === c.id).length;
@@ -119,7 +189,7 @@ function Categories({ products, onPick }) {
             <button className="ctile" key={c.id} onClick={() => onPick(c.id)} style={{ background: `linear-gradient(135deg, ${c.c1}, ${c.c2})` }}>
               <span className="cemoji">{c.icon}</span>
               <span className="cname">{c.name}</span>
-              <span className="ccount">{n} ta mahsulot ›</span>
+              <span className="ccount">{n} ta mahsulot <IChev size={13} /></span>
             </button>
           );
         })}
@@ -159,17 +229,17 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
 
   if (done) return (
     <div className="page done">
-      <div className="big-emoji">✅</div>
+      <div className="okring"><ICheck size={44} strokeWidth={2.6} /></div>
       <h2>Buyurtma qabul qilindi!</h2>
       <p className="desc">Buyurtma raqami: <b>#{done}</b><br />Tez orada siz bilan bog'lanamiz. Xaridingiz uchun rahmat!</p>
-      <button className="add big wide" onClick={goOrders}>📦 Buyurtmalarim</button>
+      <button className="add big wide" onClick={goOrders}>Buyurtmalarim</button>
       <button className="link" onClick={goHome}>Xaridni davom ettirish</button>
     </div>
   );
 
   if (!items.length) return (
     <div className="page done">
-      <div className="big-emoji">🛒</div>
+      <div className="okring empty"><ICart size={42} /></div>
       <h2>Savat bo'sh</h2>
       <p className="desc">Mahsulotlarni tanlab, savatga qo'shing.</p>
       <button className="add big wide" onClick={goHome}>Xaridni boshlash</button>
@@ -178,12 +248,12 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
 
   return (
     <div className="page">
-      <h1>{step === 'cart' ? '🛒 Savat' : '📋 Buyurtma'}</h1>
+      <header className="ptitle"><h1>{step === 'cart' ? 'Savat' : 'Buyurtma'}</h1><p>{step === 'cart' ? `${items.length} xil mahsulot` : 'Ma’lumotlaringizni kiriting'}</p></header>
       {step === 'cart' ? (
         <>
           {items.map((i) => (
             <div className="crow" key={i.id}>
-              {i.img ? <img src={img(i.img)} alt="" /> : <div className="noimg sm">💡</div>}
+              {i.img ? <img src={img(i.img)} alt="" /> : <div className="noimg sm"><span className="ni">💡</span></div>}
               <div className="cinfo">
                 <div className="name">{i.name}</div>
                 <div className="size">{i.size} · {fmt(i.price)}</div>
@@ -212,7 +282,7 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
 }
 
 /* ---------- Buyurtmalarim ---------- */
-const ST = { new: ['🆕 Qabul qilindi', 'orange'], done: ['✅ Bajarildi', 'green'], cancel: ['❌ Bekor qilindi', 'red'] };
+const ST = { new: ['Qabul qilindi', 'orange'], done: ['Bajarildi', 'green'], cancel: ['Bekor qilindi', 'red'] };
 function Orders() {
   const [orders, setOrders] = useState(null);
   const [err, setErr] = useState('');
@@ -225,7 +295,7 @@ function Orders() {
   }, []);
   return (
     <div className="page">
-      <h1>📦 Buyurtmalarim</h1>
+      <header className="ptitle"><h1>Buyurtmalarim</h1><p>Buyurtmalar tarixi va holati</p></header>
       {err === 'tg' && <p className="desc">Buyurtmalaringizni ko'rish uchun do'konni Telegram ichida oching.</p>}
       {err === 'fail' && <p className="desc">Yuklab bo'lmadi, keyinroq urinib ko'ring.</p>}
       {!err && orders === null && <p className="desc">Yuklanmoqda...</p>}
@@ -255,8 +325,8 @@ function Info() {
   ].filter((r) => r[2]);
   return (
     <div className="page">
-      <h1>ℹ️ Ma'lumot</h1>
-      <div className="infocard"><h3>🏪 {SHOP_NAME}</h3><p>{INFO.about}</p></div>
+      <header className="ptitle"><h1>Ma'lumot</h1><p>Biz haqimizda</p></header>
+      <div className="infocard hero-info"><h3>{SHOP_NAME}</h3><p>{INFO.about}</p></div>
       {rows.length > 0 && <div className="infocard">{rows.map(([i, t, v]) => <div className="irow" key={t}><span>{i} {t}</span><b>{v}</b></div>)}</div>}
       <div className="infocard"><h3>🚚 Yetkazib berish</h3><p>{INFO.delivery}</p></div>
       <div className="infocard"><h3>💳 To'lov</h3><p>{INFO.payment}</p></div>
@@ -265,7 +335,7 @@ function Info() {
 }
 
 /* ---------- Asosiy ---------- */
-const TABS = [['home', '🏠', 'Bosh'], ['cats', '🗂️', 'Kategoriya'], ['cart', '🛒', 'Savat'], ['orders', '📦', 'Buyurtmalar'], ['info', 'ℹ️', 'Info']];
+const TABS = [['home', IHome, 'Bosh'], ['cats', IGrid, 'Bo‘limlar'], ['cart', ICart, 'Savat'], ['orders', IBox, 'Buyurtmalar'], ['info', IInfo, 'Info']];
 
 export default function App() {
   const [tab, setTab] = useState('home');
@@ -286,20 +356,20 @@ export default function App() {
 
   return (
     <div className="app">
-      {tab === 'home' && <Home products={products} cart={cart} change={change} setOpen={setOpen} cat={cat} setCat={setCat} />}
+      {tab === 'home' && <Home products={products} cart={cart} change={change} setOpen={setOpen} cat={cat} setCat={setCat} count={count} goCart={() => go('cart')} />}
       {tab === 'cats' && <Categories products={products} onPick={(c) => { setCat(c); go('home'); }} />}
       {tab === 'cart' && <CartPage items={items} total={total} change={change} clear={clear} goHome={() => go('home')} goOrders={() => go('orders')} />}
       {tab === 'orders' && <Orders />}
       {tab === 'info' && <Info />}
 
       {count > 0 && tab !== 'cart' && (
-        <button className="floatcart" onClick={() => go('cart')}><span>🛒 Savat · {count} ta</span><b>{fmt(total)}</b></button>
+        <button className="floatcart" onClick={() => go('cart')}><span className="fc-l"><ICart size={20} /> {count} ta mahsulot</span><b>{fmt(total)} <IChev size={16} /></b></button>
       )}
 
       <nav className="tabbar">
-        {TABS.map(([id, icon, name]) => (
+        {TABS.map(([id, Icon, name]) => (
           <button key={id} className={tab === id ? 'on' : ''} onClick={() => go(id)}>
-            <span className="ti">{icon}{id === 'cart' && count > 0 && <i>{count}</i>}</span>{name}
+            <span className="ti"><Icon size={22} />{id === 'cart' && count > 0 && <i>{count}</i>}</span><span className="tl">{name}</span>
           </button>
         ))}
       </nav>
