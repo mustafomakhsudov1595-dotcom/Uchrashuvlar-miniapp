@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CATEGORIES, PRODUCTS } from './products.js';
-import Admin from './Admin.jsx';
-import { CURRENCY, MANAGER_USERNAME, SHOP_NAME } from './config.js';
+import { CURRENCY, SHOP_NAME } from './config.js';
 
 const tg = window.Telegram?.WebApp;
 const fmt = (n) => n.toLocaleString('ru-RU').replace(/ /g, ' ') + ' ' + CURRENCY;
@@ -104,22 +103,16 @@ function Checkout({ items, total, onChange, onClose, onDone }) {
   });
   const ok = f.name.trim() && f.phone.replace(/\D/g, '').length >= 9 && f.address.trim();
 
-  const text = () =>
-    `🛒 Yangi buyurtma — ${SHOP_NAME}\n\n` +
-    items.map((i, n) => `${n + 1}. ${i.name} (${i.size}) × ${i.q} = ${fmt(i.price * i.q)}`).join('\n') +
-    `\n\n💰 Jami: ${fmt(total)}\n\n👤 ${f.name}\n📞 ${f.phone}\n📍 ${f.address}` +
-    (f.note ? `\n💬 ${f.note}` : '');
-
-  const submit = () => {
-    const msg = text();
-    haptic('medium');
-    if (MANAGER_USERNAME) {
-      const url = `https://t.me/${MANAGER_USERNAME}?text=${encodeURIComponent(msg)}`;
-      tg?.openTelegramLink ? tg.openTelegramLink(url) : window.open(url, '_blank');
-    } else {
-      try { tg?.sendData?.(JSON.stringify({ items, total, ...f })); } catch {}
-    }
-    setStep('done');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const submit = async () => {
+    setBusy(true); setErr(''); haptic('medium');
+    try {
+      const r = await fetch('/api/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...f, items: items.map((i) => ({ id: i.id, q: i.q })) }) });
+      if (!r.ok) throw new Error();
+      setStep('done');
+    } catch { setErr("Yuborib bo'lmadi, qayta urinib ko'ring"); }
+    setBusy(false);
   };
 
   if (step === 'done') {
@@ -161,7 +154,8 @@ function Checkout({ items, total, onChange, onClose, onDone }) {
           <label>Manzil<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} placeholder="Shahar, ko'cha, uy" /></label>
           <label>Izoh (ixtiyoriy)<input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
           <div className="total"><span>Jami:</span><b>{fmt(total)}</b></div>
-          <button className="add big wide" disabled={!ok} onClick={submit}>Buyurtma berish</button>
+          <button className="add big wide" disabled={!ok || busy} onClick={submit}>{busy ? 'Yuborilmoqda...' : 'Buyurtma berish'}</button>
+          {err && <p className="desc" style={{ color: '#ef4444', textAlign: 'center' }}>{err}</p>}
           <button className="link" onClick={() => setStep('cart')}>← Savatga qaytish</button>
         </>
       )}
@@ -172,7 +166,6 @@ function Checkout({ items, total, onChange, onClose, onDone }) {
 export default function App() {
   const [overrides, setOverrides] = useState({});
   useEffect(() => { fetch('/api/products').then((r) => r.json()).then(setOverrides).catch(() => {}); }, []);
-  const isAdmin = location.pathname.replace(/\/$/, '').endsWith('/admin') || location.hash === '#admin';
   const products = useMemo(() => PRODUCTS.filter((p) => !overrides[p.id]?.hidden).map((p) => {
     const o = overrides[p.id]; return o ? { ...p, price: o.price, oldPrice: o.oldPrice || undefined } : p; }), [overrides]);
   const [cat, setCat] = useState('all');
@@ -187,8 +180,6 @@ export default function App() {
   const items = products.filter((p) => cart[p.id]).map((p) => ({ ...p, q: cart[p.id] }));
   const count = items.reduce((s, i) => s + i.q, 0);
   const total = items.reduce((s, i) => s + i.q * i.price, 0);
-
-  if (isAdmin) return <Admin overrides={overrides} onSaved={setOverrides} />;
 
   return (
     <div className="app">

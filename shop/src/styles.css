@@ -55,9 +55,3 @@ label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
 label input{display:block;width:100%;margin-top:5px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:15px;outline:none}
 .link{display:block;margin:12px auto 0;background:none;color:var(--accent)}
 .done{text-align:center;padding:20px 0}.big-emoji{font-size:56px}.done h2{margin:8px 0}
-.admin{padding:14px}
-.arow{display:grid;grid-template-columns:1fr 100px 100px auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.arow input[type=number]{padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);width:100%}
-.chk{margin:0;font-size:12px;display:flex;align-items:center;gap:3px}
-.asave{position:sticky;bottom:0;background:var(--bg);padding:10px 0;text-align:center}
-@media(max-width:480px){.arow{grid-template-columns:1fr 1fr}.arow .name{grid-column:1/-1}}
