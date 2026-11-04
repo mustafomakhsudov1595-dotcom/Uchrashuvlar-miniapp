@@ -28,11 +28,11 @@ export const PRODUCTS = [
   { id: 13, cat: 'battery', name: 'Raketa AA (LR6) Alkaline', desc: '+30% ko‘proq quvvat, 0% simob va kadmiy. Oqishdan himoyalangan.', size: '50 dona', price: 55000, img: 'raketa-aa.jpg', hit: true },
   { id: 14, cat: 'battery', name: 'Raketa AAA (LR03) Alkaline', desc: '+30% ko‘proq quvvat, 0% simob va kadmiy. Barqaror ishlash.', size: '50 dona', price: 45000, img: 'raketa-aaa.jpg' },
   { id: 15, cat: 'battery', name: 'Raketa 9V (6F22) tuzli', desc: 'Krona turidagi 9V batareyka, barqaror quvvat.', size: '10 dona', price: 23000, img: 'raketa-9v.jpg' },
-  { id: 16, cat: 'battery', name: 'Soni AA (katta) · Premium', desc: 'Katta qadoq — ko‘proq son. Barqaror ishlash, uzoq muddatli energiya.', size: '60 dona', price: 52000, img: 'soni-aa.jpg' },
-  { id: 17, cat: 'battery', name: 'Soni AAA (kichik) · Oddiy', desc: 'Pult, o‘yinchoq, soat, fonar va boshqalar uchun. Arzon variant.', size: '60 dona', price: 22000, img: 'soni-aaa.jpg' },
+  { id: 16, cat: 'battery', name: 'Soni AA Alkaline (katta)', desc: 'Katta qadoq — ko‘proq son. Barqaror ishlash, uzoq muddatli energiya.', size: '60 dona', price: 52000, img: 'soni-aa.jpg' },
+  { id: 17, cat: 'battery', name: 'Soni AAA Carbon (kichik)', desc: 'Pult, o‘yinchoq, soat, fonar va boshqalar uchun. Kichik batareya — katta quvvat.', size: '60 dona', price: 22000, img: 'soni-aaa.jpg' },
 
-  { id: 21, cat: 'battery', name: 'Soni AAA (kichik) · Premium', desc: 'Pult, o‘yinchoq, soat, fonar va boshqalar uchun. Barqaror va uzoq muddatli energiya.', size: '60 dona', price: 42000, img: 'soni-aaa.jpg' },
-  { id: 22, cat: 'battery', name: 'Soni AA (katta) · Oddiy', desc: 'Katta qadoq — ko‘proq son. Arzon variant.', size: '60 dona', price: 26000, img: 'soni-aa.jpg' },
+  { id: 21, cat: 'battery', name: 'Soni AAA (kichik) · Premium', desc: 'Pult, o‘yinchoq, soat, fonar va boshqalar uchun. Barqaror va uzoq muddatli energiya.', size: '60 dona', price: 42000, img: 'soni-aaa.jpg', hidden: true },
+  { id: 22, cat: 'battery', name: 'Soni AA (katta) · Oddiy', desc: 'Katta qadoq — ko‘proq son. Arzon variant.', size: '60 dona', price: 26000, img: 'soni-aa.jpg', hidden: true },
 
   { id: 30, cat: 'lamp', name: 'Veral LED lampochka 5 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '5 W', price: 5000, img: 'veral-5w.jpg' },
   { id: 31, cat: 'lamp', name: 'Veral LED lampochka 7 W', desc: 'Tejamkor LED lampochka, yorqin va bir tekis yorug‘lik, uzoq xizmat muddati.', size: '7 W', price: 6000, img: 'veral-7w.jpg' },
