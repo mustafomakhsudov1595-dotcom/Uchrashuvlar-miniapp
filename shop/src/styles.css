@@ -55,3 +55,4 @@ label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
 label input{display:block;width:100%;margin-top:5px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:15px;outline:none}
 .link{display:block;margin:12px auto 0;background:none;color:var(--accent)}
 .done{text-align:center;padding:20px 0}.big-emoji{font-size:56px}.done h2{margin:8px 0}
+.noimg{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:140px;font-size:56px;background:linear-gradient(#fff7d6,#f6e3a1);color:#a87b00;gap:6px}.noimg span{font-size:15px;font-weight:700}.noimg.sm{width:64px;height:64px;font-size:28px;border-radius:10px;flex:none;min-height:0}

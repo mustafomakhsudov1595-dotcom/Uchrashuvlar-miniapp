@@ -48,7 +48,7 @@ function Card({ p, q, onChange, onOpen }) {
   return (
     <div className="card">
       <div className="thumb" onClick={() => onOpen(p)}>
-        <img src={img(p.img)} alt={p.name} loading="lazy" />
+        {p.img ? <img src={img(p.img)} alt={p.name} loading="lazy" /> : <div className="noimg">💡<span>{p.size}</span></div>}
         <div className="badges">
           {disc > 0 && <span className="badge red">-{disc}%</span>}
           {p.hit && <span className="badge orange">Hit</span>}
@@ -81,7 +81,7 @@ function Sheet({ onClose, children }) {
 function Detail({ p, q, onChange, onClose }) {
   return (
     <Sheet onClose={onClose}>
-      <div className="dimg"><img src={img(p.img)} alt={p.name} /></div>
+      <div className="dimg">{p.img ? <img src={img(p.img)} alt={p.name} /> : <div className="noimg">💡<span>{p.size}</span></div>}</div>
       <h2>{p.name}</h2>
       <div className="size">{p.size}</div>
       <p className="desc">{p.desc}</p>
@@ -135,7 +135,7 @@ function Checkout({ items, total, onChange, onClose, onDone }) {
         <>
           {items.map((i) => (
             <div className="crow" key={i.id}>
-              <img src={img(i.img)} alt="" />
+              {i.img ? <img src={img(i.img)} alt="" /> : <div className="noimg sm">💡</div>}
               <div className="cinfo">
                 <div className="name">{i.name}</div>
                 <div className="size">{i.size} · {fmt(i.price)}</div>
