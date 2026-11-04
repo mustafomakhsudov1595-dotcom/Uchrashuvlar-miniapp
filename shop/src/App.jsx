@@ -113,14 +113,13 @@ function Categories({ products, onPick }) {
       <header><h1>Kategoriyalar</h1></header>
       <div className="cgrid">
         {CATEGORIES.map((c) => {
-          const items = products.filter((p) => p.cat === c.id);
-          if (!items.length) return null;
-          const pic = items.find((p) => p.img);
+          const n = products.filter((p) => p.cat === c.id).length;
+          if (!n) return null;
           return (
-            <button className="ctile" key={c.id} onClick={() => onPick(c.id)}>
-              <div className="cpic">{pic ? <img src={img(pic.img)} alt="" loading="lazy" /> : <span>{c.icon}</span>}</div>
-              <div className="cname">{c.icon} {c.name}</div>
-              <div className="ccount">{items.length} ta mahsulot</div>
+            <button className="ctile" key={c.id} onClick={() => onPick(c.id)} style={{ background: `linear-gradient(135deg, ${c.c1}, ${c.c2})` }}>
+              <span className="cemoji">{c.icon}</span>
+              <span className="cname">{c.name}</span>
+              <span className="ccount">{n} ta mahsulot ›</span>
             </button>
           );
         })}

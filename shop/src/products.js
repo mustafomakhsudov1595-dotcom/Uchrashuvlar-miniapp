@@ -2,16 +2,16 @@
 // price — DEMO narx (so'mda). Haqiqiy narxlarni shu yerda almashtiring.
 // oldPrice — ixtiyoriy: chegirma ko'rsatish uchun (eski narx).
 export const CATEGORIES = [
-  { id: 'laundry', name: 'Kir yuvish', icon: '🧺' },
-  { id: 'pipes', name: 'Quvur tozalagich', icon: '🚰' },
-  { id: 'sponge', name: 'Gubkalar', icon: '🧽' },
-  { id: 'air', name: 'Havo fresheri', icon: '🌸' },
-  { id: 'duracell', name: 'Duracell', icon: '🔋' },
-  { id: 'raketa', name: 'Raketa', icon: '🔋' },
-  { id: 'soni', name: 'Soni', icon: '🔋' },
-  { id: 'lamp', name: 'Lampochkalar', icon: '💡' },
-  { id: 'glue', name: 'Tuzoq va yelim', icon: '🪤' },
-  { id: 'razor', name: 'Ustara', icon: '🪒' },
+  { id: 'laundry', name: 'Kir yuvish', icon: '🧺', c1: '#22c55e', c2: '#15803d' },
+  { id: 'pipes', name: 'Quvur tozalagich', icon: '🚰', c1: '#38bdf8', c2: '#1d4ed8' },
+  { id: 'sponge', name: 'Gubkalar', icon: '🧽', c1: '#facc15', c2: '#16a34a' },
+  { id: 'air', name: 'Havo fresheri', icon: '🌸', c1: '#f472b6', c2: '#9333ea' },
+  { id: 'duracell', name: 'Duracell', icon: '🔋', c1: '#f59e0b', c2: '#292524' },
+  { id: 'raketa', name: 'Raketa', icon: '🔋', c1: '#3b82f6', c2: '#1e3a8a' },
+  { id: 'soni', name: 'Soni', icon: '🔋', c1: '#6366f1', c2: '#2563eb' },
+  { id: 'lamp', name: 'Lampochkalar', icon: '💡', c1: '#fde047', c2: '#f97316' },
+  { id: 'glue', name: 'Tuzoq va yelim', icon: '🪤', c1: '#fb7185', c2: '#be123c' },
+  { id: 'razor', name: 'Ustara', icon: '🪒', c1: '#94a3b8', c2: '#334155' },
 ];
 
 export const PRODUCTS = [
