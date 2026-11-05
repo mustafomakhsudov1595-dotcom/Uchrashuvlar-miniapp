@@ -294,7 +294,9 @@ const e164 = (p) => { const d = p.replace(/\D/g, ''); return `+${d.length === 9 
 /* ---------- xabarlar ---------- */
 async function sendWelcome(chat, u, from) {
   const T = S.Tof(u);
-  await send(chat, T.welcome(esc(from.first_name || '')), kbFor(T));
+  const text = T.welcome(esc(from.first_name || ''));
+  const ph = await tg('sendPhoto', { chat_id: chat, photo: `${S.SITE()}/welcome-${u.lang}.jpg?v=1`, caption: text, parse_mode: 'HTML', reply_markup: kbFor(T) });
+  if (!ph.ok) await send(chat, text, kbFor(T));
   return send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}\n${T.p.cmdSub}\n${T.p.cmdG}\n${T.p.cmdSv}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
 }
 

@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
 // Mavzu: rejim (avto / yorug' / qorong'u) va asosiy rang. Brauzerda saqlanadi.
-export const ACCENTS = ['teal', 'blue', 'violet', 'rose', 'green'];
+export const ACCENTS = ['gold', 'teal', 'blue', 'violet', 'rose', 'green'];
 export const MODES = ['auto', 'light', 'dark'];
 const MODE_KEY = 'uchrashuvlar:mode';
-const ACC_KEY = 'uchrashuvlar:accent';
-const BG = { light: '#F4F7FC', dark: '#070D1A' };
+const ACC_KEY = 'uchrashuvlar:accent2'; // yangi dizayn: hamma oltin mavzudan boshlaydi
+const BG = { light: '#F6F1E8', dark: '#09090D' };
 
 const read = (k, ok, d) => {
   try {
@@ -23,7 +23,7 @@ const write = (k, v) => {
   }
 };
 
-let state = { mode: read(MODE_KEY, MODES, 'auto'), accent: read(ACC_KEY, ACCENTS, 'teal') };
+let state = { mode: read(MODE_KEY, MODES, 'auto'), accent: read(ACC_KEY, ACCENTS, 'gold') };
 const subs = new Set();
 const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined;
 const inTg = Boolean(tg?.initData);
