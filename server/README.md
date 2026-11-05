@@ -21,6 +21,8 @@
 
 - `functions/svc.js` — servis: tayyor saytlar (`/servis`; mijoz, telefon, sayt va Claude sessiyasi havolasi, topshirilgan sana, 12 oylik servis muddati, oʻzgartirish soʻrovlari). Muddat tugashiga 30/7 kun qolganda eslatadi. Tayyor loyihadan “🛠 Servisga” tugmasi bilan oʻtkaziladi.
 
+- `functions/team.js` — bot yopiq: faqat admin (`ADMIN_IDS`, wrangler.jsonc), taklif havolasi (`/jamoa` → “Aʻzo taklif qilish”, 7 kun, bir martalik) bilan qoʻshilganlar va oldingi foydalanuvchilar ishlata oladi. Begona odam `/start` bossa hisob ochilmaydi, API 403 qaytaradi. Chiqarilgan aʻzo `blocked/<id>` bilan yopiladi.
+
 ## Deploy
 
 ```bash

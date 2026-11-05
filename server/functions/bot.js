@@ -6,6 +6,7 @@ const voice = require('./voice');
 const fin = require('./fin');
 const ext = require('./ext');
 const svc = require('./svc');
+const team = require('./team');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -303,6 +304,10 @@ async function sendWelcome(chat, u, from) {
 async function onMessage(st, m) {
   const chat = m.chat.id, from = m.from || {};
   if (m.chat.type !== 'private') return;
+  // Bot yopiq: faqat admin, taklif orqali qoʻshilganlar va oldingi foydalanuvchilar
+  const inv = /^\/start\s+t_(\w+)/.exec(m.text || '');
+  if (inv && (await team.acceptInvite(st, chat, from, inv[1]))) return;
+  if (!(await S.isAllowed(st, from.id))) return team.closedMessage(chat, from);
   const u = await S.getUser(st, from.id);
   u.chat = String(chat);
   u.name = [from.first_name, from.last_name].filter(Boolean).join(' ');
@@ -347,7 +352,7 @@ async function onMessage(st, m) {
   if (cmd && cmd !== '/yangi') u.state = null;
   if (!cmd && u.state && u.state.kind === 'p' && !text) { await send(chat, T.pleaseText); return S.saveUser(st, u); }
 
-  if (await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
+  if (await team.onMessage(chat, u, cmd, st) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
 
   if (cmd === '/start') {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
@@ -395,6 +400,7 @@ async function onMessage(st, m) {
 async function onCallback(st, q) {
   const chat = q.message && q.message.chat.id, mid = q.message && q.message.message_id;
   if (!chat) return;
+  if (!(await S.isAllowed(st, q.from.id))) { await tg('answerCallbackQuery', { callback_query_id: q.id, text: '🔒', show_alert: false }); return; }
   const u = await S.getUser(st, q.from.id);
   u.chat = String(chat);
   u.name = [q.from.first_name, q.from.last_name].filter(Boolean).join(' ');
@@ -418,6 +424,7 @@ async function onCallback(st, q) {
   else if (fin.ACTS.includes(act)) { toast = await fin.onCallback(ctx, u, act, a, b); }
   else if (ext.ACTS.includes(act)) { toast = await ext.onCallback(ctx, u, act, a, b); }
   else if (svc.ACTS.includes(act)) { toast = await svc.onCallback(ctx, u, act, a, b); }
+  else if (team.ACTS.includes(act)) { toast = await team.onCallback(ctx, st, u, act, a); }
   else if (act === 'noop') { /* sahifa raqami */ }
   else if (act === 'd') await showCard(ctx, u, a);
   else if (act === 'l') await showUpcoming(ctx, u, Number(a) || 0);

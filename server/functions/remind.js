@@ -61,6 +61,7 @@ exports.handler = async (event) => {
     try {
       const u = await st.get(key, { type: 'json' });
       if (!u || !u.chat || !u.lang) continue;
+      if (!S.isAdmin(u.id) && (await st.get(`blocked/${u.id}`))) continue;
       const full = await S.getUser(st, u.id);
       const r = await processUser(full, now);
       sent += r.sent;

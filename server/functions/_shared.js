@@ -393,6 +393,19 @@ function findServices(u, q) {
   return u.services.filter((x) => [x.name, x.client, x.url].some((v) => v.toLowerCase().includes(low)) || (dg.length >= 3 && digitsOf(x.phone).includes(dg)));
 }
 
+/* ---------- kirish: faqat jamoa ---------- */
+const adminIds = () => String(process.env.ADMIN_IDS || '1120619241').split(/[\s,]+/).filter(Boolean);
+const isAdmin = (id) => adminIds().includes(String(id));
+// Ruxsat: admin, taklif bilan qoʻshilgan, yoki oldin roʻyxatdan oʻtgan (lang tanlagan) foydalanuvchi. `blocked/` hammasidan ustun.
+async function isAllowed(st, id) {
+  const sid = String(id);
+  if (isAdmin(sid)) return true;
+  if (await st.get(`blocked/${sid}`)) return false;
+  if (await st.get(`allow/${sid}`)) return true;
+  const u = await st.get(userKey(sid), { type: 'json' });
+  return Boolean(u && u.lang);
+}
+
 /* ---------- xarita ---------- */
 function mapLinks(m) {
   if (m.lat !== null && m.lat !== undefined && m.lon !== null && m.lon !== undefined) {
@@ -513,5 +526,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, isAllowed, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

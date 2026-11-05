@@ -12,6 +12,7 @@ exports.handler = async (event) => {
   const user = S.checkInitData(initData);
   if (!user) return json(401, { ok: false, error: 'unauthorized' });
   const st = S.openStore(event);
+  if (!(await S.isAllowed(st, user.id))) return json(403, { ok: false, error: 'closed' });
   const u = await S.getUser(st, user.id);
   if (event.httpMethod === 'GET') return json(200, view(u));
   if (event.httpMethod !== 'PUT' && event.httpMethod !== 'POST') return json(405, { ok: false });
