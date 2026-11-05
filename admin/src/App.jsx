@@ -119,6 +119,7 @@ export default function App() {
       <header className="top">
         <div className="brand"><img className="logo" src="./logo.svg" alt="" /><div><div className="bname">Admin</div><div className="hello">Chilling Bet</div></div></div>
         <div className="tbtns">
+          <a className="iconbtn" href="./guide.mp4" target="_blank" rel="noreferrer" aria-label="Video qo'llanma" title="Video qo'llanma">🎬</a>
           <button className="iconbtn" onClick={() => load()} aria-label="Yangilash"><IRefresh size={20} /></button>
           <button className="iconbtn" onClick={logout} aria-label="Chiqish"><IOut size={20} /></button>
         </div>
