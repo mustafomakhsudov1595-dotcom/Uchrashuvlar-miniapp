@@ -15,7 +15,7 @@ const L = {
     inv: (l) => `🔗 Taklif havolasi (7 kun, bir martalik):\n${l}\n\nUni jamoa aʻzosiga yuboring. Havolani bosganda u botga qoʻshiladi.`,
     joined: '✅ Jamoaga qoʻshildingiz! Boshlaymiz.', badInv: '⚠️ Taklif havolasi eskirgan yoki ishlatilgan. Administratordan yangisini soʻrang.', notify: (n, id) => `✅ <b>${n}</b> jamoaga qoʻshildi (ID ${id}).`,
     rmAsk: (n) => `🗑 <b>${n}</b> ni jamoadan chiqarasizmi? Uning botga kirishi yopiladi, maʼlumotlari saqlanadi.`, yes: 'Ha, chiqarish', no: 'Yoʻq', rmDone: 'Chiqarildi.',
-    none: 'Hozircha faqat siz. “Aʻzo taklif qilish” ni bosing.',
+    none: 'Hozircha faqat siz. “Aʻzo taklif qilish” ni bosing.', open: 'Bot hammaga ochiq: havolani bossa, kira oladi. Chiqarilgan odamning kirishi yopiladi.',
   },
   ru: {
     closed: (id) => `🔒 <b>Этот бот закрытый.</b>\nОн только для членов команды. Чтобы присоединиться, напишите администратору и отправьте этот ID:\n<code>${id}</code>`,
@@ -23,7 +23,7 @@ const L = {
     inv: (l) => `🔗 Ссылка-приглашение (7 дней, одноразовая):\n${l}\n\nОтправьте её участнику команды. По ссылке он подключится к боту.`,
     joined: '✅ Вы в команде! Начинаем.', badInv: '⚠️ Ссылка устарела или уже использована. Попросите новую у администратора.', notify: (n, id) => `✅ <b>${n}</b> присоединился к команде (ID ${id}).`,
     rmAsk: (n) => `🗑 Убрать <b>${n}</b> из команды? Доступ к боту закроется, данные сохранятся.`, yes: 'Да, убрать', no: 'Нет', rmDone: 'Убран.',
-    none: 'Пока только вы. Нажмите «Пригласить участника».',
+    none: 'Пока только вы. Нажмите «Пригласить участника».', open: 'Бот открыт для всех: по ссылке на бота можно войти. Убранному участнику доступ закрывается.',
   },
   en: {
     closed: (id) => `🔒 <b>This bot is private.</b>\nIt is for team members only. To join, message the administrator and send this ID:\n<code>${id}</code>`,
@@ -31,7 +31,7 @@ const L = {
     inv: (l) => `🔗 Invite link (7 days, single use):\n${l}\n\nSend it to a team member. Opening it connects them to the bot.`,
     joined: '✅ You joined the team! Let’s start.', badInv: '⚠️ This invite expired or was already used. Ask the administrator for a new one.', notify: (n, id) => `✅ <b>${n}</b> joined the team (ID ${id}).`,
     rmAsk: (n) => `🗑 Remove <b>${n}</b> from the team? Their bot access is closed, data is kept.`, yes: 'Yes, remove', no: 'No', rmDone: 'Removed.',
-    none: 'Just you for now. Tap “Invite a member”.',
+    none: 'Just you for now. Tap “Invite a member”.', open: 'The bot is open to everyone: anyone with the bot link can enter. A removed member loses access.',
   },
 };
 const tr = (code) => L[['ru', 'en'].includes(String(code || '').slice(0, 2)) ? String(code).slice(0, 2) : 'uz'];
@@ -66,9 +66,10 @@ async function members(st) {
 async function showTeam(ctx, st, u) {
   const T = L[langOf(u)], list = await members(st);
   let text = T.title(list.length);
-  text += list.length > 1 ? '\n\n' + list.map((m) => `${m.admin ? '👑' : '👤'} <b>${esc(m.name)}</b>${m.admin ? ` · ${T.admin}` : ''}\n   <code>${m.id}</code>`).join('\n') : `\n\n${T.none}`;
+  if (S.accessOpen()) text += `\n${T.open}`;
+  text += list.length > 1 ? '\n\n' + list.map((m) => `${m.admin ? '👑' : '👤'} <b>${esc(m.name)}</b>${m.admin ? ` · ${T.admin}` : ''}\n   <code>${m.id}</code>`).join('\n') : (S.accessOpen() ? '' : `\n\n${T.none}`);
   const rows = list.filter((m) => !m.admin).slice(0, 15).map((m) => [{ text: `${T.rm} ${m.name}`.slice(0, 60), callback_data: `tx:${m.id}` }]);
-  rows.push([{ text: T.add, callback_data: 'ta:0' }]);
+  if (!S.accessOpen()) rows.push([{ text: T.add, callback_data: 'ta:0' }]);
   return show(ctx, text, { inline_keyboard: rows });
 }
 async function onMessage(chat, u, cmd, st) {

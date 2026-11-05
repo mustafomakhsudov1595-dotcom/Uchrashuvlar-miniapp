@@ -12,5 +12,5 @@
   "triggers": { "crons": ["* * * * *"] },
   "ai": { "binding": "AI" },
   "kv_namespaces": [{ "binding": "KV", "id": "cd4c34c23192483cb1fe0f39cf5896d6" }],
-  "vars": { "ADMIN_IDS": "1120619241", "BOT_USERNAME": "Improitnotes_bot", "SITE_URL": "https://impro-notes.uchrashuvlar-mini-app.workers.dev" }
+  "vars": { "ADMIN_IDS": "1120619241", "BOT_ACCESS": "open", "BOT_USERNAME": "Improitnotes_bot", "SITE_URL": "https://impro-notes.uchrashuvlar-mini-app.workers.dev" }
 }
