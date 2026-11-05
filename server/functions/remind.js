@@ -5,6 +5,7 @@ const { reminderRows } = require('./bot');
 const proj = require('./proj');
 const fin = require('./fin');
 const ext = require('./ext');
+const svc = require('./svc');
 
 async function processUser(u, now) {
   const T = S.Tof(u);
@@ -47,7 +48,8 @@ async function processUser(u, now) {
   const pr = await proj.remind(u, now);
   const fr = await fin.remind(u, now);
   const er = await ext.remind(u, now);
-  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty, sent: sent + pr.sent + fr.sent + er.sent, slow: Boolean(er.slow) };
+  const sr = await svc.remind(u, now);
+  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent, slow: Boolean(er.slow) };
 }
 
 exports.handler = async (event) => {
@@ -69,6 +71,7 @@ exports.handler = async (event) => {
           S.mergeProjects(full, fr.projects, Object.keys(fr.pdeleted));
           S.mergeSubs(full, fr.subs, Object.keys(fr.sdeleted));
           S.mergeExpenses(full, fr.expenses, Object.keys(fr.edeleted));
+          S.mergeServices(full, fr.services, Object.keys(fr.svdeleted));
           S.mergeMeetings(full, fr.meetings, Object.keys(fr.deleted));
           if ((fr.goalAt || 0) > (full.goalAt || 0)) { full.goal = fr.goal; full.goalAt = fr.goalAt; }
           full.places = fr.places; full.placesAt = fr.placesAt;

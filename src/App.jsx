@@ -8,6 +8,7 @@ import ProjectForm from './components/ProjectForm.jsx';
 import SubSheet from './components/SubSheet.jsx';
 import ClientDetail from './components/ClientDetail.jsx';
 import ExpenseSheet from './components/ExpenseSheet.jsx';
+import ServiceSheet from './components/ServiceSheet.jsx';
 import { clientsOf } from './lib/finance.js';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
@@ -18,7 +19,7 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, getCalendarToken, signature,
-  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
@@ -46,6 +47,8 @@ export default function App() {
   const [projects, setProjects] = useState(loadProjects);
   const [subs, setSubs] = useState(loadSubs);
   const [expenses, setExpenses] = useState(loadExpenses);
+  const [services, setServices] = useState(loadServices);
+  const [confirmSv, setConfirmSv] = useState(null);
   const [goalState, setGoalState] = useState(loadGoal);
   const [confirmSid, setConfirmSid] = useState(null);
   const [confirmPid, setConfirmPid] = useState(null);
@@ -69,6 +72,10 @@ export default function App() {
   projectsRef.current = projects;
   const subsRef = useRef(subs);
   subsRef.current = subs;
+  const servicesRef = useRef(services);
+  servicesRef.current = services;
+  const svdeletedRef = useRef(loadSvDeleted());
+  const svFromServer = useRef(false);
   const expensesRef = useRef(expenses);
   expensesRef.current = expenses;
   const edeletedRef = useRef(loadEDeleted());
@@ -95,6 +102,7 @@ export default function App() {
       const sentPDeleted = [...pdeletedRef.current];
       const sentSDeleted = [...sdeletedRef.current];
       const sentEDeleted = [...edeletedRef.current];
+      const sentSvDeleted = [...svdeletedRef.current];
       const remote = await syncRemote({
         meetings: meetingsRef.current,
         deleted: sentDeleted,
@@ -107,6 +115,8 @@ export default function App() {
         sdeleted: sentSDeleted,
         expenses: expensesRef.current,
         edeleted: sentEDeleted,
+        services: servicesRef.current,
+        svdeleted: sentSvDeleted,
         goal: goalRef.current.goal,
         goalAt: goalRef.current.at,
       });
@@ -119,6 +129,12 @@ export default function App() {
         saveSDeleted(sdeletedRef.current);
         edeletedRef.current = edeletedRef.current.filter((id) => !sentEDeleted.includes(id));
         saveEDeleted(edeletedRef.current);
+        svdeletedRef.current = svdeletedRef.current.filter((id) => !sentSvDeleted.includes(id));
+        saveSvDeleted(svdeletedRef.current);
+        if (servicesSignature(remote.services) !== servicesSignature(servicesRef.current)) {
+          svFromServer.current = true;
+          setServices(remote.services);
+        }
         if (expensesSignature(remote.expenses) !== expensesSignature(expensesRef.current)) {
           eFromServer.current = true;
           setExpenses(remote.expenses);
@@ -166,6 +182,15 @@ export default function App() {
     }
     scheduleSync();
   }, [meetings, scheduleSync]);
+
+  useEffect(() => {
+    saveServices(services);
+    if (svFromServer.current) {
+      svFromServer.current = false;
+      return;
+    }
+    scheduleSync();
+  }, [services, scheduleSync]);
 
   useEffect(() => {
     saveExpenses(expenses);
@@ -237,6 +262,7 @@ export default function App() {
   const current = sheet?.id && !String(sheet.type).startsWith('p') ? meetings.find((m) => m.id === sheet.id) : null;
   const curProject = sheet?.id && String(sheet.type).startsWith('p') ? projects.find((x) => x.id === sheet.id) : null;
 
+  const curService = sheet?.type === 'service' && sheet.svid ? services.find((x) => x.id === sheet.svid) : null;
   const curSub = sheet?.type === 'sub' && sheet.sid ? subs.find((x) => x.id === sheet.sid) : null;
   const clientList = useMemo(() => clientsOf(projects, subs), [projects, subs]);
   const clientNames = useMemo(() => clientList.map((c) => c.name), [clientList]);
@@ -247,13 +273,13 @@ export default function App() {
   }, [sheet, current, curProject]);
 
   const closeTop = useCallback(() => {
-    if (confirmId || confirmPid || confirmSid) { setConfirmId(null); setConfirmPid(null); setConfirmSid(null); }
+    if (confirmId || confirmPid || confirmSid || confirmSv) { setConfirmId(null); setConfirmPid(null); setConfirmSid(null); setConfirmSv(null); }
     else if (sheet?.type === 'pform' && sheet.id) setSheet({ type: 'pdetail', id: sheet.id });
     else if (sheet?.type === 'form' && sheet.id) setSheet({ type: 'detail', id: sheet.id });
     else setSheet(null);
-  }, [confirmId, confirmPid, confirmSid, sheet]);
+  }, [confirmId, confirmPid, confirmSid, confirmSv, sheet]);
 
-  const overlayOpen = Boolean(sheet || confirmId || confirmPid || confirmSid);
+  const overlayOpen = Boolean(sheet || confirmId || confirmPid || confirmSid || confirmSv);
   useBackButton(overlayOpen, closeTop);
 
   useEffect(() => {
@@ -508,6 +534,36 @@ export default function App() {
     touchProject(id, (x) => ({ paid: (x.paid || 0) + amount, pays: [...(x.pays || []), { a: amount, d: todayISO() }].slice(-40) }));
     showToast(t('toastPaid'));
   };
+  const touchService = (id, fn) => setServices((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
+  const saveService = (data) => {
+    if (sheet?.svid) touchService(sheet.svid, () => data);
+    else {
+      const id = newId();
+      setServices((list) => [...list, { id, requests: [], createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
+      setSheet({ type: 'service', svid: id });
+    }
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
+  const addSvRequest = (text) => {
+    haptic.select();
+    touchService(sheet.svid, (x) => ({ requests: [...x.requests, { id: newId(), d: todayISO(), text, done: false }].slice(-50) }));
+  };
+  const toggleSvRequest = (rid) => touchService(sheet.svid, (x) => ({ requests: x.requests.map((r) => (r.id === rid ? { ...r, done: !r.done } : r)) }));
+  const removeSvRequest = (rid) => touchService(sheet.svid, (x) => ({ requests: x.requests.filter((r) => r.id !== rid) }));
+  const handleSvDelete = () => {
+    const id = confirmSv;
+    svdeletedRef.current = [...svdeletedRef.current, id];
+    saveSvDeleted(svdeletedRef.current);
+    setServices((list) => list.filter((x) => x.id !== id));
+    setConfirmSv(null);
+    setSheet(null);
+    haptic.success();
+  };
+  const projectToService = (p) => {
+    haptic.tap();
+    setSheet({ type: 'service', fromProject: p.id });
+  };
   const addExpense = (data) => {
     setExpenses((list) => [{ id: newId(), createdAt: Date.now(), updatedAt: Date.now(), ...data }, ...list]);
     setSheet(null);
@@ -595,7 +651,7 @@ export default function App() {
         <CalendarView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} />
       )}
       {tab === 'projects' && (
-        <ProjectsView projects={projects} subs={subs} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
+        <ProjectsView projects={projects} subs={subs} services={services} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
       {tab === 'stats' && <StatsView meetings={meetings} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} now={now} onSettings={openSettings} />}
 
@@ -645,12 +701,27 @@ export default function App() {
           onShift={(n) => projShift(curProject.id, n)}
           onPay={(a) => projPay(curProject.id, a)}
           onReport={() => handleReport(curProject)}
+          onToService={() => projectToService(curProject)}
           busy={inviting}
         />
       )}
 
       {sheet?.type === 'pform' && (sheet.id ? curProject : true) && (
         <ProjectForm key={sheet.id ?? 'pnew'} initial={curProject} presetType={sheet.ptype} onSave={saveProject} onClose={closeTop} />
+      )}
+
+      {sheet?.type === 'service' && (!sheet.svid || curService) && (
+        <ServiceSheet
+          key={sheet.svid ?? (sheet.fromProject ? `from-${sheet.fromProject}` : 'svnew')}
+          service={curService}
+          fromProject={sheet.fromProject ? projects.find((x) => x.id === sheet.fromProject) : null}
+          onSave={saveService}
+          onDelete={() => setConfirmSv(sheet.svid)}
+          onAddRequest={addSvRequest}
+          onToggleRequest={toggleSvRequest}
+          onRemoveRequest={removeSvRequest}
+          onClose={closeTop}
+        />
       )}
 
       {sheet?.type === 'expense' && <ExpenseSheet projects={projects} onSave={addExpense} onClose={closeTop} />}
@@ -683,6 +754,10 @@ export default function App() {
 
       {confirmId && (
         <ConfirmDialog title={t('cDelTitle')} text={t('cDelText')} confirmLabel={t('cDelYes')} onConfirm={handleDelete} onCancel={() => setConfirmId(null)} />
+      )}
+
+      {confirmSv && (
+        <ConfirmDialog title={t('svDelTitle')} text={t('svDelText')} confirmLabel={t('cDelYes')} onConfirm={handleSvDelete} onCancel={() => setConfirmSv(null)} />
       )}
 
       {confirmSid && (

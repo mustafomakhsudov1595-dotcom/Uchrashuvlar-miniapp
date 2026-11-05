@@ -45,13 +45,13 @@ const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
   quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
-  meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, places: [], placesAt: 0, state: null,
+  meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, services: [], svdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
   if (!u) return blankUser(id);
   const d = blankUser(id);
-  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
+  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, services: u.services || [], svdeleted: u.svdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
 }
 const saveUser = (st, u) => st.setJSON(userKey(u.id), u);
 const Tof = (u) => getT(u.lang);
@@ -353,6 +353,46 @@ function goalLine(u, today) {
   else if (i.debt >= i.left) t += `\n${P.goHint(money(i.debt))}`;
   return t;
 }
+/* ---------- servis (tayyor saytlar, 1 yillik xizmat) ---------- */
+const addMonthsISO = (iso, n) => {
+  const [y, m, d] = iso.split('-').map(Number), t = new Date(Date.UTC(y, m - 1 + n, 1));
+  const last = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
+  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(Math.min(d, last))}`;
+};
+function cleanService(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || typeof x.name !== 'string' || !x.name.trim() || !DATE_RE.test(x.doneAt)) return null;
+  const months = Math.min(60, Math.max(1, Math.round(Number(x.months) || 12)));
+  return {
+    id: x.id, name: x.name.trim().slice(0, 120), client: typeof x.client === 'string' ? x.client.trim().slice(0, 100) : '', phone: typeof x.phone === 'string' ? x.phone.trim().slice(0, 30) : '',
+    url: cleanUrl(x.url), claudeUrl: cleanUrl(x.claudeUrl), doneAt: x.doneAt, months, notes: typeof x.notes === 'string' ? x.notes.slice(0, 1000) : '',
+    requests: Array.isArray(x.requests) ? x.requests.filter((r) => r && typeof r.text === 'string' && r.text.trim() && DATE_RE.test(r.d)).slice(-50).map((r) => ({ id: String(r.id || newId()).slice(0, 64), d: r.d, text: r.text.trim().slice(0, 200), done: Boolean(r.done) })) : [],
+    createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0, r: x.r,
+  };
+}
+function mergeServices(u, clientList, clientDeleted) {
+  const tomb = u.svdeleted || {}, now = Date.now();
+  const byId = new Map(u.services.map((x) => [x.id, x]));
+  for (const id of clientDeleted) { byId.delete(id); tomb[id] = now; }
+  for (const raw of clientList) {
+    const c = cleanService(raw);
+    if (!c || tomb[c.id]) continue;
+    const x = byId.get(c.id);
+    if (!x) { byId.set(c.id, { ...c, r: undefined }); continue; }
+    if (c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, { ...c, r: c.doneAt === x.doneAt && c.months === x.months ? x.r : undefined });
+  }
+  for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
+  u.svdeleted = tomb; u.services = [...byId.values()];
+  return u;
+}
+const serviceEnd = (x) => addMonthsISO(x.doneAt, x.months);
+const serviceDays = (x, today) => daysBetween(today, serviceEnd(x));
+const digitsOf = (v) => String(v || '').replace(/\D/g, '');
+function findServices(u, q) {
+  const low = String(q || '').trim().toLowerCase(), dg = digitsOf(q);
+  if (!low) return [...u.services];
+  return u.services.filter((x) => [x.name, x.client, x.url].some((v) => v.toLowerCase().includes(low)) || (dg.length >= 3 && digitsOf(x.phone).includes(dg)));
+}
+
 /* ---------- xarita ---------- */
 function mapLinks(m) {
   if (m.lat !== null && m.lat !== undefined && m.lon !== null && m.lon !== undefined) {
@@ -473,5 +513,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, projectExpense, goalInfo, goalLine, cleanUrl, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

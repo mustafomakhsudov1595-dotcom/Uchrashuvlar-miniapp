@@ -5,6 +5,7 @@ const proj = require('./proj');
 const voice = require('./voice');
 const fin = require('./fin');
 const ext = require('./ext');
+const svc = require('./svc');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -294,7 +295,7 @@ const e164 = (p) => { const d = p.replace(/\D/g, ''); return `+${d.length === 9 
 async function sendWelcome(chat, u, from) {
   const T = S.Tof(u);
   await send(chat, T.welcome(esc(from.first_name || '')), kbFor(T));
-  return send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}\n${T.p.cmdSub}\n${T.p.cmdG}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
+  return send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}\n${T.p.cmdSub}\n${T.p.cmdG}\n${T.p.cmdSv}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
 }
 
 async function onMessage(st, m) {
@@ -344,13 +345,13 @@ async function onMessage(st, m) {
   if (cmd && cmd !== '/yangi') u.state = null;
   if (!cmd && u.state && u.state.kind === 'p' && !text) { await send(chat, T.pleaseText); return S.saveUser(st, u); }
 
-  if (await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
+  if (await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
 
   if (cmd === '/start') {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
     else await sendWelcome(chat, u, from);
   } else if (cmd === '/yordam' || cmd === '/help') {
-    await send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}\n${T.p.cmdSub}\n${T.p.cmdG}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
+    await send(chat, `${T.help}\n\n${T.p.helpLine}\n${T.p.helpLine2}\n${T.p.cmdSub}\n${T.p.cmdG}\n${T.p.cmdSv}`, { inline_keyboard: [[S.appBtn(T.openApp)], newRow(T)] });
   } else if (cmd === '/ilova' || cmd === '/app') {
     await send(chat, T.openApp, { inline_keyboard: [[S.appBtn(T.openApp)]] });
   } else if (cmd === '/yangi') {
@@ -414,6 +415,7 @@ async function onCallback(st, q) {
   if (proj.ACTS.includes(act)) { toast = await proj.onCallback(ctx, u, act, a, b); }
   else if (fin.ACTS.includes(act)) { toast = await fin.onCallback(ctx, u, act, a, b); }
   else if (ext.ACTS.includes(act)) { toast = await ext.onCallback(ctx, u, act, a, b); }
+  else if (svc.ACTS.includes(act)) { toast = await svc.onCallback(ctx, u, act, a, b); }
   else if (act === 'noop') { /* sahifa raqami */ }
   else if (act === 'd') await showCard(ctx, u, a);
   else if (act === 'l') await showUpcoming(ctx, u, Number(a) || 0);

@@ -19,6 +19,8 @@
 - `functions/ext.js` — xarajatlar va sof foyda (`/xarajat`, `/xarajatlar`), oylik maqsad (`/maqsad`), sayt kuzatuvi (`/saytlar`; har soatda tekshiradi, ochilmasa xabar beradi, domen muddati 30/7/1 kun oldin), zaxira (`/zaxira`; har dushanba 10:00 da avtomatik, JSON faylni botga yuborsangiz tiklaydi) va AI yordamchi (`/ai`, loyiha kartasidagi tugmalar; Workers AI, kuniga 30 ta).
 - Sayt tekshiruvi sekin boʻlishi mumkin, shuning uchun `remind.js` saqlashdan oldin foydalanuvchini qayta oʻqib birlashtiradi.
 
+- `functions/svc.js` — servis: tayyor saytlar (`/servis`; mijoz, telefon, sayt va Claude sessiyasi havolasi, topshirilgan sana, 12 oylik servis muddati, oʻzgartirish soʻrovlari). Muddat tugashiga 30/7 kun qolganda eslatadi. Tayyor loyihadan “🛠 Servisga” tugmasi bilan oʻtkaziladi.
+
 ## Deploy
 
 ```bash

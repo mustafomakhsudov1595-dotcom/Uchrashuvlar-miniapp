@@ -28,7 +28,7 @@ async function showList(ctx, u, page = 0) {
   if (page < pages - 1) nav.push({ text: '▶️', callback_data: `pl:${page + 1}` });
   if (nav.length) rows.push(nav);
   rows.push([{ text: P.addNew, callback_data: 'pn' }, { text: P.bTasksToday, callback_data: 'ptd' }]);
-  rows.push([{ text: P.bClients, callback_data: 'cl:0' }, { text: P.bSubs, callback_data: 'sl:0' }, { text: P.bIncome, callback_data: 'in:0' }]);
+  rows.push([{ text: P.bSvc, callback_data: 'vl:0' }, { text: P.bClients, callback_data: 'cl:0' }, { text: P.bSubs, callback_data: 'sl:0' }, { text: P.bIncome, callback_data: 'in:0' }]);
   rows.push([{ text: P.bDebts, callback_data: 'pq:0' }, S.appBtn(T.openAppShort, '?tab=projects')]);
   return show(ctx, text, { inline_keyboard: rows });
 }
@@ -41,6 +41,7 @@ function cardMarkup(p, u) {
   if (p.price !== null && S.owed(p) > 0) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]);
   else if (p.price !== null) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }]);
   rows.push([{ text: P.bReport, callback_data: `pr:${p.id}` }, { text: P.bExpenses, callback_data: `xp:${p.id}` }]);
+  if (p.status === 'done') rows.push([{ text: P.bSvFromProj, callback_data: `vp:${p.id}` }]);
   rows.push([{ text: P.bSite, callback_data: `mu:${p.id}` }, ...(p.url ? [{ text: P.bCheck, callback_data: `mc:${p.id}` }, { text: '🗑', callback_data: `mx:${p.id}` }] : [])]);
   rows.push(aiButtons(p, P).map(([k, label]) => ({ text: label, callback_data: `ai:${k}:${p.id}` })));
   rows.push([{ text: P.bAddTask, callback_data: `pa:${p.id}` }, S.appBtn(P.bApp, `?proj=${p.id}`), { text: P.bDel, callback_data: `px:${p.id}` }]);

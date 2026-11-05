@@ -64,6 +64,8 @@ const SDEL_KEY = 'uchrashuvlar:sdeleted';
 const EKEY = 'uchrashuvlar:expenses:v1';
 const EDEL_KEY = 'uchrashuvlar:edeleted';
 const GOAL_KEY = 'uchrashuvlar:goal';
+const SVKEY = 'uchrashuvlar:services:v1';
+const SVDEL_KEY = 'uchrashuvlar:svdeleted';
 export const EXCATS = ['ads', 'team', 'host', 'tools', 'other'];
 const YM_RE = /^\d{4}-\d{2}$/;
 const PTYPES = ['site', 'bot', 'video', 'other'];
@@ -96,6 +98,56 @@ export function cleanProject(p) {
     updatedAt: Number(p.updatedAt) || 0,
   };
 }
+// ---- Servis: tayyor saytlar ----
+export function cleanService(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || typeof x.name !== 'string' || !x.name.trim() || !DATE_RE.test(x.doneAt)) return null;
+  return {
+    id: x.id,
+    name: x.name.trim(),
+    client: typeof x.client === 'string' ? x.client.trim() : '',
+    phone: typeof x.phone === 'string' ? x.phone.trim() : '',
+    url: typeof x.url === 'string' ? x.url.trim() : '',
+    claudeUrl: typeof x.claudeUrl === 'string' ? x.claudeUrl.trim() : '',
+    doneAt: x.doneAt,
+    months: Math.min(60, Math.max(1, Math.round(Number(x.months) || 12))),
+    notes: typeof x.notes === 'string' ? x.notes : '',
+    requests: Array.isArray(x.requests) ? x.requests.filter((r) => r && typeof r.text === 'string' && r.text.trim() && DATE_RE.test(r.d)).slice(-50).map((r) => ({ id: String(r.id ?? newId()), d: r.d, text: r.text.trim(), done: Boolean(r.done) })) : [],
+    createdAt: Number(x.createdAt) || Date.now(),
+    updatedAt: Number(x.updatedAt) || 0,
+  };
+}
+export function loadServices() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SVKEY) || '[]');
+    return Array.isArray(d) ? d.map(cleanService).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+export function saveServices(list) {
+  try {
+    localStorage.setItem(SVKEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+export function loadSvDeleted() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SVDEL_KEY) || '[]');
+    return Array.isArray(d) ? d.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+export const saveSvDeleted = (ids) => {
+  try {
+    localStorage.setItem(SVDEL_KEY, JSON.stringify(ids));
+  } catch {
+    /* ignore */
+  }
+};
+export const servicesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, x.months, x.notes, x.requests.map((r) => [r.id, r.done, r.text])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+
 // ---- Xarajatlar va oylik maqsad ----
 export function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !DATE_RE.test(x.d)) return null;
@@ -282,12 +334,12 @@ export function savePlaces(list, at) {
 const headers = () => ({ 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData });
 
 // Serverga yuboradi, birlashtirilgan natijani qaytaradi: { meetings, lang, places, placesAt }
-export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, goal, goalAt }) {
+export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, goal, goalAt }) {
   if (!isTelegram) return null;
   const res = await fetch('/api/meetings', {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, goal, goalAt, tz: -new Date().getTimezoneOffset() }),
+    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, goal, goalAt, tz: -new Date().getTimezoneOffset() }),
   });
   if (!res.ok) throw new Error(`sync ${res.status}`);
   const data = await res.json();
@@ -296,6 +348,7 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     projects: Array.isArray(data.projects) ? data.projects.map(cleanProject).filter(Boolean) : [],
     subs: Array.isArray(data.subs) ? data.subs.map(cleanSub).filter(Boolean) : [],
     expenses: Array.isArray(data.expenses) ? data.expenses.map(cleanExpense).filter(Boolean) : [],
+    services: Array.isArray(data.services) ? data.services.map(cleanService).filter(Boolean) : [],
     goal: Number(data.goal) || 0,
     goalAt: Number(data.goalAt) || 0,
     lang: data.lang,

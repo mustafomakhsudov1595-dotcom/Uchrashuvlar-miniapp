@@ -93,4 +93,6 @@ const F = require('./i18n_f');
 Object.assign(uz, F.uz); Object.assign(ru, F.ru); Object.assign(en, F.en);
 const G = require('./i18n_g');
 Object.assign(uz, G.uz); Object.assign(ru, G.ru); Object.assign(en, G.en);
+const H = require('./i18n_h');
+Object.assign(uz, H.uz); Object.assign(ru, H.ru); Object.assign(en, H.en);
 module.exports = { uz, ru, en };
