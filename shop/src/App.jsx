@@ -126,7 +126,7 @@ function Home({ products, cart, change, setOpen, cat, setCat, count, goCart }) {
     <>
       <header className="top">
         <div className="brand">
-          <div className="logo">C</div>
+          <img className="logo" src="./logo.svg" alt="" />
           <div><div className="bname">{SHOP_NAME}</div><div className="hello">{user?.first_name ? `Salom, ${user.first_name} 👋` : 'Xush kelibsiz 👋'}</div></div>
         </div>
         <button className="iconbtn" onClick={goCart} aria-label="Savat"><ICart />{count > 0 && <i className="cbadge">{count}</i>}</button>

@@ -16,8 +16,8 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;paddin
 .err{margin-top:12px;color:var(--sale);font-weight:700;font-size:14px}
 
 /* header */
-.logo{width:42px;height:42px;border-radius:14px;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:21px;box-shadow:0 8px 18px -8px var(--p1)}
-.logo.big{width:68px;height:68px;border-radius:22px;font-size:32px;margin:0 auto}
+.logo{width:44px;height:44px;border-radius:13px;display:block;box-shadow:0 8px 18px -8px #4F46E5}
+.logo.big{width:84px;height:84px;border-radius:26px;margin:0 auto}
 .top{display:flex;justify-content:space-between;align-items:center;padding:14px 0 12px}
 .brand{display:flex;align-items:center;gap:11px}.bname{font-weight:800;font-size:19px;letter-spacing:-.3px}.hello{font-size:12.5px;color:var(--muted);font-weight:600}
 .tbtns{display:flex;gap:8px}

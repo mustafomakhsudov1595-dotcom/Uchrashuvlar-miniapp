@@ -91,7 +91,7 @@ export default function App() {
   if (!authed) return (
     <div className="login">
       <div className="lcard">
-        <div className="logo big">C</div>
+        <img className="logo big" src="./logo.svg" alt="" />
         <h1>Admin panel</h1>
         <p>Chilling Bet do'koni boshqaruvi</p>
         <div className="field"><ILock size={19} /><input type="password" placeholder="Parol" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && login()} /></div>
@@ -111,7 +111,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
-        <div className="brand"><div className="logo">C</div><div><div className="bname">Admin</div><div className="hello">Chilling Bet</div></div></div>
+        <div className="brand"><img className="logo" src="./logo.svg" alt="" /><div><div className="bname">Admin</div><div className="hello">Chilling Bet</div></div></div>
         <div className="tbtns">
           <button className="iconbtn" onClick={() => load()} aria-label="Yangilash"><IRefresh size={20} /></button>
           <button className="iconbtn" onClick={logout} aria-label="Chiqish"><IOut size={20} /></button>
