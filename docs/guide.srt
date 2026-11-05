@@ -1,0 +1,64 @@
+1
+00:00:01,400 --> 00:00:05,000
+Salom! Bu admin panel bo'yicha qisqa qo'llanma.
+
+2
+00:00:05,200 --> 00:00:10,600
+Avval kirish: botga slesh admin va parolni yozib, tugmani bosing.
+
+3
+00:00:11,300 --> 00:00:16,600
+Yoki admin ilovaga parolni kiriting. Parolni faqat adminlarga bering.
+
+4
+00:00:16,900 --> 00:00:19,500
+Yangi buyurtmalar shu yerda.
+
+5
+00:00:19,700 --> 00:00:23,800
+Ism, manzil, mahsulotlar va jami summa ko'rinadi.
+
+6
+00:00:24,000 --> 00:00:26,800
+Telefon tugmasi — qo'ng'iroq.
+
+7
+00:00:27,000 --> 00:00:30,100
+Yetkazib bergach, Bajarildi tugmasini bosing.
+
+8
+00:00:30,300 --> 00:00:33,400
+Filtr bilan holat bo'yicha ajrating.
+
+9
+00:00:33,600 --> 00:00:36,300
+Endi, Mahsulot bo'limi.
+
+10
+00:00:36,500 --> 00:00:43,700
+Narxni va ombordagi sonini yozing, so'ng Saqlash tugmasini bosing. Ombor har buyurtmada o'zi kamayadi.
+
+11
+00:00:44,000 --> 00:01:06,500
+Yangi mahsulot qo'shish uchun, plyus tugmasini bosing. Rasm yuklang, nomini, narxini va sonini yozing, so'ng Saqlashni bosing. Mahsulot do'konda darrov paydo bo'ladi.
+
+12
+00:01:07,300 --> 00:01:09,900
+Aksiya bo'limi: skidka va promokod.
+
+13
+00:01:10,200 --> 00:01:18,700
+Skidka uchun nom va foizni yozib, saqlang. Narxlar o'zi arzonlashadi.
+
+14
+00:01:19,000 --> 00:01:25,600
+Promokod uchun kod va foizni yozing. Mijoz savatda shu kodni kiritsa, chegirma oladi.
+
+15
+00:01:25,900 --> 00:01:32,500
+Haftalik hisobot har yakshanba kechqurun, soat sakkizda, o'zi keladi. Hozir ham yuborish mumkin.
+
+16
+00:01:33,000 --> 00:01:38,000
+Tayyor! Admin panel shunchalik oson. Omad!
+
