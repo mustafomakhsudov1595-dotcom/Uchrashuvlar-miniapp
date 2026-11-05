@@ -1,0 +1,34 @@
+=== ELEVENLABS UCHUN TAYYOR (Text to Speech) ===
+
+SOZLAMALAR
+- Til: Uzbek (agar so'ralsa)
+- Model: Eleven v3 (o'zbek tilini qo'llaydi). Tanlab bo'lmasa — Multilingual v2.
+- Ovoz: iliq, do'stona, o'rtacha-sekin ovoz tanlang (Voice Library -> Language: Uzbek).
+- Stability: 55-65%   Similarity: 75%   Style: 10-20%   Speed: 0.95
+
+--------------------------------------------------------------------
+1-VARIANT: BITTA AUDIO (pauza bilan) — butun matnni bir marta joylang
+--------------------------------------------------------------------
+Salom! Bu admin panel bo'yicha qisqa qo'llanma. <break time="0.6s" /> Avval kirish: botga slesh admin va parolni yozib, tugmani bosing. <break time="0.6s" /> Yoki admin ilovaga parolni kiriting. Parolni faqat adminlarga bering. <break time="0.6s" /> Yangi buyurtmalar shu yerda. <break time="0.6s" /> Ism, manzil, mahsulotlar va jami summa ko'rinadi. <break time="0.6s" /> Telefon tugmasi — qo'ng'iroq. <break time="0.6s" /> Yetkazib bergach, Bajarildi tugmasini bosing. <break time="0.6s" /> Filtr bilan holat bo'yicha ajrating. <break time="0.6s" /> Endi, Mahsulot bo'limi. <break time="0.6s" /> Narxni va ombordagi sonini yozing, so'ng Saqlash tugmasini bosing. Ombor har buyurtmada o'zi kamayadi. <break time="0.6s" /> Yangi mahsulot qo'shish uchun, plyus tugmasini bosing. Rasm yuklang, nomini, narxini va sonini yozing, so'ng Saqlashni bosing. Mahsulot do'konda darrov paydo bo'ladi. <break time="0.6s" /> Aksiya bo'limi: skidka va promokod. <break time="0.6s" /> Skidka uchun nom va foizni yozib, saqlang. Narxlar o'zi arzonlashadi. <break time="0.6s" /> Promokod uchun kod va foizni yozing. Mijoz savatda shu kodni kiritsa, chegirma oladi. <break time="0.6s" /> Haftalik hisobot har yakshanba kechqurun, soat sakkizda, o'zi keladi. Hozir ham yuborish mumkin. <break time="0.6s" /> Tayyor! Admin panel shunchalik oson. Omad!
+
+--------------------------------------------------------------------
+2-VARIANT: 16 TA ALOHIDA AUDIO (videoga aniq vaqtda qo'yish uchun TAVSIYA)
+Har bir qatorni alohida yarating va 01.mp3, 02.mp3 ... deb nomlang.
+Vaqtlar: docs/video-ovoz.md va docs/guide.srt faylida.
+--------------------------------------------------------------------
+01. Salom! Bu admin panel bo'yicha qisqa qo'llanma.
+02. Avval kirish: botga slesh admin va parolni yozib, tugmani bosing.
+03. Yoki admin ilovaga parolni kiriting. Parolni faqat adminlarga bering.
+04. Yangi buyurtmalar shu yerda.
+05. Ism, manzil, mahsulotlar va jami summa ko'rinadi.
+06. Telefon tugmasi — qo'ng'iroq.
+07. Yetkazib bergach, Bajarildi tugmasini bosing.
+08. Filtr bilan holat bo'yicha ajrating.
+09. Endi, Mahsulot bo'limi.
+10. Narxni va ombordagi sonini yozing, so'ng Saqlash tugmasini bosing. Ombor har buyurtmada o'zi kamayadi.
+11. Yangi mahsulot qo'shish uchun, plyus tugmasini bosing. Rasm yuklang, nomini, narxini va sonini yozing, so'ng Saqlashni bosing. Mahsulot do'konda darrov paydo bo'ladi.
+12. Aksiya bo'limi: skidka va promokod.
+13. Skidka uchun nom va foizni yozib, saqlang. Narxlar o'zi arzonlashadi.
+14. Promokod uchun kod va foizni yozing. Mijoz savatda shu kodni kiritsa, chegirma oladi.
+15. Haftalik hisobot har yakshanba kechqurun, soat sakkizda, o'zi keladi. Hozir ham yuborish mumkin.
+16. Tayyor! Admin panel shunchalik oson. Omad!
