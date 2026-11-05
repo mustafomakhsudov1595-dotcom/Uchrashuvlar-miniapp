@@ -1,0 +1,8 @@
+{
+  "name": "chilling-weekly-report",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "deploy": "wrangler deploy" },
+  "dependencies": { "@pdf-lib/fontkit": "^1.1.1", "pdf-lib": "^1.17.1" }
+}

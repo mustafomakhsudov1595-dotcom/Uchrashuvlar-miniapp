@@ -5,7 +5,7 @@ import { IBox, ICamera, ICheck, IClose, IEdit, ILock, IOut, IPercent, IPhone, IP
 
 const ORIGIN = 'https://chilling-shop.pages.dev';
 const imgUrl = (f) => (f.startsWith('data:') ? f : f.startsWith('/') ? ORIGIN + f : `${ORIGIN}/img/${f}`);
-const EMPTY = { id: 0, name: '', cat: 'other', size: '', price: '', oldPrice: '', desc: '', hit: false, isNew: false, hidden: false, img: '' };
+const EMPTY = { id: 0, stock: '', name: '', cat: 'other', size: '', price: '', oldPrice: '', desc: '', hit: false, isNew: false, hidden: false, img: '' };
 
 // rasmni brauzerda kichraytirish (max 900px, JPEG)
 const shrink = (file) => new Promise((res, rej) => {
@@ -55,9 +55,15 @@ export default function App() {
     const d = await api({ action: 'get' });
     setOrders(d.orders); setRaw(d); setSales(d.sales); setPromos(d.promos);
     const cat = buildCatalog(PRODUCTS, d.overrides, d.custom, []);
-    const r = Object.fromEntries(cat.map((p) => [p.id, { price: String(p.price), oldPrice: String(p.oldPrice || ''), hidden: !!p.hidden }]));
+    const r = Object.fromEntries(cat.map((p) => [p.id, { price: String(p.price), oldPrice: String(p.oldPrice || ''), hidden: !!p.hidden, stock: p.stock === undefined ? '' : String(p.stock) }]));
     setRows(r); setBase(r);
   }, [api]);
+  const [sending, setSending] = useState(false);
+  const sendReport = async () => {
+    setSending(true);
+    try { const r = await api({ action: 'report_now' }); flash(r.sent ? `Yuborildi: ${r.sent} ta adminga ✓` : 'Admin topilmadi (botga /admin parol yozing)'); } catch (e) { flash(e.message); }
+    setSending(false);
+  };
   const flash = (t) => { setToast(t); setTimeout(() => setToast(''), 2200); };
 
   const login = async () => {
@@ -172,12 +178,13 @@ export default function App() {
                 <div className="ptop">
                   {p.img ? <img src={imgUrl(p.img)} alt="" loading="lazy" /> : <div className="ph">💡</div>}
                   <div className="pn"><b>{p.name}</b><span>{p.size}{p.id >= 1000 ? ' · yangi qo\'shilgan' : ''}</span></div>
-                  <button className="editb" onClick={() => setEdit({ ...EMPTY, ...p, price: String(p.price), oldPrice: String(p.oldPrice || '') })} aria-label="Tahrirlash"><IEdit size={18} /></button>
+                  <button className="editb" onClick={() => setEdit({ ...EMPTY, ...p, price: String(p.price), oldPrice: String(p.oldPrice || ''), stock: p.stock === undefined ? '' : String(p.stock) })} aria-label="Tahrirlash"><IEdit size={18} /></button>
                   <label className="sw"><input type="checkbox" checked={!rows[p.id].hidden} onChange={(e) => setRow(p.id, 'hidden', !e.target.checked)} /><i /></label>
                 </div>
-                <div className="pin">
+                <div className="pin three">
                   <label>Narx<input type="number" inputMode="numeric" value={rows[p.id].price} onChange={(e) => setRow(p.id, 'price', e.target.value)} /></label>
                   <label>Eski narx<input type="number" inputMode="numeric" value={rows[p.id].oldPrice} placeholder="—" onChange={(e) => setRow(p.id, 'oldPrice', e.target.value)} /></label>
+                  <label>Omborda<input type="number" inputMode="numeric" className={rows[p.id].stock !== '' && Number(rows[p.id].stock) <= 10 ? 'lowin' : ''} value={rows[p.id].stock} placeholder="cheksiz" onChange={(e) => setRow(p.id, 'stock', e.target.value)} /></label>
                 </div>
               </div>
             ))}
@@ -241,6 +248,10 @@ export default function App() {
             );
           })}
           <button className="btn" onClick={savePromos}>Promokodlarni saqlash</button>
+
+          <div className="sechead" style={{ marginTop: 28 }}><h3>📊 Haftalik hisobot</h3></div>
+          <p className="hint">Har yakshanba soat 20:00 da (Toshkent) barcha adminlarga PDF hisobot avtomatik yuboriladi: sotuvlar, daromad, kam qolgan mahsulotlar.</p>
+          <button className="btn" disabled={sending} onClick={sendReport}>{sending ? 'Yuborilmoqda...' : 'Hisobotni hozir yuborish'}</button>
         </>
       )}
 
@@ -295,6 +306,7 @@ function Editor({ p, onClose, onSave, onDelete }) {
             <label>Narx (so'm)<input type="number" inputMode="numeric" value={f.price} onChange={(e) => set('price', e.target.value)} /></label>
             <label>Eski narx<input type="number" inputMode="numeric" value={f.oldPrice} onChange={(e) => set('oldPrice', e.target.value)} placeholder="—" /></label>
           </div>
+          <label>Omborda necha dona bor (bo'sh = cheksiz)<input type="number" inputMode="numeric" value={f.stock} onChange={(e) => set('stock', e.target.value)} placeholder="Masalan: 50" /></label>
           <label>Tavsif<textarea rows="3" value={f.desc} onChange={(e) => set('desc', e.target.value)} placeholder="Mahsulot haqida qisqacha..." /></label>
           <div className="chips">
             <label className={'chip' + (f.hit ? ' on' : '')}><input type="checkbox" checked={f.hit} onChange={(e) => set('hit', e.target.checked)} hidden />🔥 Hit</label>

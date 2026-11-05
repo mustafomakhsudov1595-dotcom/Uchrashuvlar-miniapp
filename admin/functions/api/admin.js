@@ -4,6 +4,19 @@ const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, header
 const rd = async (env, k, d) => (await env.KV.get(k, 'json')) ?? d;
 const str = (v, n) => String(v ?? '').trim().slice(0, n);
 const num = (v) => Math.max(0, Math.round(Number(v)) || 0);
+const stockVal = (v) => (v === '' || v === null || v === undefined ? null : num(v));
+// buyurtma mahsulotlari bo'yicha ombor qoldig'ini o'zgartirish (sign: -1 ayirish, +1 qaytarish)
+async function adjustStock(env, items, sign) {
+  const overrides = await rd(env, 'overrides', {});
+  const custom = await rd(env, 'custom', []);
+  for (const it of items) {
+    if (it.id >= 1000) {
+      const c = custom.find((x) => x.id === it.id);
+      if (c && typeof c.stock === 'number') c.stock = Math.max(0, c.stock + sign * it.q);
+    } else if (typeof overrides[it.id]?.stock === 'number') overrides[it.id].stock = Math.max(0, overrides[it.id].stock + sign * it.q);
+  }
+  await Promise.all([env.KV.put('overrides', JSON.stringify(overrides)), env.KV.put('custom', JSON.stringify(custom))]);
+}
 const CATS = ['laundry', 'pipes', 'sponge', 'air', 'duracell', 'raketa', 'soni', 'lamp', 'glue', 'razor', 'other'];
 
 export async function onRequestPost({ request, env }) {
@@ -33,8 +46,8 @@ export async function onRequestPost({ request, env }) {
         if (!(price > 0)) continue;
         if (Number(id) >= 1000) {
           const c = custom.find((x) => x.id === Number(id));
-          if (c) { c.price = price; c.oldPrice = oldPrice || undefined; c.hidden = !!v.hidden; }
-        } else overrides[id] = { ...(overrides[id] || {}), price, oldPrice, hidden: !!v.hidden };
+          if (c) { c.price = price; c.oldPrice = oldPrice || undefined; c.hidden = !!v.hidden; const s = stockVal(v.stock); if (s === null) delete c.stock; else c.stock = s; }
+        } else overrides[id] = { ...(overrides[id] || {}), price, oldPrice, hidden: !!v.hidden, stock: stockVal(v.stock) };
       }
       await Promise.all([env.KV.put('overrides', JSON.stringify(overrides)), env.KV.put('custom', JSON.stringify(custom))]);
       return json({ ok: true });
@@ -48,6 +61,7 @@ export async function onRequestPost({ request, env }) {
         cat: CATS.includes(p.cat) ? p.cat : 'other', price: num(p.price), oldPrice: num(p.oldPrice),
         hit: !!p.hit, isNew: !!p.isNew, hidden: !!p.hidden,
       };
+      const stock = stockVal(p.stock);
       if (!f.name || !(f.price > 0)) return json({ error: 'Nom va narx kerak' }, 400);
       const overrides = await rd(env, 'overrides', {});
       const custom = await rd(env, 'custom', []);
@@ -65,9 +79,10 @@ export async function onRequestPost({ request, env }) {
         const i = custom.findIndex((c) => c.id === id);
         const prev = i >= 0 ? custom[i] : {};
         const item = { ...prev, ...f, oldPrice: f.oldPrice || undefined, id, img: imgUrl || prev.img };
+        if (stock === null) delete item.stock; else item.stock = stock;
         if (i >= 0) custom[i] = item; else custom.push(item);
       } else {
-        overrides[id] = { ...(overrides[id] || {}), ...f, ...(imgUrl ? { img: imgUrl } : {}) };
+        overrides[id] = { ...(overrides[id] || {}), ...f, stock, ...(imgUrl ? { img: imgUrl } : {}) };
       }
       await Promise.all([env.KV.put('overrides', JSON.stringify(overrides)), env.KV.put('custom', JSON.stringify(custom))]);
       return json({ ok: true, id });
@@ -111,13 +126,23 @@ export async function onRequestPost({ request, env }) {
       return json({ ok: true, promos });
     }
 
+    // haftalik hisobotni hozir yuborish (chilling-report Worker orqali)
+    case 'report_now': {
+      const r = await fetch('https://chilling-report.uchrashuvlar-mini-app.workers.dev/send', { headers: { 'x-key': env.ADMIN_PASSWORD } });
+      if (!r.ok) return json({ error: 'Hisobot yuborilmadi' }, 502);
+      return json(await r.json());
+    }
+
     case 'status': {
       const key = String(b.id || '');
       if (!key.startsWith('order:')) return json({ error: 'bad' }, 400);
       const o = await env.KV.get(key, 'json');
       if (!o) return json({ error: 'yoq' }, 404);
+      const before = o.status || 'new';
       o.status = b.status === 'done' ? 'done' : b.status === 'cancel' ? 'cancel' : 'new';
       await env.KV.put(key, JSON.stringify(o));
+      if (before !== 'cancel' && o.status === 'cancel') await adjustStock(env, o.items, +1);
+      if (before === 'cancel' && o.status !== 'cancel') await adjustStock(env, o.items, -1);
       return json({ ok: true });
     }
     default: return json({ error: 'bad action' }, 400);

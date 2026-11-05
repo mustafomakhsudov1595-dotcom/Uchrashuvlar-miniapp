@@ -22,7 +22,8 @@ export async function onRequestPost({ request, env }) {
     const p = catalog.find((x) => x.id === Number(it.id));
     const q = Math.floor(Number(it.q));
     if (!p || p.hidden || !(q > 0) || q > 999) continue;
-    items.push({ id: p.id, name: p.name, size: p.size, price: p.price, q });
+    if (typeof p.stock === 'number' && q > p.stock) return json({ error: 'stock', name: p.name, left: p.stock }, 409);
+    items.push({ id: p.id, name: p.name, size: p.size, price: p.price, q, stocked: typeof p.stock === 'number' });
   }
   if (!items.length) return json({ error: 'bad' }, 400);
   const subtotal = items.reduce((s, i) => s + i.price * i.q, 0);
@@ -36,11 +37,23 @@ export async function onRequestPost({ request, env }) {
   }
   const total = subtotal - discount;
 
+  // ombor qoldig'ini kamaytirish
+  const stocked = items.filter((i) => i.stocked);
+  if (stocked.length) {
+    const ov2 = (await env.KV.get('overrides', 'json')) || {};
+    const cu2 = (await env.KV.get('custom', 'json')) || [];
+    for (const i of stocked) {
+      if (i.id >= 1000) { const c = cu2.find((x) => x.id === i.id); if (c) c.stock = Math.max(0, c.stock - i.q); }
+      else if (ov2[i.id]) ov2[i.id].stock = Math.max(0, ov2[i.id].stock - i.q);
+    }
+    await Promise.all([env.KV.put('overrides', JSON.stringify(ov2)), env.KV.put('custom', JSON.stringify(cu2))]);
+  }
+
   const num = (Number(await env.KV.get('order_counter')) || 0) + 1;
   await env.KV.put('order_counter', String(num));
   const ts = Date.now();
   const id = `order:${String(9e12 - ts).padStart(13, '0')}-${num}`;
-  await env.KV.put(id, JSON.stringify({ id, num, ts, name, phone, address, note, items, subtotal, discount, promo: promoCode, total, status: 'new', tg: user?.id || null }));
+  await env.KV.put(id, JSON.stringify({ id, num, ts, name, phone, address, note, items: items.map(({ stocked, ...r }) => r), subtotal, discount, promo: promoCode, total, status: 'new', tg: user?.id || null }));
   if (user?.id) await env.KV.put(`u:${user.id}:${id}`, id);
 
   const text = `🛒 <b>Yangi buyurtma #${num}</b>\n\n` +

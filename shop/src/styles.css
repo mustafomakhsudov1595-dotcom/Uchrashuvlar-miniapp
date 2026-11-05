@@ -160,3 +160,6 @@ label input:focus{border-color:var(--p1)}
 .sumrows{margin:14px 4px 0;display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:var(--muted)}
 .sumrows div{display:flex;justify-content:space-between}.sumrows b{color:var(--text)}.sumrows .disc b,.sumrows .disc span{color:var(--green)}
 .total{margin-top:10px}
+
+.badge.out{background:#475569}.badge.low{background:var(--amber)}
+.card.soldout .thumb img,.card.soldout .noimg{filter:grayscale(1);opacity:.55}

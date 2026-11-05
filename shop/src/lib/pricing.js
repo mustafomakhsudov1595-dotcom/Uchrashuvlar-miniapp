@@ -1,5 +1,5 @@
 // Katalog + skidka + promokod hisob-kitobi. Do'kon, server (order/promo) va admin — hammasi shu faylni ishlatadi.
-const FIELDS = ['name', 'desc', 'size', 'cat', 'img', 'hit', 'isNew', 'hidden'];
+const FIELDS = ['name', 'desc', 'size', 'cat', 'img', 'hit', 'isNew', 'hidden', 'stock'];
 
 export function saleActive(s, now = Date.now()) {
   return !!s.active && Number(s.percent) > 0 && (!s.ends || now <= new Date(s.ends + 'T23:59:59').getTime());
@@ -13,7 +13,7 @@ export function buildCatalog(base, overrides = {}, custom = [], sales = [], now 
     if (o) {
       if (o.price > 0) m.price = o.price;
       if ('oldPrice' in o) m.oldPrice = o.oldPrice || undefined;
-      for (const k of FIELDS) if (o[k] !== undefined && o[k] !== '') m[k] = o[k];
+      for (const k of FIELDS) if (o[k] !== undefined && o[k] !== null && o[k] !== '') m[k] = o[k];
     }
     let best = 0;
     for (const s of act) if ((s.scope === 'all' || s.scope === m.cat) && Number(s.percent) > best) best = Number(s.percent);

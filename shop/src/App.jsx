@@ -48,21 +48,24 @@ function Pic({ p }) {
 
 function Card({ p, q, onChange, onOpen, mini }) {
   const disc = p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+  const out = p.stock === 0;
   return (
-    <div className={'card' + (mini ? ' mini' : '')}>
+    <div className={'card' + (mini ? ' mini' : '') + (out ? ' soldout' : '')}>
       <div className="thumb" onClick={() => onOpen(p)}>
         <Pic p={p} />
         <div className="badges">
           {disc > 0 && <span className="badge sale">−{disc}%</span>}
           {p.hit && <span className="badge hit">🔥 Hit</span>}
           {p.isNew && <span className="badge new">Yangi</span>}
+          {out && <span className="badge out">Tugagan</span>}
+          {p.stock > 0 && p.stock <= 5 && <span className="badge low">Oxirgi {p.stock} ta</span>}
         </div>
       </div>
       <div className="info">
         <div className="name" onClick={() => onOpen(p)}>{p.name}</div>
         <div className="size">{p.size}</div>
         <div className="prow"><Price p={p} /></div>
-        {q ? <Qty q={q} onChange={(d) => onChange(p.id, d)} /> : (
+        {out ? <button className="add" disabled>Tugagan</button> : q ? <Qty q={q} onChange={(d) => onChange(p.id, d)} /> : (
           <button className="add" onClick={() => onChange(p.id, 1)}><IPlus size={17} /> Savatga</button>
         )}
       </div>
@@ -88,7 +91,7 @@ function Detail({ p, q, onChange, onClose }) {
         </div>
         <div className="dbar">
           <Price p={p} big />
-          {q ? <Qty big q={q} onChange={(d) => onChange(p.id, d)} /> : (
+          {p.stock === 0 ? <button className="add big" disabled>Tugagan</button> : q ? <Qty big q={q} onChange={(d) => onChange(p.id, d)} /> : (
             <button className="add big" onClick={() => onChange(p.id, 1)}><IPlus size={18} /> Savatga</button>
           )}
         </div>
@@ -235,6 +238,7 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
         headers: { 'content-type': 'application/json', 'x-init-data': tg?.initData || '' },
         body: JSON.stringify({ ...f, items: items.map((i) => ({ id: i.id, q: i.q })), promo: promo?.code || '' }),
       });
+      if (r.status === 409) { const e = await r.json(); setErr(`“${e.name}” omborda yetarli emas (qoldi: ${e.left} ta)`); setBusy(false); return; }
       if (!r.ok) throw new Error();
       const d = await r.json();
       ls.set('profile', { name: f.name, phone: f.phone, address: f.address });
@@ -372,11 +376,16 @@ export default function App() {
   const [tab, setTab] = useState('home');
   const [cat, setCat] = useState('all');
   const [open, setOpen] = useState(null);
-  const [cart, change, clear] = useCart();
+  const [cart, rawChange, clear] = useCart();
   const [data, setData] = useState({ overrides: {}, custom: [], sales: [] });
   useEffect(() => { fetch('/api/products').then((r) => r.json()).then(setData).catch(() => {}); }, []);
 
   const products = useMemo(() => buildCatalog(PRODUCTS, data.overrides, data.custom, data.sales).filter((p) => !p.hidden), [data]);
+  const change = (id, d) => {
+    const p = products.find((x) => x.id === id);
+    if (d > 0 && typeof p?.stock === 'number' && (cart[id] || 0) >= p.stock) { haptic('medium'); return; }
+    rawChange(id, d);
+  };
   const items = products.filter((p) => cart[p.id]).map((p) => ({ ...p, q: cart[p.id] }));
   const count = items.reduce((s, i) => s + i.q, 0);
   const total = items.reduce((s, i) => s + i.q * i.price, 0);
