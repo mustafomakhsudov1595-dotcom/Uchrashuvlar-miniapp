@@ -1,0 +1,28 @@
+
+/* ---- tour pages ---- */
+html[lang="ru"] [data-l]:not([data-l="ru"]),html[lang="en"] [data-l]:not([data-l="en"]),html[lang="uz"] [data-l]:not([data-l="uz"]){display:none}
+.tp .hdr .lang{margin-left:0}
+.crumbs{font-size:.8rem;color:var(--muted);letter-spacing:.04em}
+.crumbs a{text-decoration:none}.crumbs a:hover{color:var(--gold)}
+.thero{position:relative;overflow:hidden;background:#0A0A0C;color:#F4F0E6;min-height:min(70svh,620px);display:flex;align-items:flex-end;padding:90px 0 56px;--muted:#BDB8AA}
+.thero-bg{position:absolute;inset:0;background:radial-gradient(55% 55% at 82% 18%,rgba(34,193,187,.2),transparent 70%),radial-gradient(45% 45% at 8% 92%,rgba(233,180,76,.14),transparent 70%)}
+.thero-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+.thero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,10,12,.94) 10%,rgba(10,10,12,.5) 65%,rgba(10,10,12,.3))}
+.thero-in{position:relative;width:100%}
+.thero h1{font-size:clamp(2.6rem,7vw,5rem);line-height:1;max-width:12em}
+.thero .lead{margin-top:22px;font-size:1.12rem;color:var(--muted);max-width:34em}
+.thero .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.thero .btn-line{color:#F4F0E6;box-shadow:inset 0 0 0 1px rgba(233,180,76,.5)}
+.tgrid{display:grid;grid-template-columns:1.4fr 1fr;gap:56px;align-items:start}
+@media (max-width:860px){.tgrid{grid-template-columns:1fr;gap:32px}}
+.tstops{list-style:none;margin:0;padding:0 0 0 28px;border-left:1px solid var(--line2)}
+.tstops li{position:relative;padding:0 0 28px 18px}
+.tstops li::before{content:"";position:absolute;left:-34px;top:.45em;width:11px;height:11px;background:var(--gold);transform:rotate(45deg)}
+.tstops b{font:600 1.7rem var(--display)}
+.tstops p{margin-top:4px;color:var(--muted)}
+.tstops .u{font-style:normal;display:inline-block;margin-left:10px;font:700 .66rem var(--text);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line2);color:var(--gold-ink);border-radius:2px;padding:1px 8px;vertical-align:middle}
+.side-h{font:700 .72rem var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-ink);margin:22px 0 8px}
+.side-p{color:var(--muted);font-size:.94rem}
+.tp .hotel{display:block}
+.tp .tour{text-decoration:none}
+body.tp .sec.in{opacity:1}
