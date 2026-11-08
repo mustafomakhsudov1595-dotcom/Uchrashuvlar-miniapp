@@ -14,9 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://trust-travel.uz/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/fonts.css">
 <link rel="stylesheet" href="/assets/site.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"TravelAgency","name":"Trust Travel","foundingDate":"2006","url":"https://trust-travel.uz/","email":"info@trust-travel.uz","telephone":"+998999047419","image":"https://trust-travel.uz/images/og.jpg","address":{"@type":"PostalAddress","streetAddress":"Проспект Навои 9, офис 215","addressLocality":"Ташкент","addressCountry":"UZ"},"openingHours":"Mo-Fr 09:00-18:00"}
@@ -30,6 +28,7 @@
 <!-- Yandex.Metrika counter -->
 <script>
 document.documentElement.className+=" js";
+setTimeout(function(){if(!window.__ttok)document.documentElement.className=document.documentElement.className.replace(" js","");},4000);
 (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
 m[i].l=1*new Date();
 for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
@@ -742,6 +741,7 @@ document.addEventListener("click",function(e){
 buildSlides();buildMap();buildChips();applyLang();onScroll();
 sel("qs").value="any";sel("fs").value="any";
 if(!reduce)updateRoute(true);
+window.__ttok=1;
 })();
 </script>
 </body>
