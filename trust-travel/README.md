@@ -1,26 +1,33 @@
 # Trust Travel — sayt (trust-travel.uz)
 
-Statik sayt, build kerak emas. Asosiy sahifa — bitta `index.html` (CSS va JS ichida).
-Tur sahifalari `node build.mjs` bilan `index.html` dagi matnlardan yaratiladi (`tours/*.html`, `sitemap.xml`, `assets/site.css`).
-Matn yoki turni o'zgartirsangiz: `index.html` ni tahrirlang, so'ng `node build.mjs`.
+Statik sayt, build kerak emas. RU / EN / UZ, bitta qora-oltin dizayn tizimi.
 
-## 1. Cloudflare Pages'ga joylash
-1. dash.cloudflare.com → Workers & Pages → Create → Pages → Connect to Git → shu repo, branch tanlang.
-2. Build command: bo'sh. Build output directory: `trust-travel`. Deploy.
-   (Git'siz variant: Upload assets → `trust-travel` papkasini sudrab tashlang.)
-3. Custom domains → Set up a custom domain → `trust-travel.uz` va `www.trust-travel.uz`.
-   Domen Cloudflare DNS'da bo'lsa, yozuvlarni o'zi qo'shadi. Bo'lmasa, nameserver'larni Cloudflare'ga ko'chiring
-   yoki registrator panelida `CNAME www → <loyiha>.pages.dev` qo'ying (apex uchun Cloudflare DNS kerak).
-4. Eski WordPress sayti shu domenda ishlayotgan bo'lsa, ulashdan oldin undan zaxira nusxa oling.
+```
+index.html        bosh sahifa (HTML + JS), asosiy mazmun
+assets/site.css   butun dizayn (bosh sahifa va tur sahifalari uchun umumiy)
+assets/i18n.js    barcha matnlar uch tilda
+assets/images.js  rasmlar ro'yxati va mualliflari (avtomatik)
+images/           WebP rasmlar (Wikimedia Commons, ochiq litsenziya)
+tours/*.html      8 ta tur sahifasi (build.mjs yaratadi)
+credits.html      rasm mualliflari (CC BY-SA talabi; saytda havola bor, o'chirmang)
+```
 
-## 2. Rasmlar
-- `bash download-images.sh` eski saytdan 10 ta rasmni `images/` ga yuklaydi (internet kerak). Rasm bo'lmasa, sayt eski saytdagi havolaga tushadi, u ham bo'lmasa rasmsiz ko'rinadi.
-- Mehmonxona: `images/hotel.jpg` (4:5, taxminan 1000×1250). Fayl bo'lsa avtomatik chiqadi.
+Matn yoki turni o'zgartirsangiz: `assets/i18n.js` yoki `index.html` ni tahrirlang, so'ng `node build.mjs`
+(tur sahifalari, credits.html va sitemap.xml qayta yaratiladi).
 
-## 3. Telegram
-`index.html` va `build.mjs` ichida `TG = "trusttravel_uz"` va `https://t.me/trusttravel_uz` — haqiqiy username bilan almashtiring
-(`grep -rn trusttravel_uz .`), so'ng `node build.mjs`.
+## Cloudflare Pages
+Build command: bo'sh. Output directory: `trust-travel`. Yoki: `npx wrangler pages deploy trust-travel --project-name trust-travel`.
+Custom domains → `trust-travel.uz` va `www.trust-travel.uz`; DNS yozuvlari Cloudflare'da bo'lishi kerak.
 
-## 4. Yandex Metrika (58712101)
-Hamma sahifada o'rnatilgan. Maqsadlar (Metrika → Sozlamalar → Maqsadlar → JavaScript-hodisa): `click_whatsapp`, `click_telegram`,
-`click_phone`, `send_whatsapp`, `send_telegram`, `tour_quote`, `tour_cta`.
+## O'zingizning rasmlaringiz
+Fayl nomi bilan almashtiring (WebP/JPG, `images/` ichida) va `assets/images.js` dagi `f` maydonini yangilang:
+`hero-1..3` (bosh ekran), `d-*` (shaharlar), `t-*` (turlar), `ca` (Markaziy Osiyo fon).
+Mehmonxona: `images/hotel.webp` qo'ying va `assets/images.js` ga `"hotel":{"f":"hotel.webp","t":"Trust Travel","a":"Trust Travel","l":"own","u":"https://trust-travel.uz"}` qo'shing, so'ng `node build.mjs`.
+O'zingizning rasmlaringiz uchun credits.html da yozuv ko'rinmasligi uchun `l:"own"` bo'lganlarni build.mjs filtrlaydi.
+
+## Telegram
+`TG = "trusttravel_uz"` (index.html) va `https://t.me/trusttravel_uz` (build.mjs, index.html) — haqiqiy username bilan almashtiring.
+
+## Yandex Metrika (58712101)
+Hamma sahifada. Maqsadlar (JavaScript-hodisa): `click_whatsapp`, `click_telegram`, `click_phone`, `click_mail`, `send_whatsapp`,
+`send_telegram`, `send_mail`, `quick_form`, `route_send`, `dest_route`, `tour_cta`.
