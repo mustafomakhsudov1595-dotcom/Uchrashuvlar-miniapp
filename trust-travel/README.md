@@ -15,9 +15,11 @@ credits.html      rasm mualliflari (CC BY-SA talabi; saytda havola bor, o'chirma
 Matn yoki turni o'zgartirsangiz: `assets/i18n.js` yoki `index.html` ni tahrirlang, so'ng `node build.mjs`
 (tur sahifalari, credits.html va sitemap.xml qayta yaratiladi).
 
-## Cloudflare Pages
-Build command: bo'sh. Output directory: `trust-travel`. Yoki: `npx wrangler pages deploy trust-travel --project-name trust-travel`.
-Custom domains → `trust-travel.uz` va `www.trust-travel.uz`; DNS yozuvlari Cloudflare'da bo'lishi kerak.
+## Cloudflare Pages (GitHub bilan ulangan)
+Loyiha `trust-travel` (trust-travel.pages.dev) shu repo'ning `claude/trust-travel-site-development-yn2c65` branch'iga ulangan:
+`trust-travel/` ichidagi har bir push avtomatik joylanadi (build command bo'sh, output `trust-travel`).
+Production branch'ni `main` ga o'tkazish: Cloudflare → Workers & Pages → trust-travel → Settings → Build → Production branch.
+Domen: Custom domains → `trust-travel.uz` va `www.trust-travel.uz`; DNS yozuvlari Cloudflare'da bo'lishi kerak.
 
 ## O'zingizning rasmlaringiz
 Fayl nomi bilan almashtiring (WebP/JPG, `images/` ichida) va `assets/images.js` dagi `f` maydonini yangilang:
