@@ -4,6 +4,7 @@ const S = require('./_shared');
 const proj = require('./proj');
 const fin = require('./fin');
 const { getAI } = require('../kv');
+const voice = require('./voice');
 const { tg, esc } = S;
 
 const send = (chat, text, markup) => tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', reply_markup: markup, disable_web_page_preview: true });
@@ -197,7 +198,6 @@ async function restore(chat, u, doc) {
 }
 
 /* ================= AI yordamchi ================= */
-const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const LANGNAME = { uz: 'Uzbek (Latin script, simple natural words)', ru: 'Russian', en: 'English' };
 function aiPrompt(kind, p, extra, u) {
   const typeName = S.Tof(u).p.types[p.type];
@@ -206,19 +206,34 @@ function aiPrompt(kind, p, extra, u) {
   if (kind === 's') return `${ctx}\nWrite website copy: SEO title (max 60 chars), meta description (max 155 chars), hero headline and subheadline, 3 benefit bullets, a short About paragraph, and the CTA button text.`;
   return `${ctx}\nWrite an Instagram post caption: a strong first-line hook, 3-5 short lines, a call to action, and 8 relevant hashtags.`;
 }
+// Modellar zanjiri: oʻzbekcha uchun eng yaxshisi birinchi, ishlamasa keyingisi
+const MODELS = [
+  { m: '@cf/openai/gpt-oss-120b', extra: { reasoning_effort: 'low' }, max: 1400 },
+  { m: '@cf/mistralai/mistral-small-3.1-24b-instruct', max: 900 },
+  { m: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', max: 900 },
+];
+const RULES = 'Never invent facts that were not given (phone numbers, addresses, prices, names, dates); if something is missing, leave it out or use a neutral placeholder like [telefon]. Write natural, fluent text the way a native speaker would, never a word-by-word translation.';
+const pickText = (out) => String((out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content) || out.result)) || '').trim();
+// Oʻzbekcha: lotin yozuvi va toʻgʻri apostroflar (oʻ, gʻ — U+02BB; maʼlumot — U+02BC)
+const normalizeUz = (t) => voice.toLatin(t).replace(/([oOgG])['’‘`´ʻʼ]/g, '$1ʻ').replace(/([A-Za-z])['’‘`´ʼ]([A-Za-z])/g, '$1ʼ$2');
+const cleanAi = (t, lang) => { let x = t.replace(/\*\*|__|^#{1,6}\s+/gm, '').replace(/^["“«]|["”»]$/g, '').trim(); if (lang === 'uz' || !lang) x = normalizeUz(x); return x; };
 async function aiCall(u, system, prompt) {
   const today = S.todayISO(u.tz), AI = getAI();
   if (!AI) return { error: 'fail' };
   u.ai = u.ai && u.ai.d === today ? u.ai : { d: today, n: 0 };
   if (u.ai.n >= 30) return { error: 'limit' };
-  try {
-    const out = await AI.run(MODEL, { messages: [{ role: 'system', content: `${system} Reply in ${LANGNAME[u.lang] || LANGNAME.uz}. Be concise and practical, no preface, no markdown symbols like ** or ##.` }, { role: 'user', content: prompt }], max_tokens: 900 });
-    u.ai.n += 1;
-    const text = String((out && (out.response || out.result || '')) || '').trim();
-    if (!text) return { error: 'fail' };
-    console.log('ai ok', text.length);
-    return { text: text.slice(0, 3800) };
-  } catch (e) { console.error('ai', e.message); return { error: 'fail' }; }
+  const messages = [{ role: 'system', content: `${system} Reply in ${LANGNAME[u.lang] || LANGNAME.uz}. Be concise and practical, no preface, no markdown symbols like ** or ##. ${RULES}` }, { role: 'user', content: prompt }];
+  for (const cfg of MODELS) {
+    try {
+      const out = await AI.run(cfg.m, { messages, max_tokens: cfg.max, temperature: 0.5, ...(cfg.extra || {}) });
+      const text = cleanAi(pickText(out), u.lang);
+      if (!text || /^(analysis|reasoning)\b/i.test(text)) continue; // model oʻylashda toʻxtab qolgan — keyingisiga oʻtamiz
+      u.ai.n += 1;
+      console.log('ai ok', cfg.m.split('/').pop(), text.length);
+      return { text: text.slice(0, 3800), model: cfg.m };
+    } catch (e) { console.error('ai', cfg.m, e.message); }
+  }
+  return { error: 'fail' };
 }
 async function aiRun(chat, u, system, prompt) {
   const P = S.Tof(u).p;

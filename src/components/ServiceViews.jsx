@@ -48,6 +48,7 @@ export function ServiceList({ services, today, onOpen, onAdd }) {
                       <b>{x.name}</b>
                       <small>{[x.client, x.url && hostOf(x.url)].filter(Boolean).join(' · ') || '—'}</small>
                       <small className={`sv-left k-${svKind(d)}`}>{t('svLeft', d)}</small>
+                      {!x.claudeUrl && <small className="sv-warn">🤖❗ {t('svNoClaudeTag')}</small>}
                     </span>
                   </button>
                   {x.claudeUrl && (

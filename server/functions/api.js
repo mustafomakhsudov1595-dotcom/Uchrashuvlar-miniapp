@@ -2,6 +2,8 @@
 const S = require('./_shared');
 const seo = require('./seo');
 const ext = require('./ext');
+const msgs = require('./msgs');
+const svc = require('./svc');
 
 const json = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 const view = (u) => ({
@@ -30,6 +32,19 @@ exports.handler = async (event) => {
     return json(200, { ok: true, token: u.calToken });
   }
 
+  if (b.action === 'tpl') {
+    const r = msgs.build(u, String(b.kind || ''), String(b.id || ''), String(b.lang || u.lang || 'uz'));
+    if (!r) return json(404, { ok: false, error: 'not found' });
+    return json(200, r.empty ? { ok: true, empty: true } : { ok: true, text: r.text, phone: r.phone, lang: r.lang });
+  }
+  if (b.action === 'linkcheck') {
+    const x = u.services.find((k) => k.id === String(b.id || ''));
+    if (!x) return json(404, { ok: false, error: 'not found' });
+    const st2 = await svc.checkClaude(x.claudeUrl);
+    x.cl = { s: st2, at: Date.now() };
+    await S.saveUser(st, u);
+    return json(200, { ok: true, status: st2 });
+  }
   if (b.action === 'seo') {
     const x = u.services.find((k) => k.id === String(b.id || ''));
     if (!x || !x.url) return json(404, { ok: false, error: 'no url' });

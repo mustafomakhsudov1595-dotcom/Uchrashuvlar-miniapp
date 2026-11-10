@@ -40,7 +40,7 @@ function cardMarkup(p, u) {
   rows.push([1, 3, 7].map((n) => ({ text: `🗓 ${P.bPlus(n)}`, callback_data: `pd:${p.id}:${n}` })));
   if (p.price !== null && S.owed(p) > 0) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]);
   else if (p.price !== null) rows.push([{ text: P.bPay, callback_data: `pp:${p.id}` }]);
-  rows.push([{ text: P.bReport, callback_data: `pr:${p.id}` }, { text: P.bExpenses, callback_data: `xp:${p.id}` }]);
+  rows.push([{ text: P.bReport, callback_data: `pr:${p.id}` }, { text: P.bExpenses, callback_data: `xp:${p.id}` }, { text: P.bMsg, callback_data: `mg:${p.id}` }]);
   if (p.status === 'done') rows.push([{ text: P.bSvFromProj, callback_data: `vp:${p.id}` }]);
   rows.push([{ text: P.bSite, callback_data: `mu:${p.id}` }, ...(p.url ? [{ text: P.bCheck, callback_data: `mc:${p.id}` }, { text: '🗑', callback_data: `mx:${p.id}` }] : [])]);
   rows.push(aiButtons(p, P).map(([k, label]) => ({ text: label, callback_data: `ai:${k}:${p.id}` })));
@@ -345,8 +345,9 @@ async function remind(u, now) {
     const since = S.toMin(hhmm) - S.toMin(at);
     if (since < 0 || since > 120) continue;
     u.dsent[kind] = today; dirty = true;
-    const v = build(u, now);
+    let v = build(u, now);
     if (!v) continue;
+    if (kind === 'w') { const ins = await require('./insight').generate(u, now).catch(() => null); if (ins) v = { ...v, text: `${v.text}\n\n✨ ${esc(ins)}` }; }
     const res = await S.tg('sendMessage', { chat_id: u.chat, text: v.text, parse_mode: 'HTML', reply_markup: v.markup, disable_web_page_preview: true });
     if (res.ok) sent += 1;
   }

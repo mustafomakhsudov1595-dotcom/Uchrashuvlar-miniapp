@@ -14,6 +14,26 @@ const cancelRow = (P) => [{ text: P.cancel, callback_data: 'pno' }];
 const host = (url) => url.replace(/^https?:\/\//, '');
 const fmtDate = (iso) => `${iso.slice(8)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
+/* ---------- Claude havolasi nazorati ---------- */
+const CLAUDE_RE = /^https:\/\/(?:[\w-]+\.)?claude\.(?:ai|com)\/\S+/i;
+async function checkClaude(url) {
+  if (!url) return 'missing';
+  if (!CLAUDE_RE.test(url)) return 'format';
+  try {
+    const r = await fetch(url, { redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (compatible; ImproNotesLinks/1.0)' }, signal: AbortSignal.timeout(6000) });
+    try { r.body && r.body.cancel(); } catch { /* ignore */ }
+    return r.status === 404 || r.status === 410 ? 'dead' : r.status >= 500 ? 'error' : 'ok';
+  } catch { return 'error'; }
+}
+const CLKEY = { ok: 'clOk', missing: 'clMissing', format: 'clBad', dead: 'clDead', error: 'clErr' };
+async function checkAll(u) {
+  const list = u.services.slice(0, 25), now = Date.now();
+  const res = await Promise.all(list.map((x) => checkClaude(x.claudeUrl)));
+  list.forEach((x, i) => { x.cl = { s: res[i], at: now }; });
+  return list.map((x, i) => ({ x, s: res[i] }));
+}
+const hasLinkProblem = (x) => !x.claudeUrl || !CLAUDE_RE.test(x.claudeUrl) || (x.cl && (x.cl.s === 'dead' || x.cl.s === 'error'));
+
 /* ---------- matn va tugmalar ---------- */
 function cardText(x, u, now = Date.now()) {
   const P = S.Tof(u).p, today = S.todayISO(u.tz, now), d = S.serviceDays(x, today);
@@ -22,8 +42,11 @@ function cardText(x, u, now = Date.now()) {
   if (x.phone) t += `${x.client ? ' · ' : '\n'}📞 ${esc(x.phone)}`;
   if (x.url) t += `\n🌐 ${esc(host(x.url))}`;
   t += `\n✅ ${P.svDoneLbl}: ${fmtDate(x.doneAt)}\n${d < 0 ? '🔴' : d <= 30 ? '🟠' : '🟢'} ${P.svSvcLbl}: <b>${P.svLeft(d)}</b> (${P.svEndLbl} ${fmtDate(S.serviceEnd(x))})`;
+  t += `\n🤖 Claude: ${!x.claudeUrl ? P.clMissing : !CLAUDE_RE.test(x.claudeUrl) ? P.clBad : x.cl ? P[CLKEY[x.cl.s]] : P.clNone}`;
   if (x.seo) t += `\n🔎 SEO: <b>${x.seo.score}/100</b> · ${P.seoAgo(S.daysBetween(S.isoOfLocal(S.localNow(u.tz, x.seo.at)), today))}`;
   if (x.notes) t += `\n📝 ${esc(x.notes)}`;
+  const chg = (x.changes || []).slice(-3);
+  if (chg.length) t += `\n\n${P.chgLast}\n` + chg.map((c) => `• ${esc(c.text)} <i>(${c.d.slice(5).replace('-', '.')})</i>`).join('\n');
   const reqs = x.requests.slice(-6);
   if (reqs.length) t += `\n\n${P.svReqLbl}\n` + reqs.map((r) => `${r.done ? '✅' : '⬜️'} ${esc(r.text)} <i>(${r.d.slice(5).replace('-', '.')})</i>`).join('\n');
   return t;
@@ -41,6 +64,7 @@ function cardMarkup(x, u) {
   const openReqs = x.requests.map((r, i) => ({ r, i })).filter((e) => !e.r.done).slice(0, 5);
   for (const e of openReqs) rows.push([{ text: `⬜️ ${e.r.text}`.slice(0, 50), callback_data: `vr:${x.id}:${e.i}` }, { text: P.bSvPrompt, callback_data: `vg:${x.id}:${e.i}` }]);
   if (x.url) rows.push([{ text: P.bSvSeo, callback_data: `vs:${x.id}` }]);
+  rows.push([{ text: P.bSvHist, callback_data: `vh:${x.id}` }, { text: P.bSvChg, callback_data: `vn:${x.id}` }, { text: P.bMsg, callback_data: `mg:${x.id}` }]);
   rows.push([...(x.phone ? [{ text: P.bSvPhone, callback_data: `vc:${x.id}` }] : []), { text: P.bSvReq, callback_data: `vq:${x.id}` }, { text: P.bSvDel, callback_data: `vx:${x.id}` }]);
   rows.push([{ text: P.back, callback_data: 'vl:0' }, S.appBtn(S.Tof(u).openAppShort, '?tab=projects&view=service')]);
   return { inline_keyboard: rows };
@@ -57,8 +81,9 @@ async function showList(ctx, u, q) {
   let text = P.svTitle(u.services.length, active);
   if (q && !list.length) text += `\n\n${P.svSearchNone(esc(q))}`;
   else if (!list.length) text += `\n\n${P.svNone}`;
-  else text += '\n\n' + list.slice(0, 15).map((x) => { const d = S.serviceDays(x, today); return `${d < 0 ? '🔴' : d <= 30 ? '🟠' : '🟢'} <b>${esc(x.name)}</b>${x.client ? ' · ' + esc(x.client) : ''}\n   ${P.svLeft(d)}`; }).join('\n');
+  else text += '\n\n' + list.slice(0, 15).map((x) => { const d = S.serviceDays(x, today); return `${d < 0 ? '🔴' : d <= 30 ? '🟠' : '🟢'} <b>${esc(x.name)}</b>${x.client ? ' · ' + esc(x.client) : ''}${hasLinkProblem(x) ? ` ${P.svNoLinkTag}` : ''}\n   ${P.svLeft(d)}`; }).join('\n');
   const rows = list.slice(0, 12).map((x) => [{ text: `🛠 ${x.name}${x.client ? ' · ' + x.client : ''}`.slice(0, 60), callback_data: `vj:${x.id}` }]);
+  if (u.services.length) rows.push([{ text: P.bSvLinks, callback_data: 'vz:0' }]);
   rows.push([{ text: P.subAdd, callback_data: 'va:0' }, { text: P.backList, callback_data: 'pl:0' }]);
   return show(ctx, text, { inline_keyboard: rows });
 }
@@ -110,6 +135,12 @@ async function onMessage(chat, u, cmd, args, text) {
     x.requests.push({ id: S.newId(), d: S.todayISO(u.tz), text: text.slice(0, 200), done: false }); x.updatedAt = Date.now();
     await send(chat, P.svReqSaved); await showCard({ chat }, u, x.id); return true;
   }
+  if (!cmd && u.state && u.state.kind === 'svchg') {
+    const x = find(u, u.state.id); u.state = null;
+    if (!x || !text) { await send(chat, P.svBad); return true; }
+    x.changes.push({ id: S.newId(), d: S.todayISO(u.tz), text: text.slice(0, 200), rid: '' }); x.updatedAt = Date.now();
+    await send(chat, P.chgSaved); await showCard({ chat }, u, x.id); return true;
+  }
   if (!cmd && u.state && u.state.kind === 'svlink') {
     const x = find(u, u.state.id), f = u.state.field, url = S.cleanUrl(text || '');
     if (!x) { u.state = null; return true; }
@@ -156,7 +187,37 @@ async function onCallback(ctx, u, act, a, b) {
     const body = ai.text || seo.requestPrompt(u.lang || 'uz', x, r.text);
     const rows = x.claudeUrl ? [[{ text: P.bSvClaude, url: x.claudeUrl }]] : [];
     await send(chat, `${P.promptReady} ${ai.text ? P.promptAi : P.promptTpl}\n\n<pre>${esc(body)}</pre>`, rows.length ? { inline_keyboard: rows } : undefined);
-  } else if (act === 'vr') { const x = find(u, a), r = x && x.requests[Number(b)]; if (r) { r.done = true; x.updatedAt = Date.now(); } await showCard(ctx, u, a); }
+  } else if (act === 'vr') {
+    const x = find(u, a), r = x && x.requests[Number(b)];
+    if (r && !r.done) { r.done = true; x.changes.push({ id: S.newId(), d: S.todayISO(u.tz), text: r.text, rid: r.id }); x.updatedAt = Date.now(); }
+    await showCard(ctx, u, a);
+  } else if (act === 'vn') { if (find(u, a)) { u.state = { kind: 'svchg', id: a }; await send(chat, P.chgAsk, { inline_keyboard: [cancelRow(P)] }); } }
+  else if (act === 'vh') {
+    const x = find(u, a);
+    if (!x) return '';
+    const list = [...x.changes].reverse();
+    let text = P.histTitle(esc(x.name), list.length);
+    text += list.length ? '\n\n' + list.slice(0, 25).map((c) => `• <b>${fmtDate(c.d)}</b> — ${esc(c.text)}`).join('\n') : `\n\n${P.histNone}`;
+    const rows = [];
+    if (list.length) rows.push([{ text: P.bHistReport, callback_data: `vhr:${x.id}` }]);
+    rows.push([{ text: P.bSvChg, callback_data: `vn:${x.id}` }, { text: P.back, callback_data: `vj:${x.id}` }]);
+    await show(ctx, text, { inline_keyboard: rows });
+  } else if (act === 'vhr') {
+    const x = find(u, a);
+    if (!x) return '';
+    const from = S.addDaysISO(S.todayISO(u.tz), -90), list = x.changes.filter((c) => c.d >= from);
+    const body = list.length ? P.histReport(x.name, list.map((c, i) => `${i + 1}. ${fmtDate(c.d)} — ${c.text}`).join('\n'), 90) : P.histReportNone;
+    await send(chat, `${P.msgCopy}\n\n<pre>${esc(body)}</pre>`, { inline_keyboard: [[{ text: P.back, callback_data: `vh:${x.id}` }]] });
+  } else if (act === 'vz') {
+    tg('sendChatAction', { chat_id: chat, action: 'typing' });
+    const res = await checkAll(u);
+    const bad = res.filter((r) => r.s !== 'ok');
+    let text = `${P.linksTitle(res.length)}\n\n` + res.map(({ x, s }) => `${esc(x.name)} — ${P[CLKEY[s]]}`).join('\n');
+    text += bad.length ? `\n\n<i>${P.linksNote}</i>` : `\n\n${P.linksAllOk}\n<i>${P.linksNote}</i>`;
+    const rows = bad.slice(0, 10).map(({ x }) => [{ text: `🛠 ${x.name}`.slice(0, 60), callback_data: `vj:${x.id}` }]);
+    rows.push([{ text: P.back, callback_data: 'vl:0' }]);
+    await send(chat, text, { inline_keyboard: rows });
+  }
   else if (act === 'vx') { const x = find(u, a); if (x) await show(ctx, `${P.svDelAsk}\n\n<b>${esc(x.name)}</b>`, { inline_keyboard: [[{ text: P.delYes, callback_data: `vxy:${a}` }, { text: P.no, callback_data: `vj:${a}` }]] }); }
   else if (act === 'vxy') { u.services = u.services.filter((x) => x.id !== a); u.svdeleted[a] = Date.now(); await show(ctx, P.svDeleted, { inline_keyboard: [[{ text: P.back, callback_data: 'vl:0' }]] }); }
   else if (act === 'vp') {
@@ -173,6 +234,14 @@ async function onCallback(ctx, u, act, a, b) {
 async function remind(u, now) {
   const P = S.Tof(u).p, loc = S.localNow(u.tz, now), hhmm = S.hhmmOfLocal(loc), today = S.isoOfLocal(loc);
   let dirty = false, sent = 0;
+  if (u.services.length && S.weekdayIdx(today) === 0 && hhmm >= '11:00' && !S.inQuiet(u, hhmm) && u.dsent.cl !== today) {
+    u.dsent.cl = today; dirty = true;
+    const bad = (await checkAll(u)).filter((r) => r.s !== 'ok');
+    if (bad.length) {
+      const res = await send(u.chat, `${P.linksWeekly(bad.length)}\n\n${bad.map(({ x, s }) => `${esc(x.name)} — ${P[CLKEY[s]]}`).join('\n')}`, { inline_keyboard: bad.slice(0, 8).map(({ x }) => [{ text: `🛠 ${x.name}`.slice(0, 60), callback_data: `vj:${x.id}` }]) });
+      if (res.ok) sent += 1;
+    }
+  }
   if (!u.remind || S.inQuiet(u, hhmm) || hhmm < '10:00') return { dirty, sent };
   for (const x of u.services) {
     const d = S.serviceDays(x, today), th = [0, 7, 30].find((v) => d <= v);
@@ -186,4 +255,4 @@ async function remind(u, now) {
   return { dirty, sent };
 }
 
-module.exports = { onMessage, onCallback, remind, parseService, cardText, ACTS: ['vl', 'vj', 'va', 'vc', 'vq', 'vk', 'vr', 'vx', 'vxy', 'vp', 'vs', 'vf', 'vg'] };
+module.exports = { onMessage, onCallback, remind, parseService, cardText, checkClaude, CLAUDE_RE, ACTS: ['vl', 'vj', 'va', 'vc', 'vq', 'vk', 'vr', 'vx', 'vxy', 'vp', 'vs', 'vf', 'vg', 'vh', 'vhr', 'vn', 'vz'] };

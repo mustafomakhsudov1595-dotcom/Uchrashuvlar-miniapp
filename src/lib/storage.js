@@ -112,6 +112,8 @@ export function cleanService(x) {
     months: Math.min(60, Math.max(1, Math.round(Number(x.months) || 12))),
     notes: typeof x.notes === 'string' ? x.notes : '',
     requests: Array.isArray(x.requests) ? x.requests.filter((r) => r && typeof r.text === 'string' && r.text.trim() && DATE_RE.test(r.d)).slice(-50).map((r) => ({ id: String(r.id ?? newId()), d: r.d, text: r.text.trim(), done: Boolean(r.done) })) : [],
+    changes: Array.isArray(x.changes) ? x.changes.filter((c) => c && typeof c.text === 'string' && c.text.trim() && DATE_RE.test(c.d)).slice(-200).map((c) => ({ id: String(c.id ?? newId()), d: c.d, text: c.text.trim(), rid: c.rid ? String(c.rid) : '' })) : [],
+    cl: x.cl && typeof x.cl === 'object' ? { s: String(x.cl.s || 'ok'), at: Number(x.cl.at) || 0 } : undefined,
     seo: x.seo && typeof x.seo === 'object' ? { score: Number(x.seo.score) || 0, at: Number(x.seo.at) || 0, bad: Array.isArray(x.seo.bad) ? x.seo.bad : [] } : undefined,
     createdAt: Number(x.createdAt) || Date.now(),
     updatedAt: Number(x.updatedAt) || 0,
@@ -147,7 +149,7 @@ export const saveSvDeleted = (ids) => {
     /* ignore */
   }
 };
-export const servicesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, x.months, x.notes, x.requests.map((r) => [r.id, r.done, r.text]), x.seo ? x.seo.at : 0]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+export const servicesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, x.months, x.notes, x.requests.map((r) => [r.id, r.done, r.text]), x.seo ? x.seo.at : 0, x.changes.map((c) => [c.id, c.text]), x.cl ? x.cl.at : 0]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 
 // ---- Xarajatlar va oylik maqsad ----
 export function cleanExpense(x) {
@@ -381,6 +383,18 @@ export async function runSeo(id) {
 export async function requestPrompt(id, rid) {
   const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'sprompt', id, rid }) });
   if (!res.ok) throw new Error(`prompt ${res.status}`);
+  return res.json();
+}
+
+// Mijozga tayyor xabar (server shablon va rekvizitni birlashtiradi)
+export async function buildMessage(id, kind, lang) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'tpl', id, kind, lang }) });
+  if (!res.ok) throw new Error(`tpl ${res.status}`);
+  return res.json();
+}
+export async function checkClaudeLink(id) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'linkcheck', id }) });
+  if (!res.ok) throw new Error(`linkcheck ${res.status}`);
   return res.json();
 }
 

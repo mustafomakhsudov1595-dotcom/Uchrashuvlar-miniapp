@@ -25,6 +25,12 @@
 
 - `functions/seo.js` — sayt SEO tekshiruvi (`vs` tugmasi / API `seo`): HTTPS, sarlavha, tavsif, H1, viewport, canonical, og, alt, noindex, robots/sitemap, JSON-LD va kontent HTMLda borligi (SPA aniqlash). Natija 100 ballik, kamchiliklar Claude uchun tayyor topshiriqqa aylanadi. Mijoz soʻrovidan topshiriq (`vg` / API `sprompt`) AI bilan yoziladi, AI ishlamasa shablon. Eslatma: Worker oʻz workers.dev saytini tekshira olmaydi (Cloudflare cheklovi), tashqi domenlar ishlaydi.
 
+- `functions/msgs.js` — mijozga tayyor xabarlar (`✉️` tugmasi: toʻlov eslatmasi, ish tayyor, muddat koʻchdi, servisni uzaytirish, oʻzgartirish bajarildi; uz/ru/en; `/rekvizit` karta maʼlumotini qoʻshadi).
+- `functions/insight.js` — AI tahlil (`/tahlil`, har yakshanba haftalik xulosa ostida): loyiha, qarz, daromad, servis va saytlar holatidan aniq tavsiya.
+- Servis: oʻzgartirishlar tarixi (bajarilgan soʻrov avtomatik yoziladi, 90 kunlik hisobot matni) va Claude havolasi nazorati (yoʻq/notoʻgʻri/404; har dushanba tekshiriladi).
+- AI: asosiy model `gpt-oss-120b` (reasoning_effort low), ishlamasa `mistral-small-3.1`, keyin `llama-3.3`. Oʻzbekcha uchun lotin yozuvi va toʻgʻri apostroflar (oʻ, gʻ, maʼ) majburlanadi, "toʻqima" qoidasi bor.
+- Oflayn: `public/sw.js` ilova qobigʻini keshlaydi, oflayn paytda yuqorida belgi chiqadi, internet kelganda avtomatik sinxronlanadi.
+
 ## Deploy
 
 ```bash

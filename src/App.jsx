@@ -9,6 +9,7 @@ import SubSheet from './components/SubSheet.jsx';
 import ClientDetail from './components/ClientDetail.jsx';
 import ExpenseSheet from './components/ExpenseSheet.jsx';
 import ServiceSheet from './components/ServiceSheet.jsx';
+import MessageSheet from './components/MessageSheet.jsx';
 import { clientsOf } from './lib/finance.js';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
@@ -18,7 +19,7 @@ import TabBar from './components/TabBar.jsx';
 import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
-  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, runSeo, requestPrompt, getCalendarToken, signature,
+  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, runSeo, requestPrompt, buildMessage, checkClaudeLink, getCalendarToken, signature,
   loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
@@ -59,6 +60,7 @@ export default function App() {
   const [confirmId, setConfirmId] = useState(null);
   const [inviting, setInviting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine !== false));
   const [burst, setBurst] = useState(0);
   const toastTimer = useRef(null);
   const calToken = useRef(null);
@@ -220,6 +222,14 @@ export default function App() {
   }, [projects, scheduleSync]);
 
   useEffect(() => {
+    const on = () => { setOnline(true); doSync(); };
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+  }, [doSync]);
+
+  useEffect(() => {
     doSync();
     const id = setInterval(doSync, 30000);
     const onVisible = () => document.visibilityState === 'visible' && doSync();
@@ -274,6 +284,7 @@ export default function App() {
 
   const closeTop = useCallback(() => {
     if (confirmId || confirmPid || confirmSid || confirmSv) { setConfirmId(null); setConfirmPid(null); setConfirmSid(null); setConfirmSv(null); }
+    else if (sheet?.type === 'msg' && sheet.back) setSheet(sheet.back);
     else if (sheet?.type === 'pform' && sheet.id) setSheet({ type: 'pdetail', id: sheet.id });
     else if (sheet?.type === 'form' && sheet.id) setSheet({ type: 'detail', id: sheet.id });
     else setSheet(null);
@@ -543,12 +554,14 @@ export default function App() {
   };
   const seoCheck = (id) => withSynced(() => runSeo(id)).then((r) => { doSync(); return r; });
   const svPrompt = (id, rid) => withSynced(() => requestPrompt(id, rid));
+  const linkCheck = (id) => withSynced(() => checkClaudeLink(id)).then((r) => { doSync(); return r; });
+  const openMsg = (kind, id, name, back) => { haptic.tap(); setSheet({ type: 'msg', refId: id, kind, name, back }); };
   const touchService = (id, fn) => setServices((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
   const saveService = (data) => {
     if (sheet?.svid) touchService(sheet.svid, () => data);
     else {
       const id = newId();
-      setServices((list) => [...list, { id, requests: [], createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
+      setServices((list) => [...list, { id, requests: [], changes: [], createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
       setSheet({ type: 'service', svid: id });
     }
     haptic.success();
@@ -558,7 +571,17 @@ export default function App() {
     haptic.select();
     touchService(sheet.svid, (x) => ({ requests: [...x.requests, { id: newId(), d: todayISO(), text, done: false }].slice(-50) }));
   };
-  const toggleSvRequest = (rid) => touchService(sheet.svid, (x) => ({ requests: x.requests.map((r) => (r.id === rid ? { ...r, done: !r.done } : r)) }));
+  const toggleSvRequest = (rid) =>
+    touchService(sheet.svid, (x) => {
+      const r = x.requests.find((q) => q.id === rid);
+      if (!r) return {};
+      const done = !r.done;
+      // Bajarilgan soʻrov avtomatik oʻzgartirishlar tarixiga yoziladi (qaytarilsa — olib tashlanadi)
+      const changes = done ? [...x.changes, { id: newId(), d: todayISO(), text: r.text, rid }].slice(-200) : x.changes.filter((c) => c.rid !== rid);
+      return { requests: x.requests.map((q) => (q.id === rid ? { ...q, done } : q)), changes };
+    });
+  const addSvChange = (text) => touchService(sheet.svid, (x) => ({ changes: [...x.changes, { id: newId(), d: todayISO(), text, rid: '' }].slice(-200) }));
+  const removeSvChange = (cid) => touchService(sheet.svid, (x) => ({ changes: x.changes.filter((c) => c.id !== cid) }));
   const removeSvRequest = (rid) => touchService(sheet.svid, (x) => ({ requests: x.requests.filter((r) => r.id !== rid) }));
   const handleSvDelete = () => {
     const id = confirmSv;
@@ -711,6 +734,7 @@ export default function App() {
           onPay={(a) => projPay(curProject.id, a)}
           onReport={() => handleReport(curProject)}
           onToService={() => projectToService(curProject)}
+          onMsg={() => openMsg('project', curProject.id, curProject.name, { type: 'pdetail', id: curProject.id })}
           busy={inviting}
         />
       )}
@@ -727,10 +751,24 @@ export default function App() {
           onSave={saveService}
           onSeo={seoCheck}
           onPrompt={svPrompt}
+          onLinkCheck={linkCheck}
+          onMsg={() => openMsg('service', curService.id, curService.name, { type: 'service', svid: curService.id })}
+          onAddChange={addSvChange}
+          onRemoveChange={removeSvChange}
           onDelete={() => setConfirmSv(sheet.svid)}
           onAddRequest={addSvRequest}
           onToggleRequest={toggleSvRequest}
           onRemoveRequest={removeSvRequest}
+          onClose={closeTop}
+        />
+      )}
+
+      {sheet?.type === 'msg' && (
+        <MessageSheet
+          key={sheet.refId}
+          title={sheet.name}
+          kinds={sheet.kind === 'project' ? ['pay', 'done', 'delay'] : ['renew', 'upd']}
+          onBuild={(kind, lang) => withSynced(() => buildMessage(sheet.refId, kind, lang))}
           onClose={closeTop}
         />
       )}
@@ -778,6 +816,8 @@ export default function App() {
       {confirmPid && (
         <ConfirmDialog title={t('pjDelTitle')} text={t('pjDelText')} confirmLabel={t('cDelYes')} onConfirm={handleProjDelete} onCancel={() => setConfirmPid(null)} />
       )}
+
+      {!online && <div className="offline-bar" role="status">📡 {t('offBar')}</div>}
 
       <Confetti burst={burst} />
       <Toast toast={toast} />

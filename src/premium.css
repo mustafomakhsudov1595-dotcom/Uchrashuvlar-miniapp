@@ -278,3 +278,13 @@ h1, h2, h3, .hero-name, .d-name, .sheet-title, .dialog h3, .empty h2, .empty-day
 .seo-list li.ok { color: var(--muted); }
 .prompt-box textarea { font-size: 13px; line-height: 1.45; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .sv-prompt { font-size: 17px; }
+
+/* Havola holati, xabar shablonlari */
+.link-status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 10px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.link-status > span { flex: 1 1 100%; }
+.sv-warn { color: #f59e0b; font-weight: 800; }
+.msg-for { margin: 0 2px 12px; color: var(--muted); font-weight: 700; }
+.prompt-box .bot-btn + .bot-btn { margin-top: 8px; }
+.muted { color: var(--muted); }
+
+.offline-bar { position: fixed; left: 12px; right: 12px; top: calc(var(--safe-top) + 8px); z-index: 90; padding: 9px 14px; border-radius: 99px; text-align: center; font-size: 13px; font-weight: 800; background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 60%, transparent); color: #f59e0b; box-shadow: var(--card-hi), 0 14px 30px -16px rgba(0, 0, 0, 0.7); animation: rise 0.3s var(--ease) both; }

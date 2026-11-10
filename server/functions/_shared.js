@@ -45,7 +45,7 @@ const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
   quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
-  meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, services: [], svdeleted: {}, places: [], placesAt: 0, state: null,
+  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, services: [], svdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
@@ -366,6 +366,8 @@ function cleanService(x) {
     id: x.id, name: x.name.trim().slice(0, 120), client: typeof x.client === 'string' ? x.client.trim().slice(0, 100) : '', phone: typeof x.phone === 'string' ? x.phone.trim().slice(0, 30) : '',
     url: cleanUrl(x.url), claudeUrl: cleanUrl(x.claudeUrl), doneAt: x.doneAt, months, notes: typeof x.notes === 'string' ? x.notes.slice(0, 1000) : '',
     requests: Array.isArray(x.requests) ? x.requests.filter((r) => r && typeof r.text === 'string' && r.text.trim() && DATE_RE.test(r.d)).slice(-50).map((r) => ({ id: String(r.id || newId()).slice(0, 64), d: r.d, text: r.text.trim().slice(0, 200), done: Boolean(r.done) })) : [],
+    changes: Array.isArray(x.changes) ? x.changes.filter((c) => c && typeof c.text === 'string' && c.text.trim() && DATE_RE.test(c.d)).slice(-200).map((c) => ({ id: String(c.id || newId()).slice(0, 64), d: c.d, text: c.text.trim().slice(0, 200), rid: c.rid ? String(c.rid).slice(0, 64) : '' })) : [],
+    cl: x.cl && typeof x.cl === 'object' ? { s: ['ok', 'dead', 'error', 'format', 'missing'].includes(x.cl.s) ? x.cl.s : 'ok', at: Number(x.cl.at) || 0 } : undefined,
     seo: x.seo && typeof x.seo === 'object' ? { score: Math.round(Number(x.seo.score)) || 0, at: Number(x.seo.at) || 0, bad: Array.isArray(x.seo.bad) ? x.seo.bad.slice(0, 20).map((b) => ({ k: String(b.k).slice(0, 20), v: b.v ?? null })) : [] } : undefined,
     createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0, r: x.r,
   };
@@ -379,7 +381,7 @@ function mergeServices(u, clientList, clientDeleted) {
     if (!c || tomb[c.id]) continue;
     const x = byId.get(c.id);
     if (!x) { byId.set(c.id, { ...c, r: undefined }); continue; }
-    if (c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, { ...c, seo: (x.seo && (!c.seo || x.seo.at >= c.seo.at)) ? x.seo : c.seo, r: c.doneAt === x.doneAt && c.months === x.months ? x.r : undefined });
+    if (c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, { ...c, seo: (x.seo && (!c.seo || x.seo.at >= c.seo.at)) ? x.seo : c.seo, cl: (x.cl && (!c.cl || x.cl.at >= c.cl.at)) ? x.cl : c.cl, r: c.doneAt === x.doneAt && c.months === x.months ? x.r : undefined });
   }
   for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
   u.svdeleted = tomb; u.services = [...byId.values()];

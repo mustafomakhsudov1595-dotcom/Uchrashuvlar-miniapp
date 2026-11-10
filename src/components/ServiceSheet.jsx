@@ -2,13 +2,13 @@ import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
 import { IconCheck, IconClose } from './Icons.jsx';
 import { addMonths, digits, fullUrl, serviceDays, serviceElapsed, serviceEnd, svKind, tgPhoneLink } from '../lib/services.js';
-import { formatFull, formatShort, todayISO } from '../lib/dates.js';
+import { formatFull, formatShort, todayISO, toISODate } from '../lib/dates.js';
 import { openExternal, openTelegramLink } from '../lib/telegram.js';
 import { t } from '../lib/i18n.js';
 
 const MONTHS = [3, 6, 12, 24, 36];
 
-export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt, onSave, onDelete, onAddRequest, onToggleRequest, onRemoveRequest, onClose }) {
+export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt, onMsg, onLinkCheck, onAddChange, onRemoveChange, onSave, onDelete, onAddRequest, onToggleRequest, onRemoveRequest, onClose }) {
   const uid = useId();
   const today = todayISO();
   const [editing, setEditing] = useState(!x);
@@ -28,6 +28,31 @@ export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt,
   const [seoRes, setSeoRes] = useState(null);
   const [box, setBox] = useState(null); // { title, text }
   const [busyReq, setBusyReq] = useState('');
+  const [chg, setChg] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkRes, setLinkRes] = useState('');
+  const doLink = async () => {
+    setLinkBusy(true);
+    try {
+      const r = await onLinkCheck(x.id);
+      setLinkRes(r.status);
+    } catch {
+      setLinkRes('error');
+    } finally {
+      setLinkBusy(false);
+    }
+  };
+  const addChg = () => {
+    const v = chg.trim();
+    if (!v) return;
+    onAddChange(v);
+    setChg('');
+  };
+  const showReport = () => {
+    const from = toISODate(new Date(Date.now() - 90 * 86400000));
+    const list = x.changes.filter((c) => c.d >= from);
+    setBox({ title: t('svHistReport'), text: list.length ? t('svReportText', x.name, list.map((c, i) => `${i + 1}. ${formatShort(c.d)} — ${c.text}`).join('\n'), 90) : t('svHistNone') });
+  };
   const copy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -127,6 +152,12 @@ export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt,
             </button>
           </div>
 
+          <div className="link-status">
+            <span>🤖 {!x.claudeUrl ? t('clStatus').missing : !/^https:\/\/([\w-]+\.)?claude\.(ai|com)\/\S+/i.test(x.claudeUrl) ? t('clStatus').format : (linkRes || x.cl?.s) ? t('clStatus')[linkRes || x.cl.s] : t('clStatus').none}</span>
+            {x.claudeUrl && <button type="button" className="link-btn" onClick={doLink} disabled={linkBusy}>{linkBusy ? '…' : t('svLinkCheck')}</button>}
+            <button type="button" className="link-btn" onClick={onMsg}>✉️ {t('msgBtn')}</button>
+          </div>
+
           {x.url && (
             <div className="seo-box">
               <div className="seo-head">
@@ -182,6 +213,29 @@ export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt,
           <div className="add-row" style={{ marginTop: 10 }}>
             <input className="input" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), add())} placeholder={t('svReqPh')} maxLength={200} enterKeyHint="done" />
             <button type="button" className="btn btn-accent add-btn" onClick={add}>{t('fAddItem')}</button>
+          </div>
+
+          <div className="section-title">
+            <h4>{t('svHistory')}</h4>
+            <span className="count">{x.changes.length}</span>
+          </div>
+          {x.changes.length > 0 && (
+            <ul className="list">
+              {[...x.changes].reverse().slice(0, 12).map((c) => (
+                <li key={c.id} className="task-row">
+                  <span className="todo"><span className="todo-text">{c.text}</span></span>
+                  <span className="due">{formatShort(c.d)}</span>
+                  <button type="button" className="icon-btn" onClick={() => onRemoveChange(c.id)} aria-label={t('fRemoveItem')}><IconClose width={16} height={16} /></button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="add-row" style={{ marginTop: 10 }}>
+            <input className="input" value={chg} onChange={(e) => setChg(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addChg())} placeholder={t('svChgPh')} maxLength={200} enterKeyHint="done" />
+            <button type="button" className="btn btn-accent add-btn" onClick={addChg}>{t('fAddItem')}</button>
+          </div>
+          <div className="shift-row" style={{ marginTop: 10 }}>
+            <button type="button" className="act-chip" onClick={showReport}>📋 {t('svHistReport')}</button>
           </div>
 
           {x.notes && (
