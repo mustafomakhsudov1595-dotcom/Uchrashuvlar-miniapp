@@ -8,7 +8,7 @@ import { t } from '../lib/i18n.js';
 
 const MONTHS = [3, 6, 12, 24, 36];
 
-export default function ServiceSheet({ service: x, fromProject, onSave, onDelete, onAddRequest, onToggleRequest, onRemoveRequest, onClose }) {
+export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt, onSave, onDelete, onAddRequest, onToggleRequest, onRemoveRequest, onClose }) {
   const uid = useId();
   const today = todayISO();
   const [editing, setEditing] = useState(!x);
@@ -24,6 +24,42 @@ export default function ServiceSheet({ service: x, fromProject, onSave, onDelete
     notes: x?.notes ?? '',
   }));
   const [err, setErr] = useState('');
+  const [seoBusy, setSeoBusy] = useState(false);
+  const [seoRes, setSeoRes] = useState(null);
+  const [box, setBox] = useState(null); // { title, text }
+  const [busyReq, setBusyReq] = useState('');
+  const copy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const doSeo = async () => {
+    setSeoBusy(true);
+    setSeoRes(null);
+    try {
+      const r = await onSeo(x.id);
+      setSeoRes(r);
+      if (r.prompt) setBox({ title: t('svFixTask'), text: r.prompt });
+    } catch {
+      setSeoRes({ error: true });
+    } finally {
+      setSeoBusy(false);
+    }
+  };
+  const doPrompt = async (rid) => {
+    setBusyReq(rid);
+    try {
+      const r = await onPrompt(x.id, rid);
+      setBox({ title: r.ai ? t('svPromptAi') : t('svPromptTpl'), text: r.text });
+    } catch {
+      setBox({ title: t('svSeoFail'), text: '' });
+    } finally {
+      setBusyReq('');
+    }
+  };
   const set = (k) => (e) => {
     setF((p) => ({ ...p, [k]: e.target.value }));
     setErr('');
@@ -91,6 +127,37 @@ export default function ServiceSheet({ service: x, fromProject, onSave, onDelete
             </button>
           </div>
 
+          {x.url && (
+            <div className="seo-box">
+              <div className="seo-head">
+                <b>🔎 SEO</b>
+                {(seoRes && !seoRes.error && !seoRes.down ? { score: seoRes.score } : x.seo) && (
+                  <span className={`seo-score ${((seoRes && seoRes.score) ?? x.seo.score) >= 80 ? 'ok' : ((seoRes && seoRes.score) ?? x.seo.score) >= 55 ? 'mid' : 'bad'}`}>{(seoRes && seoRes.score) ?? x.seo.score}/100</span>
+                )}
+                <button type="button" className="act-chip" onClick={doSeo} disabled={seoBusy}>{seoBusy ? t('svSeoRun') : t('svSeo')}</button>
+              </div>
+              {seoRes && seoRes.error && <p className="err-text">{t('svSeoFail')}</p>}
+              {seoRes && seoRes.down && <p className="err-text">{t('svSeoFail')}</p>}
+              {seoRes && seoRes.lines && seoRes.lines.length > 0 && (
+                <ul className="seo-list">
+                  {seoRes.lines.map((l, i) => <li key={i} className={l.ok ? 'ok' : 'bad'}><span>{l.ok ? '✓' : '!'}</span>{l.text}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {box && (
+            <div className="prompt-box">
+              <div className="seo-head"><b>{box.title}</b><button type="button" className="icon-btn" onClick={() => setBox(null)} aria-label={t('fCancel')}>✕</button></div>
+              {box.text && (
+                <>
+                  <textarea className="input" readOnly rows={7} value={box.text} onFocus={(e) => e.target.select()} />
+                  <button type="button" className="btn btn-primary bot-btn" onClick={async () => { (await copy(box.text)) ? setBox((b) => ({ ...b, copied: true })) : null; }}>{box.copied ? `✓ ${t('svCopied')}` : t('svCopy')}</button>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="section-title">
             <h4>{t('svRequests')}</h4>
             <span className="count">{x.requests.filter((r) => r.done).length}/{x.requests.length}</span>
@@ -103,6 +170,7 @@ export default function ServiceSheet({ service: x, fromProject, onSave, onDelete
                     <span className="box">{r.done && <IconCheck width={16} height={16} strokeWidth={3} />}</span>
                     <span className="todo-text">{r.text}</span>
                   </button>
+                  {!r.done && <button type="button" className="icon-btn sv-prompt" onClick={() => doPrompt(r.id)} disabled={busyReq === r.id} aria-label={t('svPromptBtn')}>{busyReq === r.id ? '…' : '🤖'}</button>}
                   <span className="due">{formatShort(r.d)}</span>
                   <button type="button" className="icon-btn" onClick={() => onRemoveRequest(r.id)} aria-label={t('fRemoveItem')}>
                     <IconClose width={16} height={16} />

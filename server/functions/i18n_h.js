@@ -14,6 +14,10 @@ const uz = {
   svLinkAsk: (l) => `${l} havolasini yuboring:`, svLinkBad: 'Havola notoʻgʻri. https://... koʻrinishida yuboring.', svLinkSaved: '✅ Saqlandi.',
   svReqAsk: '🔧 Mijoz nimani oʻzgartirishni soʻradi? Yozing:', svReqSaved: '✅ Soʻrov yozildi.', svDelAsk: '🗑 Servisni oʻchirasizmi?', svDeleted: '🗑 Oʻchirildi.',
   svRem: (n, c, d, end) => `🛠 <b>${n}</b>${c ? ` · ${c}` : ''} — 1 yillik servis ${d <= 0 ? 'tugadi' : `<b>${d} kun</b>dan keyin tugaydi`} (${end}).\nMijozga pullik xizmat (oylik toʻlov) taklif qiling.`,
+  bSvSeo: '🔎 SEO tekshirish', bSeoFix: '🤖 Tuzatish topshirigʻi', bSeoAgain: '🔄 Qayta tekshirish', bSvPrompt: '🤖',
+  seoChecking: '🔎 Sayt tekshirilmoqda…', seoNeedUrl: 'Avval saytning havolasini qoʻshing.', seoFail: 'Saytni ochib boʻlmadi. Havolani tekshiring.', seoOk: '🎉 Hammasi joyida!',
+  seoTitle: (u, n) => `🔎 <b>SEO tekshiruv</b> — ${u}\n${n >= 80 ? '🟢' : n >= 55 ? '🟠' : '🔴'} Ball: <b>${n}/100</b>`, seoAgo: (d) => (d <= 0 ? 'bugun' : `${d} kun oldin`),
+  promptReady: 'Claude sessiyasiga nusxalang:', promptAi: '✨ AI yozdi', promptTpl: '📋 Shablon (AI hozir ishlamadi)',
   bSvFromProj: '🛠 Servisga qoʻshish', svFromProjDone: '✅ Servisga qoʻshildi. Claude havolasini qoʻshishni unutmang.', cmdSv: '🛠 /servis — tayyor saytlar, servis, Claude havolasi',
 };
 const ru = {
@@ -26,6 +30,10 @@ const ru = {
   svLinkAsk: (l) => `Отправьте ссылку (${l}):`, svLinkBad: 'Ссылка неверная. Отправьте в виде https://...', svLinkSaved: '✅ Сохранено.',
   svReqAsk: '🔧 Что клиент просит изменить? Напишите:', svReqSaved: '✅ Запрос записан.', svDelAsk: '🗑 Удалить из сервиса?', svDeleted: '🗑 Удалено.',
   svRem: (n, c, d, end) => `🛠 <b>${n}</b>${c ? ` · ${c}` : ''} — годовой сервис ${d <= 0 ? 'закончился' : `заканчивается через <b>${d} дн.</b>`} (${end}).\nПредложите клиенту платное обслуживание (ежемесячный платёж).`,
+  bSvSeo: '🔎 SEO-проверка', bSeoFix: '🤖 Задание для исправления', bSeoAgain: '🔄 Проверить снова', bSvPrompt: '🤖',
+  seoChecking: '🔎 Проверяю сайт…', seoNeedUrl: 'Сначала добавьте ссылку на сайт.', seoFail: 'Не удалось открыть сайт. Проверьте ссылку.', seoOk: '🎉 Всё в порядке!',
+  seoTitle: (u, n) => `🔎 <b>SEO-проверка</b> — ${u}\n${n >= 80 ? '🟢' : n >= 55 ? '🟠' : '🔴'} Балл: <b>${n}/100</b>`, seoAgo: (d) => (d <= 0 ? 'сегодня' : `${d} дн. назад`),
+  promptReady: 'Скопируйте в сессию Claude:', promptAi: '✨ Написал AI', promptTpl: '📋 Шаблон (AI сейчас недоступен)',
   bSvFromProj: '🛠 В сервис', svFromProjDone: '✅ Добавлено в сервис. Не забудьте добавить ссылку Claude.', cmdSv: '🛠 /servis — готовые сайты, сервис, ссылка Claude',
 };
 const en = {
@@ -38,6 +46,10 @@ const en = {
   svLinkAsk: (l) => `Send the link (${l}):`, svLinkBad: 'Invalid link. Send it as https://...', svLinkSaved: '✅ Saved.',
   svReqAsk: '🔧 What did the client ask to change? Type it:', svReqSaved: '✅ Request saved.', svDelAsk: '🗑 Delete from service?', svDeleted: '🗑 Deleted.',
   svRem: (n, c, d, end) => `🛠 <b>${n}</b>${c ? ` · ${c}` : ''} — the 1-year service ${d <= 0 ? 'has ended' : `ends in <b>${d} days</b>`} (${end}).\nOffer the client a paid plan (monthly payment).`,
+  bSvSeo: '🔎 SEO check', bSeoFix: '🤖 Fix task', bSeoAgain: '🔄 Check again', bSvPrompt: '🤖',
+  seoChecking: '🔎 Checking the site…', seoNeedUrl: 'Add the site link first.', seoFail: 'Could not open the site. Check the link.', seoOk: '🎉 All good!',
+  seoTitle: (u, n) => `🔎 <b>SEO check</b> — ${u}\n${n >= 80 ? '🟢' : n >= 55 ? '🟠' : '🔴'} Score: <b>${n}/100</b>`, seoAgo: (d) => (d <= 0 ? 'today' : `${d} days ago`),
+  promptReady: 'Copy into the Claude session:', promptAi: '✨ Written by AI', promptTpl: '📋 Template (AI unavailable right now)',
   bSvFromProj: '🛠 To service', svFromProjDone: '✅ Added to service. Remember to add the Claude link.', cmdSv: '🛠 /servis — finished sites, service, Claude link',
 };
 module.exports = { uz, ru, en };

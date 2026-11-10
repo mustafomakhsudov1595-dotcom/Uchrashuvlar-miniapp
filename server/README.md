@@ -23,6 +23,8 @@
 
 - `functions/team.js` — kirish rejimi `BOT_ACCESS` (wrangler.jsonc): `open` (standart, hamma kira oladi; `/jamoa` aʻzolarni koʻrsatadi va chiqarishga imkon beradi) yoki `closed` — faqat admin (`ADMIN_IDS`, wrangler.jsonc), taklif havolasi (`/jamoa` → “Aʻzo taklif qilish”, 7 kun, bir martalik) bilan qoʻshilganlar va oldingi foydalanuvchilar ishlata oladi. Begona odam `/start` bossa hisob ochilmaydi, API 403 qaytaradi. Chiqarilgan aʻzo `blocked/<id>` bilan yopiladi.
 
+- `functions/seo.js` — sayt SEO tekshiruvi (`vs` tugmasi / API `seo`): HTTPS, sarlavha, tavsif, H1, viewport, canonical, og, alt, noindex, robots/sitemap, JSON-LD va kontent HTMLda borligi (SPA aniqlash). Natija 100 ballik, kamchiliklar Claude uchun tayyor topshiriqqa aylanadi. Mijoz soʻrovidan topshiriq (`vg` / API `sprompt`) AI bilan yoziladi, AI ishlamasa shablon. Eslatma: Worker oʻz workers.dev saytini tekshira olmaydi (Cloudflare cheklovi), tashqi domenlar ishlaydi.
+
 ## Deploy
 
 ```bash

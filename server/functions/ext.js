@@ -206,20 +206,27 @@ function aiPrompt(kind, p, extra, u) {
   if (kind === 's') return `${ctx}\nWrite website copy: SEO title (max 60 chars), meta description (max 155 chars), hero headline and subheadline, 3 benefit bullets, a short About paragraph, and the CTA button text.`;
   return `${ctx}\nWrite an Instagram post caption: a strong first-line hook, 3-5 short lines, a call to action, and 8 relevant hashtags.`;
 }
-async function aiRun(chat, u, system, prompt) {
-  const P = S.Tof(u).p, today = S.todayISO(u.tz), AI = getAI();
-  if (!AI) { await send(chat, P.aiFail); return null; }
+async function aiCall(u, system, prompt) {
+  const today = S.todayISO(u.tz), AI = getAI();
+  if (!AI) return { error: 'fail' };
   u.ai = u.ai && u.ai.d === today ? u.ai : { d: today, n: 0 };
-  if (u.ai.n >= 30) { await send(chat, P.aiLimit); return null; }
-  tg('sendChatAction', { chat_id: chat, action: 'typing' });
+  if (u.ai.n >= 30) return { error: 'limit' };
   try {
     const out = await AI.run(MODEL, { messages: [{ role: 'system', content: `${system} Reply in ${LANGNAME[u.lang] || LANGNAME.uz}. Be concise and practical, no preface, no markdown symbols like ** or ##.` }, { role: 'user', content: prompt }], max_tokens: 900 });
     u.ai.n += 1;
     const text = String((out && (out.response || out.result || '')) || '').trim();
-    if (!text) { await send(chat, P.aiFail); return null; }
+    if (!text) return { error: 'fail' };
     console.log('ai ok', text.length);
-    return text.slice(0, 3800);
-  } catch (e) { console.error('ai', e.message); await send(chat, P.aiFail); return null; }
+    return { text: text.slice(0, 3800) };
+  } catch (e) { console.error('ai', e.message); return { error: 'fail' }; }
+}
+async function aiRun(chat, u, system, prompt) {
+  const P = S.Tof(u).p;
+  tg('sendChatAction', { chat_id: chat, action: 'typing' });
+  const r = await aiCall(u, system, prompt);
+  if (r.text) return r.text;
+  await send(chat, r.error === 'limit' ? P.aiLimit : P.aiFail);
+  return null;
 }
 const SYS = 'You are a marketing and copywriting assistant for a freelancer in Uzbekistan who builds websites visible on Google, Telegram bots, and Instagram promo videos.';
 async function genForProject(chat, u, kind, pid, extra) {
@@ -314,4 +321,4 @@ async function remind(u, now) {
   return { dirty, sent, slow };
 }
 
-module.exports = { onMessage, onCallback, onDocument, remind, aiButtons, parseExpense, checkUrl, showExpenses, showGoal, buildBackup, ACTS: ['xl', 'xa', 'xp', 'xd', 'gl', 'gs', 'ml', 'mu', 'mx', 'mc', 'ai', 'ais', 'air'] };
+module.exports = { aiCall, onMessage, onCallback, onDocument, remind, aiButtons, parseExpense, checkUrl, showExpenses, showGoal, buildBackup, ACTS: ['xl', 'xa', 'xp', 'xd', 'gl', 'gs', 'ml', 'mu', 'mx', 'mc', 'ai', 'ais', 'air'] };

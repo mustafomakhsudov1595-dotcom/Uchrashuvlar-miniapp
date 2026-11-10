@@ -18,7 +18,7 @@ import TabBar from './components/TabBar.jsx';
 import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
-  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, getCalendarToken, signature,
+  loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, runSeo, requestPrompt, getCalendarToken, signature,
   loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
@@ -534,6 +534,15 @@ export default function App() {
     touchProject(id, (x) => ({ paid: (x.paid || 0) + amount, pays: [...(x.pays || []), { a: amount, d: todayISO() }].slice(-40) }));
     showToast(t('toastPaid'));
   };
+  // SEO va topshiriq serverda bajariladi: servis avval sinxronlanishi kerak
+  const withSynced = async (fn) => {
+    clearTimeout(syncTimer.current);
+    syncing.current = false;
+    await doSync();
+    return fn();
+  };
+  const seoCheck = (id) => withSynced(() => runSeo(id)).then((r) => { doSync(); return r; });
+  const svPrompt = (id, rid) => withSynced(() => requestPrompt(id, rid));
   const touchService = (id, fn) => setServices((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
   const saveService = (data) => {
     if (sheet?.svid) touchService(sheet.svid, () => data);
@@ -716,6 +725,8 @@ export default function App() {
           service={curService}
           fromProject={sheet.fromProject ? projects.find((x) => x.id === sheet.fromProject) : null}
           onSave={saveService}
+          onSeo={seoCheck}
+          onPrompt={svPrompt}
           onDelete={() => setConfirmSv(sheet.svid)}
           onAddRequest={addSvRequest}
           onToggleRequest={toggleSvRequest}

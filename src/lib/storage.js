@@ -112,6 +112,7 @@ export function cleanService(x) {
     months: Math.min(60, Math.max(1, Math.round(Number(x.months) || 12))),
     notes: typeof x.notes === 'string' ? x.notes : '',
     requests: Array.isArray(x.requests) ? x.requests.filter((r) => r && typeof r.text === 'string' && r.text.trim() && DATE_RE.test(r.d)).slice(-50).map((r) => ({ id: String(r.id ?? newId()), d: r.d, text: r.text.trim(), done: Boolean(r.done) })) : [],
+    seo: x.seo && typeof x.seo === 'object' ? { score: Number(x.seo.score) || 0, at: Number(x.seo.at) || 0, bad: Array.isArray(x.seo.bad) ? x.seo.bad : [] } : undefined,
     createdAt: Number(x.createdAt) || Date.now(),
     updatedAt: Number(x.updatedAt) || 0,
   };
@@ -146,7 +147,7 @@ export const saveSvDeleted = (ids) => {
     /* ignore */
   }
 };
-export const servicesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, x.months, x.notes, x.requests.map((r) => [r.id, r.done, r.text])]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+export const servicesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, x.months, x.notes, x.requests.map((r) => [r.id, r.done, r.text]), x.seo ? x.seo.at : 0]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 
 // ---- Xarajatlar va oylik maqsad ----
 export function cleanExpense(x) {
@@ -369,6 +370,18 @@ export async function createReport(id) {
   const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'report', id }) });
   if (!res.ok) throw new Error(`report ${res.status}`);
   return (await res.json()).link;
+}
+
+// Sayt SEO tekshiruvi va mijoz soʻrovi uchun Claude topshirigʻi (server bajaradi)
+export async function runSeo(id) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'seo', id }) });
+  if (!res.ok) throw new Error(`seo ${res.status}`);
+  return res.json();
+}
+export async function requestPrompt(id, rid) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'sprompt', id, rid }) });
+  if (!res.ok) throw new Error(`prompt ${res.status}`);
+  return res.json();
 }
 
 // Kalendar obuna havolasi uchun maxfiy kalit (server yaratadi)

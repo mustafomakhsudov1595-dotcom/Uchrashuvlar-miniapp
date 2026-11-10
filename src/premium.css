@@ -260,3 +260,21 @@ h1, h2, h3, .hero-name, .d-name, .sheet-title, .dialog h3, .empty h2, .empty-day
 .swatch { border-radius: 18px; }
 
 .cat-chips { margin-bottom: 14px; }
+
+/* SEO va Claude topshirigʻi */
+.seo-box, .prompt-box { display: grid; gap: 10px; margin-top: 14px; padding: 14px 16px; border-radius: var(--r-lg); background: linear-gradient(180deg, color-mix(in srgb, var(--glass-2) 70%, transparent), var(--glass)); border: 1px solid var(--line); box-shadow: var(--card-hi); }
+.seo-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seo-head b { flex: 1; min-width: 0; }
+.seo-score { padding: 3px 11px; border-radius: 99px; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; }
+.seo-score.ok { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+.seo-score.mid { background: color-mix(in srgb, #f59e0b 22%, transparent); color: #f59e0b; }
+.seo-score.bad { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+.seo-list { display: grid; gap: 7px; font-size: 14px; font-weight: 600; }
+.seo-list li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: start; }
+.seo-list li span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; font-weight: 900; }
+.seo-list li.ok span { background: color-mix(in srgb, var(--ok) 22%, transparent); color: var(--ok); }
+.seo-list li.bad span { background: color-mix(in srgb, #f59e0b 25%, transparent); color: #f59e0b; }
+.seo-list li.bad { color: var(--text); }
+.seo-list li.ok { color: var(--muted); }
+.prompt-box textarea { font-size: 13px; line-height: 1.45; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.sv-prompt { font-size: 17px; }

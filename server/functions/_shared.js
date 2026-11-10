@@ -366,6 +366,7 @@ function cleanService(x) {
     id: x.id, name: x.name.trim().slice(0, 120), client: typeof x.client === 'string' ? x.client.trim().slice(0, 100) : '', phone: typeof x.phone === 'string' ? x.phone.trim().slice(0, 30) : '',
     url: cleanUrl(x.url), claudeUrl: cleanUrl(x.claudeUrl), doneAt: x.doneAt, months, notes: typeof x.notes === 'string' ? x.notes.slice(0, 1000) : '',
     requests: Array.isArray(x.requests) ? x.requests.filter((r) => r && typeof r.text === 'string' && r.text.trim() && DATE_RE.test(r.d)).slice(-50).map((r) => ({ id: String(r.id || newId()).slice(0, 64), d: r.d, text: r.text.trim().slice(0, 200), done: Boolean(r.done) })) : [],
+    seo: x.seo && typeof x.seo === 'object' ? { score: Math.round(Number(x.seo.score)) || 0, at: Number(x.seo.at) || 0, bad: Array.isArray(x.seo.bad) ? x.seo.bad.slice(0, 20).map((b) => ({ k: String(b.k).slice(0, 20), v: b.v ?? null })) : [] } : undefined,
     createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0, r: x.r,
   };
 }
@@ -378,7 +379,7 @@ function mergeServices(u, clientList, clientDeleted) {
     if (!c || tomb[c.id]) continue;
     const x = byId.get(c.id);
     if (!x) { byId.set(c.id, { ...c, r: undefined }); continue; }
-    if (c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, { ...c, r: c.doneAt === x.doneAt && c.months === x.months ? x.r : undefined });
+    if (c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, { ...c, seo: (x.seo && (!c.seo || x.seo.at >= c.seo.at)) ? x.seo : c.seo, r: c.doneAt === x.doneAt && c.months === x.months ? x.r : undefined });
   }
   for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
   u.svdeleted = tomb; u.services = [...byId.values()];

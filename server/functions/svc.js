@@ -1,6 +1,8 @@
 'use strict';
 // Servis: tayyor saytlar — egasining raqami, sayt va Claude sessiyasi havolasi, 1 yillik xizmat muddati
 const S = require('./_shared');
+const seo = require('./seo');
+const ext = require('./ext');
 const { tg, esc } = S;
 
 const send = (chat, text, markup) => tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', reply_markup: markup, disable_web_page_preview: true });
@@ -20,6 +22,7 @@ function cardText(x, u, now = Date.now()) {
   if (x.phone) t += `${x.client ? ' · ' : '\n'}📞 ${esc(x.phone)}`;
   if (x.url) t += `\n🌐 ${esc(host(x.url))}`;
   t += `\n✅ ${P.svDoneLbl}: ${fmtDate(x.doneAt)}\n${d < 0 ? '🔴' : d <= 30 ? '🟠' : '🟢'} ${P.svSvcLbl}: <b>${P.svLeft(d)}</b> (${P.svEndLbl} ${fmtDate(S.serviceEnd(x))})`;
+  if (x.seo) t += `\n🔎 SEO: <b>${x.seo.score}/100</b> · ${P.seoAgo(S.daysBetween(S.isoOfLocal(S.localNow(u.tz, x.seo.at)), today))}`;
   if (x.notes) t += `\n📝 ${esc(x.notes)}`;
   const reqs = x.requests.slice(-6);
   if (reqs.length) t += `\n\n${P.svReqLbl}\n` + reqs.map((r) => `${r.done ? '✅' : '⬜️'} ${esc(r.text)} <i>(${r.d.slice(5).replace('-', '.')})</i>`).join('\n');
@@ -36,7 +39,8 @@ function cardMarkup(x, u) {
   if (!x.url) setRow.push({ text: P.bSvSetSite, callback_data: `vk:${x.id}:s` });
   if (setRow.length) rows.push(setRow);
   const openReqs = x.requests.map((r, i) => ({ r, i })).filter((e) => !e.r.done).slice(0, 5);
-  for (const e of openReqs) rows.push([{ text: `⬜️ ${e.r.text}`.slice(0, 60), callback_data: `vr:${x.id}:${e.i}` }]);
+  for (const e of openReqs) rows.push([{ text: `⬜️ ${e.r.text}`.slice(0, 50), callback_data: `vr:${x.id}:${e.i}` }, { text: P.bSvPrompt, callback_data: `vg:${x.id}:${e.i}` }]);
+  if (x.url) rows.push([{ text: P.bSvSeo, callback_data: `vs:${x.id}` }]);
   rows.push([...(x.phone ? [{ text: P.bSvPhone, callback_data: `vc:${x.id}` }] : []), { text: P.bSvReq, callback_data: `vq:${x.id}` }, { text: P.bSvDel, callback_data: `vx:${x.id}` }]);
   rows.push([{ text: P.back, callback_data: 'vl:0' }, S.appBtn(S.Tof(u).openAppShort, '?tab=projects&view=service')]);
   return { inline_keyboard: rows };
@@ -123,7 +127,36 @@ async function onCallback(ctx, u, act, a, b) {
   else if (act === 'vc') { const x = find(u, a); if (x && x.phone) await tg('sendContact', { chat_id: chat, phone_number: `+${S.digitsOf(x.phone)}`, first_name: x.client || x.name }); }
   else if (act === 'vq') { if (find(u, a)) { u.state = { kind: 'svreq', id: a }; await send(chat, P.svReqAsk, { inline_keyboard: [cancelRow(P)] }); } }
   else if (act === 'vk') { const x = find(u, a); if (x) { const field = b === 's' ? 'url' : 'claudeUrl'; u.state = { kind: 'svlink', id: a, field }; await send(chat, P.svLinkAsk(b === 's' ? P.bSvSite.replace(/^\S+\s/, '') : 'Claude'), { inline_keyboard: [cancelRow(P)] }); } }
-  else if (act === 'vr') { const x = find(u, a), r = x && x.requests[Number(b)]; if (r) { r.done = true; x.updatedAt = Date.now(); } await showCard(ctx, u, a); }
+  else if (act === 'vs') {
+    const x = find(u, a);
+    if (!x || !x.url) { await send(chat, P.seoNeedUrl); return ''; }
+    tg('sendChatAction', { chat_id: chat, action: 'typing' });
+    const res = await seo.audit(x.url);
+    if (!res) { await send(chat, P.seoFail); return ''; }
+    const bad = seo.badList(res.items);
+    x.seo = { score: res.score, at: Date.now(), bad };
+    const lines = res.items.length === 1 && !res.items[0].ok ? [] : seo.lines(u.lang || 'uz', res.items);
+    let text = P.seoTitle(esc(host(x.url)), res.score);
+    text += lines.length ? '\n\n' + lines.map((l) => `${l.ok ? '✅' : '⚠️'} ${esc(l.text)}`).join('\n') : `\n\n${P.seoFail}`;
+    if (lines.length && !bad.length) text += `\n\n${P.seoOk}`;
+    const rows = [];
+    if (bad.length && lines.length) rows.push([{ text: P.bSeoFix, callback_data: `vf:${x.id}` }]);
+    rows.push([{ text: P.bSeoAgain, callback_data: `vs:${x.id}` }, { text: P.back, callback_data: `vj:${x.id}` }]);
+    await send(chat, text, { inline_keyboard: rows });
+  } else if (act === 'vf') {
+    const x = find(u, a);
+    if (!x || !x.seo || !x.seo.bad.length) { await send(chat, P.seoOk); return ''; }
+    const rows = x.claudeUrl ? [[{ text: P.bSvClaude, url: x.claudeUrl }]] : [];
+    await send(chat, `${P.promptReady}\n\n<pre>${esc(seo.fixPrompt(u.lang || 'uz', x.url, x.seo.bad))}</pre>`, rows.length ? { inline_keyboard: rows } : undefined);
+  } else if (act === 'vg') {
+    const x = find(u, a), r = x && x.requests[Number(b)];
+    if (!r) return '';
+    tg('sendChatAction', { chat_id: chat, action: 'typing' });
+    const ai = await ext.aiCall(u, seo.REQ_SYSTEM, `Site: ${x.name}${x.url ? ` (${x.url})` : ''}. ${x.notes ? `Notes: ${x.notes}. ` : ''}Client request: ${r.text}`);
+    const body = ai.text || seo.requestPrompt(u.lang || 'uz', x, r.text);
+    const rows = x.claudeUrl ? [[{ text: P.bSvClaude, url: x.claudeUrl }]] : [];
+    await send(chat, `${P.promptReady} ${ai.text ? P.promptAi : P.promptTpl}\n\n<pre>${esc(body)}</pre>`, rows.length ? { inline_keyboard: rows } : undefined);
+  } else if (act === 'vr') { const x = find(u, a), r = x && x.requests[Number(b)]; if (r) { r.done = true; x.updatedAt = Date.now(); } await showCard(ctx, u, a); }
   else if (act === 'vx') { const x = find(u, a); if (x) await show(ctx, `${P.svDelAsk}\n\n<b>${esc(x.name)}</b>`, { inline_keyboard: [[{ text: P.delYes, callback_data: `vxy:${a}` }, { text: P.no, callback_data: `vj:${a}` }]] }); }
   else if (act === 'vxy') { u.services = u.services.filter((x) => x.id !== a); u.svdeleted[a] = Date.now(); await show(ctx, P.svDeleted, { inline_keyboard: [[{ text: P.back, callback_data: 'vl:0' }]] }); }
   else if (act === 'vp') {
@@ -153,4 +186,4 @@ async function remind(u, now) {
   return { dirty, sent };
 }
 
-module.exports = { onMessage, onCallback, remind, parseService, cardText, ACTS: ['vl', 'vj', 'va', 'vc', 'vq', 'vk', 'vr', 'vx', 'vxy', 'vp'] };
+module.exports = { onMessage, onCallback, remind, parseService, cardText, ACTS: ['vl', 'vj', 'va', 'vc', 'vq', 'vk', 'vr', 'vx', 'vxy', 'vp', 'vs', 'vf', 'vg'] };

@@ -1,5 +1,7 @@
 'use strict';
 const S = require('./_shared');
+const seo = require('./seo');
+const ext = require('./ext');
 
 const json = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 const view = (u) => ({
@@ -26,6 +28,25 @@ exports.handler = async (event) => {
       await S.saveUser(st, u);
     }
     return json(200, { ok: true, token: u.calToken });
+  }
+
+  if (b.action === 'seo') {
+    const x = u.services.find((k) => k.id === String(b.id || ''));
+    if (!x || !x.url) return json(404, { ok: false, error: 'no url' });
+    const res = await seo.audit(x.url);
+    if (!res) return json(400, { ok: false, error: 'bad url' });
+    const bad = seo.badList(res.items);
+    x.seo = { score: res.score, at: Date.now(), bad };
+    await S.saveUser(st, u);
+    const down = res.items.length === 1 && !res.items[0].ok;
+    return json(200, { ok: true, down, score: res.score, at: x.seo.at, lines: down ? [] : seo.lines(u.lang || 'uz', res.items), prompt: bad.length && !down ? seo.fixPrompt(u.lang || 'uz', x.url, bad) : '' });
+  }
+  if (b.action === 'sprompt') {
+    const x = u.services.find((k) => k.id === String(b.id || '')), r = x && x.requests.find((q) => q.id === String(b.rid || ''));
+    if (!r) return json(404, { ok: false, error: 'not found' });
+    const ai = await ext.aiCall(u, seo.REQ_SYSTEM, `Site: ${x.name}${x.url ? ` (${x.url})` : ''}. ${x.notes ? `Notes: ${x.notes}. ` : ''}Client request: ${r.text}`);
+    await S.saveUser(st, u);
+    return json(200, { ok: true, ai: Boolean(ai.text), text: ai.text || seo.requestPrompt(u.lang || 'uz', x, r.text) });
   }
 
   if (b.action === 'report') {
