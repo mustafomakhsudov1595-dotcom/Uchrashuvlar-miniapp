@@ -150,6 +150,7 @@ function leadCard(l) {
 const leadKb = (l) => ({ inline_keyboard: [[{ text: '✍️ Javob yozish', callback_data: `igo:${l.id}` }, { text: l.muted && l.muted > Date.now() ? '🤖 AI yoqish' : '🔇 AI toʻxtatish', callback_data: `igm:${l.id}` }], [{ text: '👥 Lidlar', callback_data: 'igl:0' }]] });
 
 async function notifyOwner(c, r) {
+  if (c.notify === 'report') return; // faqat kunlik hisobot rejimi
   const l = r.lead;
   const title = r.isNew ? '🆕 Yangi lid' : r.gotPhone ? '📞 Telefon qoldirdi' : r.handoff ? '🙋 Operator kerak' : '🔥 Lid qiziqdi';
   const ids = [c.owner, ...S.adminIds()].filter((x, i, a) => x && a.indexOf(x) === i);
@@ -234,8 +235,8 @@ function reportText(s, today) {
 async function showMain(ctx, u) {
   const st = store(), c = await cfg(st), today = S.todayISO(u.tz), s = await dayStats(st, today, u.tz);
   const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? '✅ ulangan' : '⏳ ulanmagan (Meta kalitlari kerak)';
-  const text = `📸 <b>Instagram lidlar</b>\n\nMeta ulanishi: ${conn}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nKunlik hisobot: ${c.hour}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
-  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
+  const text = `📸 <b>Instagram lidlar</b>\n\nMeta ulanishi: ${conn}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
+  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
 }
 async function showLeads(ctx, u) {
   const st = store(), leads = (await recentLeads(st, 20)).filter((l) => !l.spam);
@@ -281,6 +282,7 @@ async function onCallback(ctx, u, act, a) {
   const st = store();
   if (act === 'igs') await showMain(ctx, u);
   else if (act === 'igt') { const c = await cfg(st); c.on = !c.on; await saveCfg(st, c); await showMain(ctx, u); return c.on ? '🟢' : '⏸'; }
+  else if (act === 'ign') { const c = await cfg(st); c.notify = c.notify === 'report' ? 'hot' : 'report'; await saveCfg(st, c); await showMain(ctx, u); return c.notify === 'report' ? '🔕' : '🔔'; }
   else if (act === 'iga') { u.state = { kind: 'igabout' }; await send(ctx.chat, '✍️ <b>Biznesingiz haqida</b> yozing: xizmatlar, narxlar (agar aytsa boʻladigan boʻlsa), muddatlar, ish vaqti, qanday gaplashish kerak.\n\nAI faqat shu maʼlumotdan foydalanadi, oʻzidan narx oʻylab topmaydi.\n\nHozirgi matn:\n' + esc((await cfg(st)).about || DEFAULT_ABOUT), { inline_keyboard: [[{ text: '❌ Bekor', callback_data: 'pno' }]] }); }
   else if (act === 'igx') { u.state = { kind: 'igtest' }; await send(ctx.chat, '🧪 Sinov rejimi. Mijoz kabi yozing (masalan: <i>Assalomu alaykum, sayt kerak edi</i>). Chiqish: /bekor'); }
   else if (act === 'igl') await showLeads(ctx, u);
@@ -308,4 +310,4 @@ async function remind(u, now) {
   return { dirty: false, sent: r.ok ? 1 : 0 };
 }
 
-module.exports = { handler: exports.handler, onMessage, onCallback, remind, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm'] };
+module.exports = { handler: exports.handler, onMessage, onCallback, remind, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign'] };
