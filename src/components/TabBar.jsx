@@ -18,7 +18,7 @@ export default function TabBar({ tab, onTab, onAdd }) {
           <IconPlus width={26} height={26} strokeWidth={2.4} />
         </button>
         {item('calendar', IconCalendar, t('tabCalendar'))}
-        {item('stats', IconWallet, t('tabStats'))}
+        {item('stats', IconWallet, t('tabMoney'))}
       </div>
     </nav>
   );
