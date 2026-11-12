@@ -6,7 +6,7 @@
    ===================================================================== */
 
 :root {
-  --display: 'Playfair Display Variable', 'Manrope Variable', Georgia, 'Times New Roman', serif;
+  --display: 'Sora Variable', 'Manrope Variable', system-ui, sans-serif;
   --r-xl: 30px;
   --r-lg: 24px;
   --r-md: 18px;
@@ -349,3 +349,25 @@ h1, h2, h3, .hero-name, .d-name, .sheet-title, .dialog h3, .empty h2, .empty-day
 .tab[aria-current='page'] svg { transform: translateY(-1px) scale(1.08); }
 .tab[aria-current='page']::after { bottom: 2px; }
 .tab, .tab span { font-family: var(--font); }
+
+/* Yangi shrift: Sora (sarlavhalar) + Manrope (matn) */
+h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em; }
+.home-head h1 { font-weight: 700; }
+.sheet-title { font-weight: 700; font-size: 20px; }
+
+/* Sana tanlash */
+.date-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font-weight: 600; }
+.date-btn svg { color: var(--a1); flex: none; }
+.datefield.open .date-btn { border-color: var(--a1); box-shadow: 0 0 0 4px var(--a-soft); }
+.date-pop { margin-top: 8px; padding: 12px; border-radius: 20px; background: var(--glass); border: 1px solid var(--line); animation: fadein 0.18s ease; }
+.date-chips { display: flex; gap: 8px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
+.date-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.date-nav b { font-family: var(--display); font-size: 15px; }
+.date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.date-grid small { color: var(--muted); font-size: 11px; font-weight: 700; padding: 4px 0; }
+.dd { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.dd.out { color: var(--muted); opacity: 0.4; }
+.dd.today { box-shadow: inset 0 0 0 1.5px var(--a1); }
+.dd.on { background: var(--grad); color: var(--on-a); box-shadow: 0 8px 16px -10px var(--a1); }
+.row2:has(.datefield.open) { grid-template-columns: 1fr; }
+.home-head h1 { font-size: clamp(16px, 4.9vw, 21px); letter-spacing: -0.03em; }

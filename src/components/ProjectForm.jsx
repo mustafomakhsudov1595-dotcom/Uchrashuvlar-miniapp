@@ -1,3 +1,4 @@
+import DateField from './DateField.jsx';
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
 import { TypeIcon } from './ProjectCard.jsx';
@@ -81,7 +82,7 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
         <div className="row2">
           <div className="field">
             <label htmlFor={`${uid}-d`}>{t('pfDeadline')}</label>
-            <input id={`${uid}-d`} type="date" className="input" value={f.date} onChange={set('date')} aria-invalid={Boolean(errors.date)} />
+            <DateField id={`${uid}-d`} value={f.date} onChange={(v) => setF((p) => ({ ...p, date: v }))} invalid={Boolean(errors.date)} />
             {errors.date && <span className="error">{errors.date}</span>}
           </div>
           <div className="field">
@@ -110,7 +111,7 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
             </div>
             <div className="field">
               <label htmlFor={`${uid}-de`}>{t('pfDomExp')}</label>
-              <input id={`${uid}-de`} className="input" type="date" value={f.domExp} onChange={set('domExp')} />
+              <DateField id={`${uid}-de`} value={f.domExp} onChange={(v) => setF((p) => ({ ...p, domExp: v }))} />
             </div>
           </div>
         )}

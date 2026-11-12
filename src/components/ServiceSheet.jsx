@@ -1,3 +1,4 @@
+import DateField from './DateField.jsx';
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
 import Choice from './Choice.jsx';
@@ -276,7 +277,7 @@ export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt,
           <div className="row2">
             <div className="field">
               <label htmlFor={`${uid}-d`}>{t('svDone')}</label>
-              <input id={`${uid}-d`} className="input" type="date" value={f.doneAt} onChange={set('doneAt')} />
+              <DateField id={`${uid}-d`} value={f.doneAt} onChange={(v) => setF((p) => ({ ...p, doneAt: v }))} />
             </div>
             <div className="field">
               <span className="label-like">{t('svPeriod')}</span>

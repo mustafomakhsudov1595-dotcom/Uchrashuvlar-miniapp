@@ -1,3 +1,4 @@
+import DateField from './DateField.jsx';
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
 import Choice from './Choice.jsx';
@@ -53,7 +54,7 @@ export default function ExpenseSheet({ projects, onSave, onClose }) {
           </div>
           <div className="field">
             <label htmlFor={`${uid}-d`}>{t('exDate')}</label>
-            <input id={`${uid}-d`} className="input" type="date" value={f.d} onChange={set('d')} />
+            <DateField id={`${uid}-d`} value={f.d} onChange={(v) => setF((p) => ({ ...p, d: v }))} />
           </div>
         </div>
       </form>

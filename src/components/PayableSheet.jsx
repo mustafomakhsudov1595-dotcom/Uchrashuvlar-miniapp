@@ -1,3 +1,4 @@
+import DateField from './DateField.jsx';
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
 import Choice from './Choice.jsx';
@@ -107,7 +108,7 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
             </div>
             <div className="field">
               <label htmlFor={`${uid}-d`}>{t('pvDue')}</label>
-              <input id={`${uid}-d`} className="input" type="date" value={f.due} onChange={set('due')} />
+              <DateField id={`${uid}-d`} value={f.due} onChange={(v) => setF((p) => ({ ...p, due: v }))} />
             </div>
           </div>
           {err && <p className="err-text">{err}</p>}

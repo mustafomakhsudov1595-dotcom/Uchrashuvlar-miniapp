@@ -1,3 +1,4 @@
+import DateField from './DateField.jsx';
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
 import { IconClose, IconStar } from './Icons.jsx';
@@ -113,14 +114,7 @@ export default function MeetingForm({ initial, presetDate, prefill, titleKey, fa
         <div className="row2">
           <div className="field">
             <label htmlFor={`${uid}-date`}>{t('fDate')}</label>
-            <input
-              id={`${uid}-date`}
-              type="date"
-              className="input"
-              value={f.date}
-              onChange={set('date')}
-              aria-invalid={Boolean(errors.date)}
-            />
+            <DateField id={`${uid}-date`} value={f.date} onChange={(v) => { setF((p) => ({ ...p, date: v })); setErrors((p) => (p.date ? { ...p, date: undefined } : p)); }} invalid={Boolean(errors.date)} />
             {errors.date && <span className="error">{errors.date}</span>}
           </div>
           <div className="field">
