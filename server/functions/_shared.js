@@ -425,6 +425,11 @@ async function isAllowed(st, id) {
 }
 
 /* ---------- toʻlash kerak (majburiyatlar): kimga, qachon, qancha ---------- */
+// Kredit: cn = jami oy, ci = hozirgi toʻlov raqami
+function creditOf(x) {
+  const cn = Math.round(Number(x.cn)), ci = Math.round(Number(x.ci));
+  return cn >= 2 && cn <= 120 ? { cn, ci: ci >= 1 && ci <= cn ? ci : 1 } : { cn: 0, ci: 0 };
+}
 function cleanPayable(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || typeof x.who !== 'string' || !x.who.trim() || !DATE_RE.test(x.due)) return null;
   const amount = num(x.amount);
@@ -432,7 +437,7 @@ function cleanPayable(x) {
   const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id || newId()).slice(0, 64), a: Math.round(Number(y.a)), d: y.d })) : [];
   return {
     id: x.id, who: x.who.trim().slice(0, 80), note: typeof x.note === 'string' ? x.note.trim().slice(0, 120) : '', amount: Math.round(amount), due: x.due,
-    paid: Math.min(Math.round(amount), pays.reduce((n, y) => n + y.a, 0)), pays, cat: EXCATS.includes(x.cat) ? x.cat : 'other', repeat: x.repeat === 'month' ? 'month' : '',
+    paid: Math.min(Math.round(amount), pays.reduce((n, y) => n + y.a, 0)), pays, cat: EXCATS.includes(x.cat) ? x.cat : 'other', repeat: x.repeat === 'month' ? 'month' : '', ...creditOf(x),
     nextId: typeof x.nextId === 'string' ? x.nextId.slice(0, 64) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '',
     createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0, r: x.r,
   };
@@ -475,8 +480,8 @@ function applyPayment(u, x, amount, today, now = Date.now()) {
   const payId = newId();
   x.pays = [...x.pays, { id: payId, a, d: today }].slice(-60); x.paid += a; x.updatedAt = now; x.r = undefined;
   u.expenses.unshift(cleanExpense({ id: newId(), a, d: today, cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now }));
-  if (payLeft(x) === 0 && x.repeat === 'month' && !x.nextId) {
-    const nx = cleanPayable({ ...x, id: newId(), due: addMonthsISO(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now, r: undefined });
+  if (payLeft(x) === 0 && (x.repeat === 'month' || (x.cn && x.ci < x.cn)) && !x.nextId) {
+    const nx = cleanPayable({ ...x, ci: x.cn ? x.ci + 1 : 0, id: newId(), due: addMonthsISO(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now, r: undefined });
     if (nx) { x.nextId = nx.id; u.payables.push(nx); }
   }
   return a;

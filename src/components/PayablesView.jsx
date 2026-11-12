@@ -51,7 +51,7 @@ export default function PayablesView({ payables, projects, subs, today, onOpen, 
                     <button type="button" className="sub-main" onClick={() => onOpen(x.id)}>
                       <span className="ptile pay">💸</span>
                       <span className="pc-main">
-                        <b>{x.who}{x.repeat ? ' 🔁' : ''}</b>
+                        <b>{x.who}{x.cn ? ` 💳 ${x.ci}/${x.cn}` : x.repeat ? ' 🔁' : ''}</b>
                         <small>{x.note || t('exCats')[x.cat]} · {formatShort(x.due)}</small>
                         <small className={`pay-left k-${dk.kind}`}>{money(left(x))} · {tagText(dk)}</small>
                       </span>

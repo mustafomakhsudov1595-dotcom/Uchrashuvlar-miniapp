@@ -12,7 +12,7 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
   const [editing, setEditing] = useState(!x);
   const [part, setPart] = useState('');
   const [err, setErr] = useState('');
-  const [f, setF] = useState(() => ({ who: x?.who ?? '', note: x?.note ?? '', amount: x?.amount ?? '', due: x?.due ?? today, cat: x?.cat ?? 'team', repeat: x?.repeat === 'month', pid: x?.pid ?? '' }));
+  const [f, setF] = useState(() => ({ who: x?.who ?? '', note: x?.note ?? '', amount: x?.amount ?? '', due: x?.due ?? today, cat: x?.cat ?? 'team', repeat: x?.repeat === 'month', credit: Boolean(x?.cn), cn: x?.cn || 12, ci: x?.ci || 1, pid: x?.pid ?? '' }));
   const set = (k) => (e) => {
     setF((p) => ({ ...p, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
     setErr('');
@@ -21,7 +21,7 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
     e.preventDefault();
     if (!f.who.trim()) return setErr(t('pvEWho'));
     if (!(Number(f.amount) > 0)) return setErr(t('eAmount'));
-    onSave({ who: f.who.trim(), note: f.note.trim(), amount: Math.round(Number(f.amount)), due: f.due || today, cat: f.cat, repeat: f.repeat ? 'month' : '', pid: f.pid });
+    onSave({ who: f.who.trim(), note: f.note.trim(), amount: Math.round(Number(f.amount)), due: f.due || today, cat: f.cat, repeat: f.credit ? '' : f.repeat ? 'month' : '', cn: f.credit ? Math.min(120, Math.max(2, Math.round(Number(f.cn)) || 2)) : 0, ci: f.credit ? Math.max(1, Math.round(Number(f.ci)) || 1) : 0, pid: f.pid });
     if (x) setEditing(false);
   };
   const addPart = () => {
@@ -61,7 +61,8 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
             <span>{x.who}{x.note ? ` · ${x.note}` : ''}</span>
             <span>{t('pvDue')}: {formatFull(x.due)}{l > 0 ? ` · ${k.kind === 'over' ? t('pvOverdue', -k.n) : k.kind === 'today' ? t('pvToday') : k.n === 1 ? t('pvTomorrow') : t('pvIn', k.n)}` : ''}</span>
             <span className="bar big"><i style={{ width: `${Math.min(100, (x.paid / x.amount) * 100)}%` }} /></span>
-            <em>{l === 0 ? `✓ ${t('pvDone')}` : `${t('pvPaidOf')}: ${money(x.paid)} / ${money(x.amount)}`}{x.repeat ? ' · 🔁' : ''}</em>
+            <em>{l === 0 ? `✓ ${t('pvDone')}` : `${t('pvPaidOf')}: ${money(x.paid)} / ${money(x.amount)}`}{x.cn ? ` · 💳 ${x.ci}/${x.cn}` : x.repeat ? ' · 🔁' : ''}</em>
+            {x.cn > 0 && <em>{t('pvCrLeft', x.cn - x.ci + (l > 0 ? 1 : 0), money(((x.cn - x.ci) + (l > 0 ? 1 : 0)) * x.amount - x.paid))}</em>}
           </div>
 
           {l > 0 && (
@@ -100,7 +101,7 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
           </div>
           <div className="row2">
             <div className="field">
-              <label htmlFor={`${uid}-a`}>{t('pvAmount')}</label>
+              <label htmlFor={`${uid}-a`}>{f.credit ? t('pvCrMonthly') : t('pvAmount')}</label>
               <input id={`${uid}-a`} className="input" type="number" inputMode="numeric" min="0" value={f.amount} onChange={set('amount')} placeholder="1500000" />
             </div>
             <div className="field">
@@ -125,9 +126,25 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
             </select>
           </div>
           <label className="check-line">
+            <input type="checkbox" checked={f.credit} onChange={set('credit')} />
+            <span>💳 {t('pvCredit')}</span>
+          </label>
+          {f.credit && (
+            <div className="row2">
+              <div className="field">
+                <label htmlFor={`${uid}-cn`}>{t('pvCrMonths')}</label>
+                <input id={`${uid}-cn`} className="input" type="number" inputMode="numeric" min="2" max="120" value={f.cn} onChange={set('cn')} />
+              </div>
+              <div className="field">
+                <label htmlFor={`${uid}-ci`}>{t('pvCrNum')}</label>
+                <input id={`${uid}-ci`} className="input" type="number" inputMode="numeric" min="1" value={f.ci} onChange={set('ci')} />
+              </div>
+            </div>
+          )}
+          {!f.credit && <label className="check-line">
             <input type="checkbox" checked={f.repeat} onChange={set('repeat')} />
             <span>🔁 {t('pvRepeat')}</span>
-          </label>
+          </label>}
         </form>
       )}
     </Sheet>

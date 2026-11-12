@@ -67,11 +67,14 @@ async function showCard(ctx, u, id) {
 }
 
 /* ---------- yozuvdan ajratish ---------- */
+const CREDIT_RE = /^(kredit|rassrochka|рассрочка|кредит|credit|installments?)\s*(\d{1,3})(?:\s*(?:oy|мес\w*|months?))?$/i;
 const REPEAT_RE = /^(oylik|har\s*oy|har oyning|monthly|every month|ежемесячно|каждый месяц)/i;
 function parsePayable(text, u) {
   const today = S.todayISO(u.tz), parts = text.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
-  let amount = null, due = '', repeat = '', free = [];
+  let amount = null, due = '', repeat = '', cn = 0, free = [];
   for (const p of parts) {
+    const cm = p.match(CREDIT_RE);
+    if (cm) { cn = Math.min(120, +cm[2]); continue; }
     if (REPEAT_RE.test(p)) { repeat = 'month'; continue; }
     const dm = p.match(/^(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?$/);
     if (dm && +dm[1] >= 1 && +dm[1] <= 31 && +dm[2] >= 1 && +dm[2] <= 12) {
@@ -93,7 +96,7 @@ function parsePayable(text, u) {
   }
   if (!free.length || !amount) return null;
   const now = Date.now();
-  return S.cleanPayable({ id: S.newId(), who: free[0], note: free.slice(1).join(', '), amount, due: due || today, repeat, createdAt: now, updatedAt: now });
+  return S.cleanPayable({ id: S.newId(), who: free[0], note: free.slice(1).join(', '), amount, due: due || today, repeat: cn ? '' : repeat, cn, ci: cn ? 1 : 0, createdAt: now, updatedAt: now });
 }
 
 /* ---------- yoʻnaltirgichlar ---------- */
@@ -161,13 +164,13 @@ async function remind(u, now) {
   let dirty = false, sent = 0;
   if (!u.remind || S.inQuiet(u, hhmm) || hhmm < '09:00') return { dirty, sent };
   for (const x of S.payOpen(u)) {
-    const d = S.daysBetween(today, x.due), kind = d === 3 ? 'd3' : d === 1 ? 'd1' : d === 0 ? 'd0' : d < 0 && d >= -14 ? 'o' : '';
+    const d = S.daysBetween(today, x.due), kind = d === 7 && x.cn ? 'd7' : d === 3 ? 'd3' : d === 1 ? 'd1' : d === 0 ? 'd0' : d < 0 && d >= -14 ? 'o' : '';
     if (!kind) continue;
     const r = x.r || (x.r = {}), key = kind === 'o' ? `${today}:o` : `${x.due}:${kind}`;
     if ((r.k || []).includes(key)) continue;
     r.k = [...(r.k || []).filter((k) => k.startsWith(x.due) || k.endsWith(':o')).slice(-6), key]; dirty = true;
     const left = S.payLeft(x);
-    const res = await send(u.chat, P.pvRem(kind, esc(x.who), esc(x.note), left, -d), { inline_keyboard: [[{ text: P.bPvPaid(left), callback_data: `zp:${x.id}` }, { text: P.bPvPart, callback_data: `zq:${x.id}` }], [{ text: P.bPvSnooze, callback_data: `zs:${x.id}` }, { text: P.bPvOpen, callback_data: `zj:${x.id}` }]] });
+    const res = await send(u.chat, P.pvRem(kind, esc(x.who), esc(x.note), left, -d) + (x.cn ? `\n💳 ${x.ci}/${x.cn}` : ''), { inline_keyboard: [[{ text: P.bPvPaid(left), callback_data: `zp:${x.id}` }, { text: P.bPvPart, callback_data: `zq:${x.id}` }], [{ text: P.bPvSnooze, callback_data: `zs:${x.id}` }, { text: P.bPvOpen, callback_data: `zj:${x.id}` }]] });
     if (res.ok) sent += 1;
   }
   return { dirty, sent };

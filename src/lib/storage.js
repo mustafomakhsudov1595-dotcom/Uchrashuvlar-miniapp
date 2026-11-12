@@ -116,6 +116,7 @@ export function cleanPayable(x) {
     pays,
     cat: EXCATS.includes(x.cat) ? x.cat : 'other',
     repeat: x.repeat === 'month' ? 'month' : '',
+    ...(Number(x.cn) >= 2 && Number(x.cn) <= 120 ? { cn: Math.round(Number(x.cn)), ci: Number(x.ci) >= 1 && Number(x.ci) <= Number(x.cn) ? Math.round(Number(x.ci)) : 1 } : { cn: 0, ci: 0 }),
     nextId: typeof x.nextId === 'string' ? x.nextId : '',
     pid: typeof x.pid === 'string' ? x.pid : '',
     createdAt: Number(x.createdAt) || Date.now(),
@@ -152,7 +153,7 @@ export const savePvDeleted = (ids) => {
     /* ignore */
   }
 };
-export const payablesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.who, x.note, x.amount, x.due, x.paid, x.repeat, x.cat, x.pid, x.pays.length]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+export const payablesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.who, x.note, x.amount, x.due, x.paid, x.repeat, x.cn, x.ci, x.cat, x.pid, x.pays.length]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 
 // ---- Servis: tayyor saytlar ----
 export function cleanService(x) {

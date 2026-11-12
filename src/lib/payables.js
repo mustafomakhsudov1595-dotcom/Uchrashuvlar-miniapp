@@ -40,8 +40,8 @@ export function payNow(payables, expenses, id, amount, today, now = Date.now()) 
   const paid = x.paid + a;
   let next = null;
   const upd = { ...x, paid, pays: [...x.pays, { id: payId, a, d: today }].slice(-60), updatedAt: now };
-  if (paid >= x.amount && x.repeat === 'month' && !x.nextId) {
-    next = { ...x, id: newId(), due: addMonths(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now };
+  if (paid >= x.amount && (x.repeat === 'month' || (x.cn && x.ci < x.cn)) && !x.nextId) {
+    next = { ...x, ci: x.cn ? x.ci + 1 : 0, id: newId(), due: addMonths(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now };
     upd.nextId = next.id;
   }
   const exp = { id: newId(), a, d: today, cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now };
