@@ -1,0 +1,58 @@
+'use strict';
+// Toʻlash kerak (majburiyatlar): kimga, qachon, qancha (uz / ru / en)
+const fm = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const uz = {
+  bPay2: '💸 Toʻlash kerak', bPvAdd: '➕ Qoʻshish', bPvSum: '📊 Hisob-kitob', bPvList: '⬅️ Roʻyxat',
+  pvTitle: (n, t) => `💸 <b>Toʻlash kerak</b> (${n}) — jami <b>${fm(t)}</b>`, pvNone: 'Toʻlash kerak boʻlgan narsa yoʻq 🎉\nQoʻshish uchun “➕ Qoʻshish” ni bosing.',
+  pvGroups: { over: '⚠️ Muddati oʻtgan', today: '📌 Bugun', week: '🗓 Shu hafta', later: '📅 Keyinroq' },
+  pvOverdue: (n) => `${n} kun kechikdi`, pvToday: 'bugun', pvTomorrow: 'ertaga', pvIn: (n) => `${n} kundan keyin`,
+  pvLine: (who, note, left, tag) => `• <b>${who}</b>${note ? ` (${note})` : ''} — <b>${fm(left)}</b> · ${tag}`,
+  pvCard: (x, left, tag) => `💸 <b>${x.who}</b>${x.note ? `\n📝 ${x.note}` : ''}\n💰 Summa: <b>${fm(x.amount)}</b>${x.paid ? ` · toʻlandi: ${fm(x.paid)}` : ''}\n🧾 Qoldi: <b>${fm(left)}</b>\n📅 Muddat: <b>${x.due.slice(8)}.${x.due.slice(5, 7)}.${x.due.slice(0, 4)}</b> · ${tag}${x.repeat ? '\n🔁 Har oy takrorlanadi' : ''}`,
+  pvHist: 'Toʻlovlar:', pvAsk: '💸 <b>Kimga toʻlash kerak?</b>\n\nBitta xabarda yozing:\n<code>kimga, nima uchun, summa, sana, oylik</code>\n\nMasalan:\n<code>Sardor, maosh, 1 500 000, 5.12, oylik</code>\n<code>Domen, reg.uz, 120 000, 20.12</code>\n\nSana oʻrniga faqat kunni yozsangiz (masalan <code>5</code>) — oyning shu kuni deb olinadi. “oylik” yozsangiz har oy takrorlanadi.',
+  pvBad: 'Tushunmadim. Kimga va summani yozing. Masalan: <code>Sardor, maosh, 1 500 000, 5.12, oylik</code>', pvSaved: '✅ Qoʻshildi.',
+  bPvPaid: (a) => `✅ Toʻlandi · ${fm(a)}`, bPvPart: '💵 Qisman', bPvSnooze: '⏰ +3 kun', bPvUndo: '↩️ Oxirgi toʻlovni bekor qilish', bPvRepOn: '🔁 Oylik qilish', bPvRepOff: '🔁 Oylikni oʻchirish', bPvDel: '🗑 Oʻchirish', bPvOpen: '📂 Ochish',
+  pvPartAsk: (w, l) => `💵 <b>${w}</b>: qancha toʻladingiz? (qoldi: ${fm(l)})\nSummani yozing, masalan <code>500 000</code>`, pvPartBad: 'Summani tushunmadim. Masalan: <code>500000</code>',
+  pvPaidMsg: (a, l) => `✅ Toʻlov yozildi: <b>${fm(a)}</b>${l > 0 ? `\n🧾 Qoldi: <b>${fm(l)}</b>` : '\n🎉 Toʻliq toʻlandi! Xarajatlarga ham qoʻshildi.'}`, pvNext: (d) => `🔁 Keyingi oy: ${d}`,
+  pvSnoozed: (d) => `⏰ Muddat surildi: ${d}`, pvUndone: '↩️ Oxirgi toʻlov bekor qilindi.', pvDelAsk: '🗑 Oʻchirasizmi?', pvDeleted: '🗑 Oʻchirildi.',
+  pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd3' ? '3 kundan keyin' : k === 'd1' ? 'Ertaga' : k === 'd0' ? 'Bugun' : `${n} kun kechikdi`}:</b> ${who}ga <b>${fm(amt)}</b> toʻlash kerak${note ? ` (${note})` : ''}.`,
+  pvSumTitle: '📊 <b>Hisob-kitob</b>', pvSumTotal: 'Jami toʻlash kerak', pvSumOver: 'Muddati oʻtgan', pvSumToday: 'Bugun', pvSumWeek: '7 kun ichida', pvSumMonth: 'Shu oyda', pvSumWho: 'Kimga qancha',
+  pvForecast: '🔮 <b>30 kunlik prognoz</b>', pvInflow: 'Kutilayotgan tushum (qarzlar + oylik toʻlovlar)', pvOut30: 'Toʻlash kerak (30 kun)', pvBalance: 'Farq', pvEnough: '✅ yetadi', pvShort: '⚠️ yetishmaydi',
+  brPay: '💸 Toʻlash kerak', wkPay: (t, c) => `💸 Kelgusi 7 kunda toʻlash kerak: <b>${fm(t)}</b> (${c} ta)`, cmdPv: '💸 /tolash — kimga qancha toʻlash kerak',
+};
+const ru = {
+  ...uz,
+  bPay2: '💸 К оплате', bPvAdd: '➕ Добавить', bPvSum: '📊 Расчёт', bPvList: '⬅️ Список',
+  pvTitle: (n, t) => `💸 <b>К оплате</b> (${n}) — всего <b>${fm(t)}</b>`, pvNone: 'Платить пока нечего 🎉\nНажмите «➕ Добавить».',
+  pvGroups: { over: '⚠️ Просрочено', today: '📌 Сегодня', week: '🗓 На этой неделе', later: '📅 Позже' },
+  pvOverdue: (n) => `просрочено на ${n} дн.`, pvToday: 'сегодня', pvTomorrow: 'завтра', pvIn: (n) => `через ${n} дн.`,
+  pvCard: (x, left, tag) => `💸 <b>${x.who}</b>${x.note ? `\n📝 ${x.note}` : ''}\n💰 Сумма: <b>${fm(x.amount)}</b>${x.paid ? ` · оплачено: ${fm(x.paid)}` : ''}\n🧾 Осталось: <b>${fm(left)}</b>\n📅 Срок: <b>${x.due.slice(8)}.${x.due.slice(5, 7)}.${x.due.slice(0, 4)}</b> · ${tag}${x.repeat ? '\n🔁 Повторяется каждый месяц' : ''}`,
+  pvHist: 'Платежи:', pvAsk: '💸 <b>Кому нужно заплатить?</b>\n\nОдним сообщением:\n<code>кому, за что, сумма, дата, ежемесячно</code>\n\nНапример:\n<code>Сардор, зарплата, 1 500 000, 5.12, ежемесячно</code>\n<code>Домен, reg.uz, 120 000, 20.12</code>\n\nЕсли вместо даты написать только число (например <code>5</code>) — это день месяца. «ежемесячно» — повторять каждый месяц.',
+  pvBad: 'Не понял. Укажите кому и сумму. Например: <code>Сардор, зарплата, 1 500 000, 5.12, ежемесячно</code>', pvSaved: '✅ Добавлено.',
+  bPvPaid: (a) => `✅ Оплачено · ${fm(a)}`, bPvPart: '💵 Частично', bPvSnooze: '⏰ +3 дня', bPvUndo: '↩️ Отменить последний платёж', bPvRepOn: '🔁 Сделать ежемесячным', bPvRepOff: '🔁 Отключить повтор', bPvDel: '🗑 Удалить', bPvOpen: '📂 Открыть',
+  pvPartAsk: (w, l) => `💵 <b>${w}</b>: сколько оплатили? (осталось: ${fm(l)})\nНапишите сумму, например <code>500 000</code>`, pvPartBad: 'Не понял сумму. Например: <code>500000</code>',
+  pvPaidMsg: (a, l) => `✅ Платёж записан: <b>${fm(a)}</b>${l > 0 ? `\n🧾 Осталось: <b>${fm(l)}</b>` : '\n🎉 Оплачено полностью! Добавлено и в расходы.'}`, pvNext: (d) => `🔁 Следующий месяц: ${d}`,
+  pvSnoozed: (d) => `⏰ Срок сдвинут: ${d}`, pvUndone: '↩️ Последний платёж отменён.', pvDelAsk: '🗑 Удалить?', pvDeleted: '🗑 Удалено.',
+  pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd3' ? 'Через 3 дня' : k === 'd1' ? 'Завтра' : k === 'd0' ? 'Сегодня' : `Просрочено на ${n} дн.`}:</b> нужно заплатить <b>${fm(amt)}</b> — ${who}${note ? ` (${note})` : ''}.`,
+  pvSumTitle: '📊 <b>Расчёт</b>', pvSumTotal: 'Всего к оплате', pvSumOver: 'Просрочено', pvSumToday: 'Сегодня', pvSumWeek: 'В ближайшие 7 дней', pvSumMonth: 'В этом месяце', pvSumWho: 'Кому сколько',
+  pvForecast: '🔮 <b>Прогноз на 30 дней</b>', pvInflow: 'Ожидаемые поступления (долги + ежемесячные)', pvOut30: 'К оплате (30 дней)', pvBalance: 'Разница', pvEnough: '✅ хватает', pvShort: '⚠️ не хватает',
+  brPay: '💸 К оплате', wkPay: (t, c) => `💸 К оплате в ближайшие 7 дней: <b>${fm(t)}</b> (${c} шт.)`, cmdPv: '💸 /tolash — кому и сколько платить',
+};
+const en = {
+  ...uz,
+  bPay2: '💸 To pay', bPvAdd: '➕ Add', bPvSum: '📊 Summary', bPvList: '⬅️ List',
+  pvTitle: (n, t) => `💸 <b>To pay</b> (${n}) — total <b>${fm(t)}</b>`, pvNone: 'Nothing to pay 🎉\nTap “➕ Add”.',
+  pvGroups: { over: '⚠️ Overdue', today: '📌 Today', week: '🗓 This week', later: '📅 Later' },
+  pvOverdue: (n) => `${n} days overdue`, pvToday: 'today', pvTomorrow: 'tomorrow', pvIn: (n) => `in ${n} days`,
+  pvCard: (x, left, tag) => `💸 <b>${x.who}</b>${x.note ? `\n📝 ${x.note}` : ''}\n💰 Amount: <b>${fm(x.amount)}</b>${x.paid ? ` · paid: ${fm(x.paid)}` : ''}\n🧾 Left: <b>${fm(left)}</b>\n📅 Due: <b>${x.due.slice(8)}.${x.due.slice(5, 7)}.${x.due.slice(0, 4)}</b> · ${tag}${x.repeat ? '\n🔁 Repeats monthly' : ''}`,
+  pvHist: 'Payments:', pvAsk: '💸 <b>Who do you need to pay?</b>\n\nIn one message:\n<code>who, what for, amount, date, monthly</code>\n\nExample:\n<code>Sardor, salary, 1 500 000, 5.12, monthly</code>\n<code>Domain, reg.uz, 120 000, 20.12</code>\n\nA bare number instead of a date (e.g. <code>5</code>) means that day of the month. “monthly” repeats it every month.',
+  pvBad: 'Could not read it. Give a name and an amount. Example: <code>Sardor, salary, 1 500 000, 5.12, monthly</code>', pvSaved: '✅ Added.',
+  bPvPaid: (a) => `✅ Paid · ${fm(a)}`, bPvPart: '💵 Partial', bPvSnooze: '⏰ +3 days', bPvUndo: '↩️ Undo last payment', bPvRepOn: '🔁 Make monthly', bPvRepOff: '🔁 Stop repeating', bPvDel: '🗑 Delete', bPvOpen: '📂 Open',
+  pvPartAsk: (w, l) => `💵 <b>${w}</b>: how much did you pay? (left: ${fm(l)})\nType the amount, e.g. <code>500 000</code>`, pvPartBad: 'Could not read the amount. Example: <code>500000</code>',
+  pvPaidMsg: (a, l) => `✅ Payment recorded: <b>${fm(a)}</b>${l > 0 ? `\n🧾 Left: <b>${fm(l)}</b>` : '\n🎉 Paid in full! Also added to expenses.'}`, pvNext: (d) => `🔁 Next month: ${d}`,
+  pvSnoozed: (d) => `⏰ Due date moved: ${d}`, pvUndone: '↩️ Last payment undone.', pvDelAsk: '🗑 Delete?', pvDeleted: '🗑 Deleted.',
+  pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd3' ? 'In 3 days' : k === 'd1' ? 'Tomorrow' : k === 'd0' ? 'Today' : `${n} days overdue`}:</b> pay <b>${fm(amt)}</b> to ${who}${note ? ` (${note})` : ''}.`,
+  pvSumTitle: '📊 <b>Summary</b>', pvSumTotal: 'Total to pay', pvSumOver: 'Overdue', pvSumToday: 'Today', pvSumWeek: 'Within 7 days', pvSumMonth: 'This month', pvSumWho: 'Who gets how much',
+  pvForecast: '🔮 <b>30-day forecast</b>', pvInflow: 'Expected income (debts + monthly payments)', pvOut30: 'To pay (30 days)', pvBalance: 'Difference', pvEnough: '✅ enough', pvShort: '⚠️ short',
+  brPay: '💸 To pay', wkPay: (t, c) => `💸 To pay in the next 7 days: <b>${fm(t)}</b> (${c})`, cmdPv: '💸 /tolash — who to pay and how much',
+};
+module.exports = { uz, ru, en };

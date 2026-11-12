@@ -29,7 +29,8 @@ async function showList(ctx, u, page = 0) {
   if (nav.length) rows.push(nav);
   rows.push([{ text: P.addNew, callback_data: 'pn' }, { text: P.bTasksToday, callback_data: 'ptd' }]);
   rows.push([{ text: P.bSvc, callback_data: 'vl:0' }, { text: P.bClients, callback_data: 'cl:0' }, { text: P.bSubs, callback_data: 'sl:0' }, { text: P.bIncome, callback_data: 'in:0' }]);
-  rows.push([{ text: P.bDebts, callback_data: 'pq:0' }, S.appBtn(T.openAppShort, '?tab=projects')]);
+  rows.push([{ text: P.bPay2, callback_data: 'zl:0' }, { text: P.bDebts, callback_data: 'pq:0' }]);
+  rows.push([S.appBtn(T.openAppShort, '?tab=projects')]);
   return show(ctx, text, { inline_keyboard: rows });
 }
 
@@ -117,9 +118,11 @@ function briefMessage(u, now = Date.now()) {
   if (near.length) parts.push(`${P.brProj}\n${near.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${S.deadlineTag(p, today, T)}`).join('\n')}`);
   if (sd.length) parts.push(`${P.brSubs}\n${sd.slice(0, 6).map((x) => `• <b>${esc([x.client, x.name].filter(Boolean).join(' · '))}</b> — ${S.money(x.amount)}`).join('\n')}`);
   if (dl.length) parts.push(P.brDebt(dl.length, S.money(debtSum(dl))));
+  const pb = require('./pay').briefBlock(u, today);
+  if (pb) parts.push(pb);
   const gl = S.goalLine(u, today);
   if (gl) parts.push(gl);
-  const empty = !sd.length && !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;
+  const empty = !pb && !sd.length && !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;
   if (empty) parts.push(P.brNone);
   const rows = [...g.over, ...g.today].slice(0, 6).map((e) => [{ text: `⬜️ ${e.t.text} · ${e.p.name}`.slice(0, 60), callback_data: `pu:${e.p.id}:${e.i}` }]);
   for (const m of meets.slice(0, 4)) rows.push([{ text: `${m.time} · ${m.name}`.slice(0, 60), callback_data: `d:${m.id}` }]);
@@ -141,6 +144,8 @@ function weeklyMessage(u, now = Date.now()) {
   const exp = S.expenseSum(S.expensesIn(u, from, today)), gl = S.goalLine(u, today);
   const parts = [P.wkTitle, [P.wkDone(done.length), P.wkMoney(S.money(money)), exp ? P.inExp(S.money(exp)) : '', exp ? P.inNet(S.money(money - exp)) : '', dl.length ? P.wkDebt(dl.length, S.money(debtSum(dl))) : '', P.wkActive(act.length, over), P.wkMeet(meets)].filter(Boolean).join('\n')];
   if (upcoming.length) parts.push(`${P.wkNext}\n${upcoming.slice(0, 6).map((p) => `• ${S.PICON[p.type]} <b>${esc(p.name)}</b> — ${esc(S.fmtWd(p.date, T))}`).join('\n')}`);
+  const wp = require('./pay').weekBlock(u, today);
+  if (wp) parts.push(wp);
   if (gl) parts.push(gl);
   const rows = [[S.appBtn(T.openAppShort, '?tab=projects')]];
   if (dl.length) rows.unshift([{ text: P.bDebts, callback_data: 'pq:0' }]);

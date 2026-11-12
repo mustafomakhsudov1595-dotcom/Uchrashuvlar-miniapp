@@ -288,3 +288,27 @@ h1, h2, h3, .hero-name, .d-name, .sheet-title, .dialog h3, .empty h2, .empty-day
 .muted { color: var(--muted); }
 
 .offline-bar { position: fixed; left: 12px; right: 12px; top: calc(var(--safe-top) + 8px); z-index: 90; padding: 9px 14px; border-radius: 99px; text-align: center; font-size: 13px; font-weight: 800; background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 60%, transparent); color: #f59e0b; box-shadow: var(--card-hi), 0 14px 30px -16px rgba(0, 0, 0, 0.7); animation: rise 0.3s var(--ease) both; }
+
+/* Toʻlash kerak */
+.seg { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: minmax(max-content, 1fr); overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg button { padding: 10px 14px; }
+.ptile.pay { background: linear-gradient(135deg, #fb7185, #f59e0b); box-shadow: 0 10px 20px -10px #fb7185, inset 0 1px 0 rgba(255, 255, 255, 0.4); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; font-size: 20px; }
+.pay-row { display: flex !important; gap: 10px; align-items: center; }
+.pay-row .sub-main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; flex: 1; min-width: 0; text-align: left; }
+.pay-row.k-over { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.pay-row.k-today, .pay-row.k-soon { border-color: color-mix(in srgb, #f59e0b 50%, transparent); }
+.pay-left { font-weight: 800; }
+.pay-left.k-over { color: var(--danger); }
+.pay-left.k-today, .pay-left.k-soon { color: #f59e0b; }
+.pay-ok { flex: none; width: 48px; height: 48px; padding: 0; font-size: 20px; }
+.pay-sum b { background: none; color: var(--text); -webkit-text-fill-color: currentColor; }
+.forecast { display: grid; gap: 6px; margin-bottom: 14px; padding: 14px 16px; border-radius: var(--r-lg); background: linear-gradient(180deg, color-mix(in srgb, var(--glass-2) 70%, transparent), var(--glass)); border: 1px solid var(--line); box-shadow: var(--card-hi); font-size: 14px; }
+.forecast div { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-weight: 600; }
+.forecast div em { font-style: normal; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+.forecast div.ok em { color: var(--ok); }
+.forecast div.bad em { color: var(--danger); }
+.pay-hero.k-over b { color: var(--danger); }
+.pay-hero.k-done b { color: var(--ok); }
+.check-line { display: flex; align-items: center; gap: 10px; margin: 6px 0 14px; font-weight: 700; }
+.check-line input { width: 20px; height: 20px; accent-color: var(--a1); }

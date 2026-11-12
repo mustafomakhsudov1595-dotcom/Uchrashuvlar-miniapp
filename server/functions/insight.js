@@ -24,6 +24,8 @@ function snapshot(u, now = Date.now()) {
   if (down.length) L.push(`Sites currently down: ${down.map((p) => p.name).join(', ')}`);
   const noClaude = u.services.filter((x) => !x.claudeUrl).length;
   if (noClaude) L.push(`Services without a Claude link: ${noClaude}`);
+  const ps = S.paySummary(u, today);
+  if (ps.open.length) L.push(`Money to pay out: total ${S.money(ps.total)}${ps.overdue ? `, overdue ${S.money(ps.overdue)}` : ''}; next 7 days ${S.money(ps.week)}; ${ps.open.slice(0, 5).map((x) => `${x.who} ${S.money(S.payLeft(x))} due ${x.due}`).join('; ')}; 30-day forecast balance ${S.money(ps.balance)}`);
   const due = S.subsDue(u, today);
   if (due.length) L.push(`Monthly payments due: ${due.map((x) => `${x.client || x.name} ${S.money(x.amount)}`).join('; ')}`);
   return L.length > 2 ? L.join('\n') : '';

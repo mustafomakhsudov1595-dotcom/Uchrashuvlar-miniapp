@@ -10,6 +10,8 @@ import ClientDetail from './components/ClientDetail.jsx';
 import ExpenseSheet from './components/ExpenseSheet.jsx';
 import ServiceSheet from './components/ServiceSheet.jsx';
 import MessageSheet from './components/MessageSheet.jsx';
+import PayableSheet from './components/PayableSheet.jsx';
+import { payNow, undoLast, left as payLeft } from './lib/payables.js';
 import { clientsOf } from './lib/finance.js';
 import MeetingDetail from './components/MeetingDetail.jsx';
 import MeetingForm from './components/MeetingForm.jsx';
@@ -20,7 +22,7 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, runSeo, requestPrompt, buildMessage, checkClaudeLink, getCalendarToken, signature,
-  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature, loadPayables, savePayables, loadPvDeleted, savePvDeleted, payablesSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
@@ -49,6 +51,8 @@ export default function App() {
   const [subs, setSubs] = useState(loadSubs);
   const [expenses, setExpenses] = useState(loadExpenses);
   const [services, setServices] = useState(loadServices);
+  const [payables, setPayables] = useState(loadPayables);
+  const [confirmPay, setConfirmPay] = useState(null);
   const [confirmSv, setConfirmSv] = useState(null);
   const [goalState, setGoalState] = useState(loadGoal);
   const [confirmSid, setConfirmSid] = useState(null);
@@ -74,6 +78,10 @@ export default function App() {
   projectsRef.current = projects;
   const subsRef = useRef(subs);
   subsRef.current = subs;
+  const payablesRef = useRef(payables);
+  payablesRef.current = payables;
+  const pvdeletedRef = useRef(loadPvDeleted());
+  const pvFromServer = useRef(false);
   const servicesRef = useRef(services);
   servicesRef.current = services;
   const svdeletedRef = useRef(loadSvDeleted());
@@ -105,6 +113,7 @@ export default function App() {
       const sentSDeleted = [...sdeletedRef.current];
       const sentEDeleted = [...edeletedRef.current];
       const sentSvDeleted = [...svdeletedRef.current];
+      const sentPvDeleted = [...pvdeletedRef.current];
       const remote = await syncRemote({
         meetings: meetingsRef.current,
         deleted: sentDeleted,
@@ -119,6 +128,8 @@ export default function App() {
         edeleted: sentEDeleted,
         services: servicesRef.current,
         svdeleted: sentSvDeleted,
+        payables: payablesRef.current,
+        pvdeleted: sentPvDeleted,
         goal: goalRef.current.goal,
         goalAt: goalRef.current.at,
       });
@@ -133,6 +144,12 @@ export default function App() {
         saveEDeleted(edeletedRef.current);
         svdeletedRef.current = svdeletedRef.current.filter((id) => !sentSvDeleted.includes(id));
         saveSvDeleted(svdeletedRef.current);
+        pvdeletedRef.current = pvdeletedRef.current.filter((id) => !sentPvDeleted.includes(id));
+        savePvDeleted(pvdeletedRef.current);
+        if (payablesSignature(remote.payables) !== payablesSignature(payablesRef.current)) {
+          pvFromServer.current = true;
+          setPayables(remote.payables);
+        }
         if (servicesSignature(remote.services) !== servicesSignature(servicesRef.current)) {
           svFromServer.current = true;
           setServices(remote.services);
@@ -184,6 +201,15 @@ export default function App() {
     }
     scheduleSync();
   }, [meetings, scheduleSync]);
+
+  useEffect(() => {
+    savePayables(payables);
+    if (pvFromServer.current) {
+      pvFromServer.current = false;
+      return;
+    }
+    scheduleSync();
+  }, [payables, scheduleSync]);
 
   useEffect(() => {
     saveServices(services);
@@ -272,6 +298,7 @@ export default function App() {
   const current = sheet?.id && !String(sheet.type).startsWith('p') ? meetings.find((m) => m.id === sheet.id) : null;
   const curProject = sheet?.id && String(sheet.type).startsWith('p') ? projects.find((x) => x.id === sheet.id) : null;
 
+  const curPayable = sheet?.type === 'payable' && sheet.payid ? payables.find((x) => x.id === sheet.payid) : null;
   const curService = sheet?.type === 'service' && sheet.svid ? services.find((x) => x.id === sheet.svid) : null;
   const curSub = sheet?.type === 'sub' && sheet.sid ? subs.find((x) => x.id === sheet.sid) : null;
   const clientList = useMemo(() => clientsOf(projects, subs), [projects, subs]);
@@ -283,14 +310,14 @@ export default function App() {
   }, [sheet, current, curProject]);
 
   const closeTop = useCallback(() => {
-    if (confirmId || confirmPid || confirmSid || confirmSv) { setConfirmId(null); setConfirmPid(null); setConfirmSid(null); setConfirmSv(null); }
+    if (confirmId || confirmPid || confirmSid || confirmSv || confirmPay) { setConfirmId(null); setConfirmPid(null); setConfirmSid(null); setConfirmSv(null); setConfirmPay(null); }
     else if (sheet?.type === 'msg' && sheet.back) setSheet(sheet.back);
     else if (sheet?.type === 'pform' && sheet.id) setSheet({ type: 'pdetail', id: sheet.id });
     else if (sheet?.type === 'form' && sheet.id) setSheet({ type: 'detail', id: sheet.id });
     else setSheet(null);
-  }, [confirmId, confirmPid, confirmSid, confirmSv, sheet]);
+  }, [confirmId, confirmPid, confirmSid, confirmSv, confirmPay, sheet]);
 
-  const overlayOpen = Boolean(sheet || confirmId || confirmPid || confirmSid || confirmSv);
+  const overlayOpen = Boolean(sheet || confirmId || confirmPid || confirmSid || confirmSv || confirmPay);
   useBackButton(overlayOpen, closeTop);
 
   useEffect(() => {
@@ -556,6 +583,44 @@ export default function App() {
   const svPrompt = (id, rid) => withSynced(() => requestPrompt(id, rid));
   const linkCheck = (id) => withSynced(() => checkClaudeLink(id)).then((r) => { doSync(); return r; });
   const openMsg = (kind, id, name, back) => { haptic.tap(); setSheet({ type: 'msg', refId: id, kind, name, back }); };
+  const touchPayable = (id, fn) => setPayables((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
+  const payAmount = (id, amount) => {
+    const r = payNow(payablesRef.current, expensesRef.current, id, amount, todayISO());
+    setPayables(r.payables);
+    setExpenses(r.expenses);
+    haptic.success();
+    showToast(t('pvPaidToast'));
+  };
+  const payFull = (id) => {
+    const x = payablesRef.current.find((p) => p.id === id);
+    if (x) payAmount(id, payLeft(x));
+  };
+  const undoPay = (id) => {
+    const r = undoLast(payablesRef.current, expensesRef.current, id);
+    pvdeletedRef.current = [...pvdeletedRef.current, ...(r.removed || [])];
+    savePvDeleted(pvdeletedRef.current);
+    edeletedRef.current = [...edeletedRef.current, ...(r.goneExpenses || [])];
+    saveEDeleted(edeletedRef.current);
+    setPayables(r.payables);
+    setExpenses(r.expenses);
+    haptic.select();
+  };
+  const savePayable = (data) => {
+    if (sheet?.payid) touchPayable(sheet.payid, () => data);
+    else setPayables((list) => [...list, { id: newId(), paid: 0, pays: [], nextId: '', createdAt: Date.now(), updatedAt: Date.now(), ...data }]);
+    setSheet(null);
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
+  const handlePayDelete = () => {
+    const id = confirmPay;
+    pvdeletedRef.current = [...pvdeletedRef.current, id];
+    savePvDeleted(pvdeletedRef.current);
+    setPayables((list) => list.filter((x) => x.id !== id));
+    setConfirmPay(null);
+    setSheet(null);
+    haptic.success();
+  };
   const touchService = (id, fn) => setServices((list) => list.map((x) => (x.id === id ? { ...x, ...fn(x), updatedAt: Date.now() } : x)));
   const saveService = (data) => {
     if (sheet?.svid) touchService(sheet.svid, () => data);
@@ -683,7 +748,7 @@ export default function App() {
         <CalendarView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} />
       )}
       {tab === 'projects' && (
-        <ProjectsView projects={projects} subs={subs} services={services} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
+        <ProjectsView projects={projects} subs={subs} services={services} payables={payables} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
       {tab === 'stats' && <StatsView meetings={meetings} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} now={now} onSettings={openSettings} />}
 
@@ -763,6 +828,20 @@ export default function App() {
         />
       )}
 
+      {sheet?.type === 'payable' && (!sheet.payid || curPayable) && (
+        <PayableSheet
+          key={sheet.payid ?? 'paynew'}
+          item={curPayable}
+          projects={projects}
+          onSave={savePayable}
+          onPay={(a) => payAmount(sheet.payid, a)}
+          onUndo={() => undoPay(sheet.payid)}
+          onSnooze={(due) => touchPayable(sheet.payid, () => ({ due }))}
+          onDelete={() => setConfirmPay(sheet.payid)}
+          onClose={closeTop}
+        />
+      )}
+
       {sheet?.type === 'msg' && (
         <MessageSheet
           key={sheet.refId}
@@ -803,6 +882,10 @@ export default function App() {
 
       {confirmId && (
         <ConfirmDialog title={t('cDelTitle')} text={t('cDelText')} confirmLabel={t('cDelYes')} onConfirm={handleDelete} onCancel={() => setConfirmId(null)} />
+      )}
+
+      {confirmPay && (
+        <ConfirmDialog title={t('pvDelTitle')} text={t('pvDelText')} confirmLabel={t('cDelYes')} onConfirm={handlePayDelete} onCancel={() => setConfirmPay(null)} />
       )}
 
       {confirmSv && (

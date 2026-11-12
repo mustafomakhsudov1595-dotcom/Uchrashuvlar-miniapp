@@ -6,6 +6,7 @@ const proj = require('./proj');
 const fin = require('./fin');
 const ext = require('./ext');
 const svc = require('./svc');
+const pay = require('./pay');
 
 async function processUser(u, now) {
   const T = S.Tof(u);
@@ -49,7 +50,8 @@ async function processUser(u, now) {
   const fr = await fin.remind(u, now);
   const er = await ext.remind(u, now);
   const sr = await svc.remind(u, now);
-  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent, slow: Boolean(er.slow) };
+  const pr2 = await pay.remind(u, now);
+  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty || pr2.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent + pr2.sent, slow: Boolean(er.slow) };
 }
 
 exports.handler = async (event) => {
@@ -73,6 +75,7 @@ exports.handler = async (event) => {
           S.mergeSubs(full, fr.subs, Object.keys(fr.sdeleted));
           S.mergeExpenses(full, fr.expenses, Object.keys(fr.edeleted));
           S.mergeServices(full, fr.services, Object.keys(fr.svdeleted));
+          S.mergePayables(full, fr.payables, Object.keys(fr.pvdeleted));
           S.mergeMeetings(full, fr.meetings, Object.keys(fr.deleted));
           if ((fr.goalAt || 0) > (full.goalAt || 0)) { full.goal = fr.goal; full.goalAt = fr.goalAt; }
           full.places = fr.places; full.placesAt = fr.placesAt;

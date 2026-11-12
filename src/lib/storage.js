@@ -65,6 +65,8 @@ const EKEY = 'uchrashuvlar:expenses:v1';
 const EDEL_KEY = 'uchrashuvlar:edeleted';
 const GOAL_KEY = 'uchrashuvlar:goal';
 const SVKEY = 'uchrashuvlar:services:v1';
+const PVKEY = 'uchrashuvlar:payables:v1';
+const PVDEL_KEY = 'uchrashuvlar:pvdeleted';
 const SVDEL_KEY = 'uchrashuvlar:svdeleted';
 export const EXCATS = ['ads', 'team', 'host', 'tools', 'other'];
 const YM_RE = /^\d{4}-\d{2}$/;
@@ -98,6 +100,60 @@ export function cleanProject(p) {
     updatedAt: Number(p.updatedAt) || 0,
   };
 }
+// ---- Toʻlash kerak (majburiyatlar) ----
+export function cleanPayable(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || typeof x.who !== 'string' || !x.who.trim() || !DATE_RE.test(x.due)) return null;
+  const amount = Number(x.amount);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id ?? newId()), a: Math.round(Number(y.a)), d: y.d })) : [];
+  return {
+    id: x.id,
+    who: x.who.trim(),
+    note: typeof x.note === 'string' ? x.note.trim() : '',
+    amount: Math.round(amount),
+    due: x.due,
+    paid: Math.min(Math.round(amount), pays.reduce((n, y) => n + y.a, 0)),
+    pays,
+    cat: EXCATS.includes(x.cat) ? x.cat : 'other',
+    repeat: x.repeat === 'month' ? 'month' : '',
+    nextId: typeof x.nextId === 'string' ? x.nextId : '',
+    pid: typeof x.pid === 'string' ? x.pid : '',
+    createdAt: Number(x.createdAt) || Date.now(),
+    updatedAt: Number(x.updatedAt) || 0,
+  };
+}
+export function loadPayables() {
+  try {
+    const d = JSON.parse(localStorage.getItem(PVKEY) || '[]');
+    return Array.isArray(d) ? d.map(cleanPayable).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+export function savePayables(list) {
+  try {
+    localStorage.setItem(PVKEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+export function loadPvDeleted() {
+  try {
+    const d = JSON.parse(localStorage.getItem(PVDEL_KEY) || '[]');
+    return Array.isArray(d) ? d.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+export const savePvDeleted = (ids) => {
+  try {
+    localStorage.setItem(PVDEL_KEY, JSON.stringify(ids));
+  } catch {
+    /* ignore */
+  }
+};
+export const payablesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.who, x.note, x.amount, x.due, x.paid, x.repeat, x.cat, x.pid, x.pays.length]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+
 // ---- Servis: tayyor saytlar ----
 export function cleanService(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || typeof x.name !== 'string' || !x.name.trim() || !DATE_RE.test(x.doneAt)) return null;
@@ -156,7 +212,7 @@ export function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !DATE_RE.test(x.d)) return null;
   const a = Number(x.a);
   if (!Number.isFinite(a) || a <= 0) return null;
-  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', src: typeof x.src === 'string' ? x.src : '', ref: typeof x.ref === 'string' ? x.ref : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
 }
 export function loadExpenses() {
   try {
@@ -337,12 +393,12 @@ export function savePlaces(list, at) {
 const headers = () => ({ 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData });
 
 // Serverga yuboradi, birlashtirilgan natijani qaytaradi: { meetings, lang, places, placesAt }
-export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, goal, goalAt }) {
+export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt }) {
   if (!isTelegram) return null;
   const res = await fetch('/api/meetings', {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, goal, goalAt, tz: -new Date().getTimezoneOffset() }),
+    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt, tz: -new Date().getTimezoneOffset() }),
   });
   if (!res.ok) throw new Error(`sync ${res.status}`);
   const data = await res.json();
@@ -352,6 +408,7 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     subs: Array.isArray(data.subs) ? data.subs.map(cleanSub).filter(Boolean) : [],
     expenses: Array.isArray(data.expenses) ? data.expenses.map(cleanExpense).filter(Boolean) : [],
     services: Array.isArray(data.services) ? data.services.map(cleanService).filter(Boolean) : [],
+    payables: Array.isArray(data.payables) ? data.payables.map(cleanPayable).filter(Boolean) : [],
     goal: Number(data.goal) || 0,
     goalAt: Number(data.goalAt) || 0,
     lang: data.lang,

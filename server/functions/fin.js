@@ -103,7 +103,7 @@ async function sendDoc(chat, name, content, caption, mime = 'text/csv') {
 }
 async function exportCsv(chat, u) {
   const T = S.Tof(u), P = T.p;
-  if (!u.projects.length && !u.subs.length && !u.expenses.length && !u.services.length) return send(chat, P.exEmpty);
+  if (!u.projects.length && !u.subs.length && !u.expenses.length && !u.services.length && !u.payables.length) return send(chat, P.exEmpty);
   const projects = [['Loyiha', 'Mijoz', 'Aloqa', 'Turi', 'Holat', 'Muddat', 'Narx', 'Toʻlandi', 'Qoldiq', 'Vazifalar']];
   for (const p of u.projects) projects.push([p.name, p.client, p.contact, T.p.types[p.type], T.p.status[p.status], p.date, p.price ?? '', p.paid ?? '', S.owed(p), `${p.tasks.filter((t) => t.done).length}/${p.tasks.length}`]);
   const pays = [['Sana', 'Summa', 'Manba', 'Mijoz', 'Tur']];
@@ -115,6 +115,7 @@ async function exportCsv(chat, u) {
   await sendDoc(chat, 'loyihalar.csv', csv(projects), P.exCaption);
   if (pays.length > 1) await sendDoc(chat, 'tolovlar.csv', csv(pays));
   if (subs.length > 1) await sendDoc(chat, 'oylik.csv', csv(subs));
+  if (u.payables.length) await sendDoc(chat, 'tolash.csv', csv([['Kimga', 'Nima uchun', 'Summa', 'Toʻlandi', 'Qoldi', 'Muddat', 'Takror'], ...u.payables.map((x) => [x.who, x.note, x.amount, x.paid, S.payLeft(x), x.due, x.repeat ? 'oylik' : ''])]));
   if (u.services.length) await sendDoc(chat, 'servis.csv', csv([['Sayt', 'Mijoz', 'Telefon', 'Sayt havolasi', 'Claude havolasi', 'Topshirilgan', 'Servis tugaydi'], ...u.services.map((x) => [x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, S.serviceEnd(x)])]));
   if (u.expenses.length) await sendDoc(chat, 'xarajatlar.csv', csv([['Sana', 'Summa', 'Tur', 'Izoh', 'Loyiha'], ...u.expenses.map((x) => [x.d, x.a, P.exCats[x.cat].replace(/^\S+\s/, ''), x.note, (u.projects.find((p) => p.id === x.pid) || {}).name || ''])]));
 }

@@ -57,13 +57,13 @@ const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
   quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
-  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, services: [], svdeleted: {}, places: [], placesAt: 0, state: null,
+  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, services: [], svdeleted: {}, payables: [], pvdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
   if (!u) return blankUser(id);
   const d = blankUser(id);
-  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, services: u.services || [], svdeleted: u.svdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
+  return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, services: u.services || [], svdeleted: u.svdeleted || {}, payables: u.payables || [], pvdeleted: u.pvdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
 }
 const saveUser = (st, u) => st.setJSON(userKey(u.id), u);
 const Tof = (u) => getT(u.lang);
@@ -325,7 +325,7 @@ function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || !DATE_RE.test(x.d)) return null;
   const a = num(x.a);
   if (a === null || a <= 0) return null;
-  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', src: typeof x.src === 'string' ? x.src.slice(0, 64) : '', ref: typeof x.ref === 'string' ? x.ref.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
 }
 function mergeExpenses(u, clientList, clientDeleted) {
   const tomb = u.edeleted || {}, now = Date.now();
@@ -422,6 +422,76 @@ async function isAllowed(st, id) {
   if (await st.get(`allow/${sid}`)) return true;
   const u = await st.get(userKey(sid), { type: 'json' });
   return Boolean(u && u.lang);
+}
+
+/* ---------- toʻlash kerak (majburiyatlar): kimga, qachon, qancha ---------- */
+function cleanPayable(x) {
+  if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || typeof x.who !== 'string' || !x.who.trim() || !DATE_RE.test(x.due)) return null;
+  const amount = num(x.amount);
+  if (amount === null || amount <= 0) return null;
+  const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id || newId()).slice(0, 64), a: Math.round(Number(y.a)), d: y.d })) : [];
+  return {
+    id: x.id, who: x.who.trim().slice(0, 80), note: typeof x.note === 'string' ? x.note.trim().slice(0, 120) : '', amount: Math.round(amount), due: x.due,
+    paid: Math.min(Math.round(amount), pays.reduce((n, y) => n + y.a, 0)), pays, cat: EXCATS.includes(x.cat) ? x.cat : 'other', repeat: x.repeat === 'month' ? 'month' : '',
+    nextId: typeof x.nextId === 'string' ? x.nextId.slice(0, 64) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '',
+    createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0, r: x.r,
+  };
+}
+function mergePayables(u, clientList, clientDeleted) {
+  const tomb = u.pvdeleted || {}, now = Date.now();
+  const byId = new Map(u.payables.map((x) => [x.id, x]));
+  for (const id of clientDeleted) { byId.delete(id); tomb[id] = now; }
+  for (const raw of clientList) {
+    const c = cleanPayable(raw);
+    if (!c || tomb[c.id]) continue;
+    const x = byId.get(c.id);
+    if (!x) { byId.set(c.id, { ...c, r: undefined }); continue; }
+    if (c.updatedAt >= (x.updatedAt || 0)) byId.set(c.id, { ...c, r: c.due === x.due ? x.r : undefined });
+  }
+  for (const [id, t] of Object.entries(tomb)) if (now - t > 60 * 86400000) delete tomb[id];
+  u.pvdeleted = tomb; u.payables = [...byId.values()];
+  return u;
+}
+const payLeft = (x) => Math.max(0, x.amount - x.paid);
+const payOpen = (u) => u.payables.filter((x) => payLeft(x) > 0).sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.who < b.who ? -1 : 1));
+// Hisob: umumiy, muddati oʻtgan, 7 kun, oy, 30 kun; kutilayotgan tushum bilan solishtirish
+function paySummary(u, today) {
+  const open = payOpen(u), ym = today.slice(0, 7), d7 = addDaysISO(today, 7), d30 = addDaysISO(today, 30);
+  const sum = (arr) => arr.reduce((n, x) => n + payLeft(x), 0);
+  const byWho = new Map();
+  for (const x of open) byWho.set(x.who, (byWho.get(x.who) || 0) + payLeft(x));
+  const subsIn = u.subs.filter((x) => x.active).reduce((n, x) => n + x.amount, 0);
+  const inflow = activeDebt(u) + subsIn;
+  const out30 = sum(open.filter((x) => x.due <= d30));
+  return {
+    open, total: sum(open), overdue: sum(open.filter((x) => x.due < today)), today: sum(open.filter((x) => x.due === today)), week: sum(open.filter((x) => x.due >= today && x.due <= d7)),
+    month: sum(open.filter((x) => x.due.slice(0, 7) === ym)), out30, inflow, balance: inflow - out30, byWho: [...byWho.entries()].sort((a, b) => b[1] - a[1]),
+  };
+}
+// Toʻlov qilish: toʻlovni yozadi, xarajatga avtomatik qoʻshadi, oylik boʻlsa keyingi oyni yaratadi
+function applyPayment(u, x, amount, today, now = Date.now()) {
+  const a = Math.min(Math.round(amount), payLeft(x));
+  if (a <= 0) return 0;
+  const payId = newId();
+  x.pays = [...x.pays, { id: payId, a, d: today }].slice(-60); x.paid += a; x.updatedAt = now; x.r = undefined;
+  u.expenses.unshift(cleanExpense({ id: newId(), a, d: today, cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now }));
+  if (payLeft(x) === 0 && x.repeat === 'month' && !x.nextId) {
+    const nx = cleanPayable({ ...x, id: newId(), due: addMonthsISO(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now, r: undefined });
+    if (nx) { x.nextId = nx.id; u.payables.push(nx); }
+  }
+  return a;
+}
+function undoPayment(u, x, now = Date.now()) {
+  const last = x.pays[x.pays.length - 1];
+  if (!last) return false;
+  x.pays = x.pays.slice(0, -1); x.paid = Math.max(0, x.paid - last.a); x.updatedAt = now; x.r = undefined;
+  u.expenses = u.expenses.filter((e) => e.ref !== last.id);
+  if (x.nextId) {
+    const nx = u.payables.find((p) => p.id === x.nextId);
+    if (nx && nx.paid === 0) u.payables = u.payables.filter((p) => p.id !== nx.id);
+    x.nextId = '';
+  }
+  return true;
 }
 
 /* ---------- xarita ---------- */
@@ -544,5 +614,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

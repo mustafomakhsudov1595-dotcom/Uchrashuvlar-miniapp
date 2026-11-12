@@ -167,7 +167,7 @@ async function monitor(u, now) {
 function buildBackup(u) {
   const strip = ({ r, sn, mon, ...x }) => x;
   return {
-    app: 'impro-notes', v: 1, at: new Date().toISOString(), meetings: u.meetings.map(strip), projects: u.projects.map(strip), subs: u.subs.map(strip), services: u.services.map(strip), expenses: u.expenses,
+    app: 'impro-notes', v: 1, at: new Date().toISOString(), meetings: u.meetings.map(strip), projects: u.projects.map(strip), subs: u.subs.map(strip), services: u.services.map(strip), payables: u.payables.map(strip), expenses: u.expenses,
     places: u.places || [], goal: u.goal || 0, lang: u.lang, tz: u.tz, remind: u.remind, lead: u.lead, quiet: u.quiet, digest: u.digest,
   };
 }
@@ -190,6 +190,7 @@ async function restore(chat, u, doc) {
     S.mergeSubs(u, (j.subs || []).slice(0, 200), []);
     S.mergeExpenses(u, (j.expenses || []).slice(0, 1500), []);
     S.mergeServices(u, (j.services || []).slice(0, 500), []);
+    S.mergePayables(u, (j.payables || []).slice(0, 500), []);
     if (!u.goal && Number(j.goal) > 0) setGoal(u, Number(j.goal));
     if (Array.isArray(j.places)) u.places = [...new Set([...(u.places || []), ...j.places.filter((x) => typeof x === 'string')])].slice(0, 50);
     const d = (a, b) => Math.max(0, b - a);
@@ -335,7 +336,7 @@ async function remind(u, now) {
     const since = S.toMin(hhmm) - S.toMin(at);
     if (since >= 0 && since <= 120) {
       u.dsent.k = today; dirty = true;
-      if (u.meetings.length || u.projects.length || u.subs.length || u.expenses.length || u.services.length) { const r = await sendBackup(u.chat, u); if (r && r.ok) sent += 1; }
+      if (u.meetings.length || u.projects.length || u.subs.length || u.expenses.length || u.services.length || u.payables.length) { const r = await sendBackup(u.chat, u); if (r && r.ok) sent += 1; }
     }
   }
   return { dirty, sent, slow };

@@ -8,7 +8,7 @@ const svc = require('./svc');
 const json = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(obj) });
 const view = (u) => ({
   ok: true, meetings: u.meetings.map(({ r, sn, g, ...m }) => ({ ...m, guests: g ? g.length : 0 })),
-  projects: (u.projects || []).map(({ r, ...p }) => p), subs: (u.subs || []).map(({ r, ...x }) => x), expenses: u.expenses || [], services: (u.services || []).map(({ r, ...x }) => x), goal: u.goal || 0, goalAt: u.goalAt || 0, lang: u.lang, remind: u.remind, lead: u.lead, places: u.places || [], placesAt: u.placesAt || 0, tz: u.tz,
+  projects: (u.projects || []).map(({ r, ...p }) => p), subs: (u.subs || []).map(({ r, ...x }) => x), expenses: u.expenses || [], services: (u.services || []).map(({ r, ...x }) => x), payables: (u.payables || []).map(({ r, ...x }) => x), goal: u.goal || 0, goalAt: u.goalAt || 0, lang: u.lang, remind: u.remind, lead: u.lead, places: u.places || [], placesAt: u.placesAt || 0, tz: u.tz,
 });
 
 exports.handler = async (event) => {
@@ -92,6 +92,7 @@ exports.handler = async (event) => {
   S.mergeExpenses(u, Array.isArray(b.expenses) ? b.expenses.slice(0, 1500) : [], Array.isArray(b.edeleted) ? b.edeleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
   if (Number.isFinite(b.goalAt) && b.goalAt > (u.goalAt || 0) && Number.isFinite(b.goal) && b.goal >= 0) { u.goal = Math.round(b.goal); u.goalAt = b.goalAt; }
   S.mergeServices(u, Array.isArray(b.services) ? b.services.slice(0, 500) : [], Array.isArray(b.svdeleted) ? b.svdeleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
+  S.mergePayables(u, Array.isArray(b.payables) ? b.payables.slice(0, 500) : [], Array.isArray(b.pvdeleted) ? b.pvdeleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
   S.mergeMeetings(u, Array.isArray(b.meetings) ? b.meetings.slice(0, 500) : [], Array.isArray(b.deleted) ? b.deleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
   await S.saveUser(st, u);
   return json(200, view(u));

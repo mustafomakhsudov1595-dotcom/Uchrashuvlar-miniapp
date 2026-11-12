@@ -39,6 +39,8 @@
 - `functions/web.js` — internet: AI avval vositani tanlaydi (router, Mistral), natija javob uchun kontekst boʻladi. Vositalar: ob-havo (Open-Meteo), valyuta (cbu.uz) va kripto (Coinbase), namoz vaqti (Aladhan), shahar vaqti, yangiliklar (kun.uz, BBC), Vikipediya, futbol (ESPN: natija, jonli hisob, keyingi oʻyin) va umumiy veb-qidiruv (Bing: bir nechta qisqa soʻrov + dolzarblik saralash + sahifa oʻqish). Soʻrov inglizcha/ruscha kalit soʻzlarga oʻgiriladi. Manba havolalari javob oxirida. Cheklov: DuckDuckGo/Google/Brave Cloudflare IP'larini bloklaydi; Bing mahalliy narxlarni (masalan Oʻzbekistondagi iPhone narxi) yaxshi topmaydi.
 - Tuzatish: `DEBUG_AI=1` oʻzgaruvchisi bilan deploy qilinsa AI javoblari logga yoziladi (odatda oʻchiq).
 
+- `functions/pay.js` — **toʻlash kerak** (majburiyatlar): kimga, nima uchun, qancha, qachon (`/tolash`; qisqa: `/tolash Sardor, maosh, 1 500 000, 5.12, oylik`). Eslatma: muddatdan 3 kun, 1 kun oldin, kuni va keyin har kuni (14 kungacha); “Toʻlandi / Qisman / +3 kun” tugmalari. Toʻlov avtomatik **xarajatga** yoziladi (sof foyda hisobiga kiradi), oylik boʻlsa keyingi oy oʻzi yaratiladi, oxirgi toʻlovni bekor qilish mumkin. Hisob-kitob: jami, muddati oʻtgan, 7 kun, oy, kimga qancha va 30 kunlik prognoz (kutilayotgan tushum − toʻlovlar). Ertalabki karta, haftalik xulosa, `/tahlil` va AI suhbatga ham kiradi.
+
 ## Deploy
 
 ```bash
