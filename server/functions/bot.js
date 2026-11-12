@@ -529,6 +529,7 @@ exports.handler = async (event) => {
     else if (up.callback_query) await onCallback(st, up.callback_query);
   } catch (e) {
     console.error(e);
+    await require('./alert').notify('bot', e);
   }
   return { statusCode: 200, body: 'ok' };
 };

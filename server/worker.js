@@ -5,6 +5,7 @@ import api from './functions/api.js';
 import cal from './functions/cal.js';
 import remind from './functions/remind.js';
 import report from './functions/report.js';
+import alert from './functions/alert.js';
 
 async function toEvent(request) {
   const url = new URL(request.url);
@@ -28,10 +29,16 @@ export default {
     setKV(env.KV); setAI(env.AI);
     const handler = route(new URL(request.url).pathname);
     if (!handler) return new Response('not found', { status: 404 });
-    return toResponse(await handler(await toEvent(request)));
+    try {
+      return toResponse(await handler(await toEvent(request)));
+    } catch (e) {
+      console.error(e);
+      await alert.notify(new URL(request.url).pathname, e);
+      return new Response('error', { status: 500 });
+    }
   },
   async scheduled(controller, env, ctx) {
     setKV(env.KV); setAI(env.AI);
-    ctx.waitUntil(remind.handler({}));
+    ctx.waitUntil(remind.handler({}).catch((e) => alert.notify('cron', e)));
   },
 };

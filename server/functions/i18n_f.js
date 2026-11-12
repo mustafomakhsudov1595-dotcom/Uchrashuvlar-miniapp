@@ -16,7 +16,7 @@ const uz = {
   clCard: (c) => `👤 <b>${c.name}</b>${c.contact ? `\n📞 ${c.contact}` : ''}\n📁 Loyihalar: <b>${c.projects.length}</b> (faol: ${c.active})\n💰 Jami narx: <b>${fm(c.price)}</b>\n✅ Toʻlagan: <b>${fm(c.paid)}</b>\n🧾 Qarz: <b>${fm(c.owed)}</b>${c.monthly ? `\n🔁 Oylik: <b>${fm(c.monthly)}</b>` : ''}`,
   inTitle: '💹 <b>Daromad</b>', inMonth: (name, s) => `${name}: <b>${s}</b>`, inKinds: { site: '🌐 Sayt', bot: '🤖 Bot', video: '🎬 Video', other: '📦 Boshqa', sub: '🔁 Oylik' },
   inDebt: (s) => `🧾 Hozirgi qarz: <b>${s}</b>`, inMonthly: (s) => `🔁 Oylik daromad (har oy): <b>${s}</b>`, inAvg: (s) => `📊 Oʻrtacha (6 oy): <b>${s}</b>`, inNone: 'Hali toʻlov yoʻq. Loyihada 💵 Toʻlov tugmasini bosib yozib boring.',
-  inNote: 'Eski toʻlovlar oxirgi yangilangan oyga yoziladi.', bExport: '📤 Excel (CSV)', exCaption: 'Excel/Google Sheets ochadi (UTF-8, ; ajratgich)', exEmpty: 'Eksport uchun maʼlumot yoʻq.',
+  rpCap: (ym, i, e, p) => `📄 <b>Oylik hisobot · ${ym}</b>\n\n💰 Daromad: <b>${i}</b>\n💸 Chiqim: <b>${e}</b>\n📈 Foyda: <b>${p}</b>`, rpAsk: '📄 Qaysi oy hisoboti?', rpPrev: 'Oʻtgan oy', rpCur: 'Joriy oy', rpFail: 'Hisobotni yuborib boʻlmadi.', inNote: 'Eski toʻlovlar oxirgi yangilangan oyga yoziladi.', bExport: '📤 Excel (CSV)', exCaption: 'Excel/Google Sheets ochadi (UTF-8, ; ajratgich)', exEmpty: 'Eksport uchun maʼlumot yoʻq.',
   cmdSub: '/obuna — oylik toʻlovlar · /mijozlar · /daromad · /eksport',
 };
 const ru = {
@@ -34,7 +34,7 @@ const ru = {
   clCard: (c) => `👤 <b>${c.name}</b>${c.contact ? `\n📞 ${c.contact}` : ''}\n📁 Проекты: <b>${c.projects.length}</b> (активных: ${c.active})\n💰 Сумма: <b>${fm(c.price)}</b>\n✅ Оплатил: <b>${fm(c.paid)}</b>\n🧾 Долг: <b>${fm(c.owed)}</b>${c.monthly ? `\n🔁 Ежемесячно: <b>${fm(c.monthly)}</b>` : ''}`,
   inTitle: '💹 <b>Доход</b>', inKinds: { site: '🌐 Сайт', bot: '🤖 Бот', video: '🎬 Видео', other: '📦 Другое', sub: '🔁 Ежемес.' },
   inDebt: (s) => `🧾 Текущий долг: <b>${s}</b>`, inMonthly: (s) => `🔁 Ежемесячный доход: <b>${s}</b>`, inAvg: (s) => `📊 В среднем (6 мес.): <b>${s}</b>`, inNone: 'Оплат пока нет. Записывайте через кнопку 💵 Оплата в проекте.',
-  inNote: 'Старые оплаты записаны на месяц последнего обновления.', bExport: '📤 Excel (CSV)', exCaption: 'Откроется в Excel/Google Sheets (UTF-8, разделитель ;)', exEmpty: 'Нет данных для экспорта.',
+  rpCap: (ym, i, e, p) => `📄 <b>Месячный отчёт · ${ym}</b>\n\n💰 Доход: <b>${i}</b>\n💸 Расход: <b>${e}</b>\n📈 Прибыль: <b>${p}</b>`, rpAsk: '📄 Отчёт за какой месяц?', rpPrev: 'Прошлый месяц', rpCur: 'Текущий месяц', rpFail: 'Не удалось отправить отчёт.', inNote: 'Старые оплаты записаны на месяц последнего обновления.', bExport: '📤 Excel (CSV)', exCaption: 'Откроется в Excel/Google Sheets (UTF-8, разделитель ;)', exEmpty: 'Нет данных для экспорта.',
   cmdSub: '/obuna — ежемесячные платежи · /mijozlar · /daromad · /eksport',
 };
 const en = {
@@ -52,7 +52,7 @@ const en = {
   clCard: (c) => `👤 <b>${c.name}</b>${c.contact ? `\n📞 ${c.contact}` : ''}\n📁 Projects: <b>${c.projects.length}</b> (active: ${c.active})\n💰 Total price: <b>${fm(c.price)}</b>\n✅ Paid: <b>${fm(c.paid)}</b>\n🧾 Owed: <b>${fm(c.owed)}</b>${c.monthly ? `\n🔁 Monthly: <b>${fm(c.monthly)}</b>` : ''}`,
   inTitle: '💹 <b>Income</b>', inKinds: { site: '🌐 Site', bot: '🤖 Bot', video: '🎬 Video', other: '📦 Other', sub: '🔁 Monthly' },
   inDebt: (s) => `🧾 Outstanding: <b>${s}</b>`, inMonthly: (s) => `🔁 Recurring income: <b>${s}</b>`, inAvg: (s) => `📊 Average (6 months): <b>${s}</b>`, inNone: 'No payments yet. Record them with 💵 Payment in a project.',
-  inNote: 'Older payments are counted in the month of the last update.', bExport: '📤 Excel (CSV)', exCaption: 'Opens in Excel/Google Sheets (UTF-8, ; separator)', exEmpty: 'Nothing to export.',
+  rpCap: (ym, i, e, p) => `📄 <b>Monthly report · ${ym}</b>\n\n💰 Income: <b>${i}</b>\n💸 Expenses: <b>${e}</b>\n📈 Profit: <b>${p}</b>`, rpAsk: '📄 Report for which month?', rpPrev: 'Last month', rpCur: 'This month', rpFail: 'Could not send the report.', inNote: 'Older payments are counted in the month of the last update.', bExport: '📤 Excel (CSV)', exCaption: 'Opens in Excel/Google Sheets (UTF-8, ; separator)', exEmpty: 'Nothing to export.',
   cmdSub: '/obuna — monthly payments · /mijozlar · /daromad · /eksport',
 };
 module.exports = { uz, ru, en };

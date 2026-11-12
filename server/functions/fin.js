@@ -88,7 +88,7 @@ async function showIncome(ctx, u) {
   const gl = S.goalLine(u, today);
   if (gl) text += `\n\n${gl}`;
   text += `\n\n<i>${P.inNote}</i>`;
-  return show(ctx, text, { inline_keyboard: [[{ text: P.bExport, callback_data: 'ex:0' }, { text: P.bExpenses, callback_data: 'xl:0' }, { text: '🎯', callback_data: 'gl:0' }], [{ text: P.bDebts, callback_data: 'pq:0' }, { text: P.backList, callback_data: 'pl:0' }]] });
+  return show(ctx, text, { inline_keyboard: [[{ text: P.bExport, callback_data: 'ex:0' }, { text: '📄 PDF', callback_data: 'rp:1' }, { text: P.bExpenses, callback_data: 'xl:0' }, { text: '🎯', callback_data: 'gl:0' }], [{ text: P.bDebts, callback_data: 'pq:0' }, { text: P.backList, callback_data: 'pl:0' }]] });
 }
 
 /* ---------- CSV eksport (Excel) ---------- */
@@ -100,6 +100,13 @@ async function sendDoc(chat, name, content, caption, mime = 'text/csv') {
   fd.append('document', new Blob([content], { type: mime }), name);
   const r = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd });
   return r.json().catch(() => ({}));
+}
+async function sendReport(chat, u, cur) {
+  const today = S.todayISO(u.tz), ym = cur ? today.slice(0, 7) : S.prevYM(today.slice(0, 7), 1);
+  const r = require('./pdf').report(u, ym);
+  const P = S.Tof(u).p;
+  const res = await sendDoc(chat, r.name, r.pdf, P.rpCap(ym, S.money(r.income), S.money(r.expense), S.money(r.income - r.expense)), 'application/pdf');
+  if (!res.ok) await send(chat, P.rpFail);
 }
 async function exportCsv(chat, u) {
   const T = S.Tof(u), P = T.p;
@@ -133,6 +140,7 @@ async function onMessage(chat, u, cmd, args, text) {
   }
   if (cmd === '/mijozlar' || cmd === '/clients') { await showClients({ chat }, u); return true; }
   if (cmd === '/daromad' || cmd === '/income') { await showIncome({ chat }, u); return true; }
+  if (cmd === '/hisobot' || cmd === '/report') { await send(chat, P.rpAsk, { inline_keyboard: [[{ text: P.rpPrev, callback_data: 'rp:0' }, { text: P.rpCur, callback_data: 'rp:1' }]] }); return true; }
   if (cmd === '/eksport' || cmd === '/export') { await exportCsv(chat, u); return true; }
   if (!cmd && u.state && u.state.kind === 'sub') {
     const x = text ? parseSub(text) : null;
@@ -157,6 +165,7 @@ async function onCallback(ctx, u, act, a) {
   else if (act === 'cj') await showClient(ctx, u, a);
   else if (act === 'in') await showIncome(ctx, u);
   else if (act === 'ex') { await exportCsv(ctx.chat, u); }
+  else if (act === 'rp') { await sendReport(ctx.chat, u, a === '1'); return '📄'; }
   return toast;
 }
 
@@ -165,6 +174,10 @@ async function remind(u, now) {
   const P = S.Tof(u).p, loc = S.localNow(u.tz, now), hhmm = S.hhmmOfLocal(loc), today = S.isoOfLocal(loc);
   let dirty = false, sent = 0;
   if (!u.remind || S.inQuiet(u, hhmm) || hhmm < '09:00') return { dirty, sent };
+  if (today.slice(8) === '01' && hhmm >= '09:30' && hhmm < '13:00' && u.digest && u.digest.r !== null && u.dsent.r !== today.slice(0, 7) && (u.projects.length || u.subs.length || u.expenses.length)) {
+    u.dsent.r = today.slice(0, 7); dirty = true;
+    try { await sendReport(u.chat, u, false); sent += 1; } catch (e) { console.error('report', e.message); }
+  }
   for (const x of S.subsDue(u, today)) {
     const r = x.r || (x.r = {});
     if (r.ym !== today.slice(0, 7)) { r.ym = today.slice(0, 7); r.n = 0; r.d = ''; }
@@ -176,4 +189,4 @@ async function remind(u, now) {
   return { dirty, sent };
 }
 
-module.exports = { sendDoc, csv, onMessage, onCallback, remind, showSubs, showClients, showIncome, exportCsv, parseSub, ACTS: ['sl', 'sj', 'sa', 'sno', 'sp', 'sg', 'sx', 'sxy', 'cl', 'cj', 'in', 'ex'] };
+module.exports = { sendDoc, csv, onMessage, onCallback, remind, showSubs, showClients, showIncome, exportCsv, parseSub, ACTS: ['sl', 'sj', 'sa', 'sno', 'sp', 'sg', 'sx', 'sxy', 'cl', 'cj', 'in', 'ex', 'rp'] };

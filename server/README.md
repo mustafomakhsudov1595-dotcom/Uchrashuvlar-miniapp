@@ -53,3 +53,8 @@ curl "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" -d url=<SITE_URL>/api/
 
 `SITE_URL` va `BOT_USERNAME` — `wrangler.jsonc` ichida (`vars`). Vaqt zonasi: telefon vaqt zonasi ilovadan olinadi (standart: Toshkent, UTC+5).
 Eslatma: cron har daqiqa barcha foydalanuvchilarni o'qiydi — Workers bepul rejasida KV o'qish limiti (100k/kun) kichik foydalanuvchi soniga yetadi.
+
+## Qoʻshimcha modullar
+- `alert.js` — xatolar haqida adminga ogohlantirish (bir xil xato 30 daqiqada 1 marta, soatiga ≤6).
+- `pdf.js` — oylik PDF hisobot (kutubxonasiz). `/hisobot` yoki Daromad ekranidagi «📄 PDF»; har oyning 1-sanasi 09:30 dan avtomatik yuboriladi (`dsent.r`).
+- Ertalabki xabarga «💰 Pul holati» qatori (`pay.moneyBlock`).

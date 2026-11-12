@@ -120,6 +120,8 @@ function briefMessage(u, now = Date.now()) {
   if (dl.length) parts.push(P.brDebt(dl.length, S.money(debtSum(dl))));
   const pb = require('./pay').briefBlock(u, today);
   if (pb) parts.push(pb);
+  const mb = require('./pay').moneyBlock(u, today);
+  if (mb) parts.push(mb);
   const gl = S.goalLine(u, today);
   if (gl) parts.push(gl);
   const empty = !pb && !sd.length && !meets.length && !g.over.length && !g.today.length && !near.length && !dl.length;

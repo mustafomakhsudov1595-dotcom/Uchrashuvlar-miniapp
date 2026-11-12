@@ -17,7 +17,7 @@ const uz = {
   pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd7' ? '7 kundan keyin' : k === 'd3' ? '3 kundan keyin' : k === 'd1' ? 'Ertaga' : k === 'd0' ? 'Bugun' : `${n} kun kechikdi`}:</b> ${who}ga <b>${fm(amt)}</b> toʻlash kerak${note ? ` (${note})` : ''}.`,
   pvSumTitle: '📊 <b>Hisob-kitob</b>', pvSumTotal: 'Jami toʻlash kerak', pvSumOver: 'Muddati oʻtgan', pvSumToday: 'Bugun', pvSumWeek: '7 kun ichida', pvSumMonth: 'Shu oyda', pvSumWho: 'Kimga qancha',
   pvForecast: '🔮 <b>30 kunlik prognoz</b>', pvInflow: 'Kutilayotgan tushum (qarzlar + oylik toʻlovlar)', pvOut30: 'Toʻlash kerak (30 kun)', pvBalance: 'Farq', pvEnough: '✅ yetadi', pvShort: '⚠️ yetishmaydi',
-  brPay: '💸 Toʻlash kerak', wkPay: (t, c) => `💸 Kelgusi 7 kunda toʻlash kerak: <b>${fm(t)}</b> (${c} ta)`, cmdPv: '💸 /tolash — kimga qancha toʻlash kerak',
+  brMoney: (need, inflow, bal, abs, out) => `💰 <b>Pul holati</b>\nBugun toʻlash kerak: <b>${need}</b>\n30 kunda: kutilayotgan tushum <b>${inflow}</b> − chiqim <b>${out}</b> = <b>${bal < 0 ? '−' : ''}${abs}</b> ${bal >= 0 ? '✅' : '⚠️'}`, brPay: '💸 Toʻlash kerak', wkPay: (t, c) => `💸 Kelgusi 7 kunda toʻlash kerak: <b>${fm(t)}</b> (${c} ta)`, cmdPv: '💸 /tolash — kimga qancha toʻlash kerak\n📄 /hisobot — oylik PDF hisobot',
 };
 const ru = {
   ...uz,
@@ -35,7 +35,7 @@ const ru = {
   pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd7' ? 'Через 7 дней' : k === 'd3' ? 'Через 3 дня' : k === 'd1' ? 'Завтра' : k === 'd0' ? 'Сегодня' : `Просрочено на ${n} дн.`}:</b> нужно заплатить <b>${fm(amt)}</b> — ${who}${note ? ` (${note})` : ''}.`,
   pvSumTitle: '📊 <b>Расчёт</b>', pvSumTotal: 'Всего к оплате', pvSumOver: 'Просрочено', pvSumToday: 'Сегодня', pvSumWeek: 'В ближайшие 7 дней', pvSumMonth: 'В этом месяце', pvSumWho: 'Кому сколько',
   pvForecast: '🔮 <b>Прогноз на 30 дней</b>', pvInflow: 'Ожидаемые поступления (долги + ежемесячные)', pvOut30: 'К оплате (30 дней)', pvBalance: 'Разница', pvEnough: '✅ хватает', pvShort: '⚠️ не хватает',
-  brPay: '💸 К оплате', wkPay: (t, c) => `💸 К оплате в ближайшие 7 дней: <b>${fm(t)}</b> (${c} шт.)`, cmdPv: '💸 /tolash — кому и сколько платить',
+  brMoney: (need, inflow, bal, abs, out) => `💰 <b>Денежный статус</b>\nСегодня к оплате: <b>${need}</b>\nЗа 30 дней: ожидаемый приход <b>${inflow}</b> − расход <b>${out}</b> = <b>${bal < 0 ? '−' : ''}${abs}</b> ${bal >= 0 ? '✅' : '⚠️'}`, brPay: '💸 К оплате', wkPay: (t, c) => `💸 К оплате в ближайшие 7 дней: <b>${fm(t)}</b> (${c} шт.)`, cmdPv: '💸 /tolash — кому и сколько платить',
 };
 const en = {
   ...uz,
@@ -53,6 +53,6 @@ const en = {
   pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd7' ? 'In 7 days' : k === 'd3' ? 'In 3 days' : k === 'd1' ? 'Tomorrow' : k === 'd0' ? 'Today' : `${n} days overdue`}:</b> pay <b>${fm(amt)}</b> to ${who}${note ? ` (${note})` : ''}.`,
   pvSumTitle: '📊 <b>Summary</b>', pvSumTotal: 'Total to pay', pvSumOver: 'Overdue', pvSumToday: 'Today', pvSumWeek: 'Within 7 days', pvSumMonth: 'This month', pvSumWho: 'Who gets how much',
   pvForecast: '🔮 <b>30-day forecast</b>', pvInflow: 'Expected income (debts + monthly payments)', pvOut30: 'To pay (30 days)', pvBalance: 'Difference', pvEnough: '✅ enough', pvShort: '⚠️ short',
-  brPay: '💸 To pay', wkPay: (t, c) => `💸 To pay in the next 7 days: <b>${fm(t)}</b> (${c})`, cmdPv: '💸 /tolash — who to pay and how much',
+  brMoney: (need, inflow, bal, abs, out) => `💰 <b>Money status</b>\nTo pay today: <b>${need}</b>\nNext 30 days: expected income <b>${inflow}</b> − payouts <b>${out}</b> = <b>${bal < 0 ? '−' : ''}${abs}</b> ${bal >= 0 ? '✅' : '⚠️'}`, brPay: '💸 To pay', wkPay: (t, c) => `💸 To pay in the next 7 days: <b>${fm(t)}</b> (${c})`, cmdPv: '💸 /tolash — who to pay and how much',
 };
 module.exports = { uz, ru, en };

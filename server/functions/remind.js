@@ -82,7 +82,7 @@ exports.handler = async (event) => {
         }
         await S.saveUser(st, full);
       }
-    } catch (e) { console.error('remind', key, e.message); }
+    } catch (e) { console.error('remind', key, e.message); await require('./alert').notify('cron', e); }
   }
   console.log('remind sent', sent);
   return { statusCode: 200, body: String(sent) };

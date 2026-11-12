@@ -153,6 +153,11 @@ function briefBlock(u, today) {
   if (!list.length) return '';
   return `${P.brPay}\n${list.map((x) => `• <b>${esc(x.who)}</b> — ${S.money(S.payLeft(x))} · ${tag(x, today, P)}`).join('\n')}`;
 }
+function moneyBlock(u, today) {
+  const P = S.Tof(u).p, s = S.paySummary(u, today), need = s.overdue + s.today;
+  if (!s.open.length && !s.inflow) return '';
+  return P.brMoney(S.money(need), S.money(s.inflow), s.balance, S.money(Math.abs(s.balance)), S.money(s.out30));
+}
 function weekBlock(u, today) {
   const P = S.Tof(u).p, d7 = S.addDaysISO(today, 7), list = S.payOpen(u).filter((x) => x.due <= d7);
   return list.length ? P.wkPay(list.reduce((n, x) => n + S.payLeft(x), 0), list.length) : '';
@@ -176,4 +181,4 @@ async function remind(u, now) {
   return { dirty, sent };
 }
 
-module.exports = { onMessage, onCallback, remind, briefBlock, weekBlock, parsePayable, showList, ACTS: ['zl', 'zh', 'zj', 'za', 'zp', 'zq', 'zs', 'zu', 'zm', 'zx', 'zxy'] };
+module.exports = { onMessage, onCallback, remind, briefBlock, moneyBlock, weekBlock, parsePayable, showList, ACTS: ['zl', 'zh', 'zj', 'za', 'zp', 'zq', 'zs', 'zu', 'zm', 'zx', 'zxy'] };
