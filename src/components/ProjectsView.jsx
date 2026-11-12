@@ -3,7 +3,6 @@ import ProjectCard, { TypeIcon } from './ProjectCard.jsx';
 import Illustration from './Illustration.jsx';
 import { ClientsList, SubsList } from './FinanceViews.jsx';
 import { ServiceList } from './ServiceViews.jsx';
-import PayablesView from './PayablesView.jsx';
 import { IconSettings } from './Icons.jsx';
 import { byDeadline, PTYPES, urgency, owed, money } from '../lib/projects.js';
 import { toISODate } from '../lib/dates.js';
@@ -11,7 +10,7 @@ import { clientsOf } from '../lib/finance.js';
 import { t } from '../lib/i18n.js';
 
 export default function ProjectsView({ projects, subs, services = [], payables = [], now, onOpenPayable, onAddPayable, onPayNow, onOpenService, onAddService, onOpen, onAdd, onDone, onDelete, onSettings, onOpenClient, onOpenSub, onAddSub, onPaySub }) {
-  const [view, setView] = useState(() => { try { const v = new URLSearchParams(window.location.search).get('view'); return ['projects', 'clients', 'subs', 'service', 'pay'].includes(v) ? v : 'projects'; } catch { return 'projects'; } }); // projects | clients | subs | service
+  const [view, setView] = useState(() => { try { const v = new URLSearchParams(window.location.search).get('view'); return ['projects', 'clients', 'subs', 'service'].includes(v) ? v : 'projects'; } catch { return 'projects'; } }); // projects | clients | subs | service
   const segRef = useRef(null);
   useEffect(() => {
     const el = segRef.current && segRef.current.querySelector('[aria-selected="true"]');
@@ -50,12 +49,11 @@ export default function ProjectsView({ projects, subs, services = [], payables =
       </header>
 
       <div className="seg" role="tablist" ref={segRef}>
-        {[['projects', 'fvProjects'], ['service', 'fvService'], ['clients', 'fvClients'], ['subs', 'fvSubs'], ['pay', 'fvPay']].map(([k, label]) => (
+        {[['projects', 'fvProjects'], ['service', 'fvService'], ['clients', 'fvClients'], ['subs', 'fvSubs']].map(([k, label]) => (
           <button type="button" key={k} role="tab" aria-selected={view === k} className={view === k ? 'on' : ''} onClick={() => setView(k)}>{t(label)}</button>
         ))}
       </div>
 
-      {view === 'pay' && <PayablesView payables={payables} projects={projects} subs={subs} today={today} onOpen={onOpenPayable} onAdd={onAddPayable} onPay={onPayNow} />}
       {view === 'service' && <ServiceList services={services} today={today} onOpen={onOpenService} onAdd={onAddService} />}
       {view === 'clients' && <ClientsList clients={clients} onOpen={onOpenClient} />}
       {view === 'subs' && <SubsList subs={subs} today={today} onOpen={onOpenSub} onAdd={onAddSub} onPay={onPaySub} />}

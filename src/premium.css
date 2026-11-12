@@ -312,3 +312,22 @@ h1, h2, h3, .hero-name, .d-name, .sheet-title, .dialog h3, .empty h2, .empty-day
 .pay-hero.k-done b { color: var(--ok); }
 .check-line { display: flex; align-items: center; gap: 10px; margin: 6px 0 14px; font-weight: 700; }
 .check-line input { width: 20px; height: 20px; accent-color: var(--a1); }
+
+/* Tez qoʻshish menyusi va Pul boʻlimi */
+.seg.seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.qm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-bottom: 6px; }
+.qm-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px; border-radius: 20px; text-align: left; background: var(--glass); border: 1px solid var(--line); transition: transform 0.15s; }
+.qm-tile:active { transform: scale(0.97); }
+.qm-tile b { font-size: 15px; font-weight: 800; }
+.qm-tile small { color: var(--muted); font-size: 12px; }
+.qm-ico { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; margin-bottom: 6px; background: var(--a-soft); color: var(--a1); }
+.qm-tile.hot { grid-column: 1 / -1; background: var(--grad); border-color: transparent; color: var(--on-a); box-shadow: 0 16px 30px -16px var(--a1); }
+.qm-tile.hot small { color: inherit; opacity: 0.85; }
+.qm-tile.hot .qm-ico { background: rgba(255, 255, 255, 0.22); color: inherit; }
+.pay-strip { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; margin: 0 0 14px; border-radius: 20px; text-align: left; background: var(--glass); border: 1px solid var(--line); color: inherit; }
+.ps-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: var(--grad); color: var(--on-a); flex: none; }
+.ps-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ps-txt small { color: var(--muted); font-size: 12px; }
+.ps-txt b { font-size: 16px; font-weight: 800; }
+.ps-txt i { font-style: normal; font-weight: 600; font-size: 12px; color: var(--muted); }
+.ps-over { padding: 4px 9px; border-radius: 99px; font-size: 12px; font-weight: 800; background: color-mix(in srgb, #e5484d 16%, transparent); color: #e5484d; }

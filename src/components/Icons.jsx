@@ -115,3 +115,5 @@ export const IconFilm = make(
 export const IconBox = make(<path d="M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8" />);
 export const IconFolder = make(<path d="M3.500 7.500a2 2 0 0 1 2-2H10l2 2.500h6.500a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />);
 export const IconFlag = make(<path d="M5 21V4M5 4h11l-2 4 2 4H5" />);
+
+export const IconWallet = make(<><path d="M4 7a2 2 0 0 1 2-2h11v4" /><path d="M4 7v10a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1H6a2 2 0 0 1-2-2z" /><circle cx="16" cy="14" r="1.2" /></>);

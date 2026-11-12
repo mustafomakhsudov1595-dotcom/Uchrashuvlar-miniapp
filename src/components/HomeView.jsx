@@ -14,7 +14,7 @@ import { t } from '../lib/i18n.js';
 const greeting = (h) => (h < 5 ? t('greetNight') : h < 12 ? t('greetMorning') : h < 18 ? t('greetDay') : t('greetEvening'));
 const userName = () => window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name || '';
 
-export default function HomeView({ projects = [], onOpenProject, onOpenProjects, meetings, now, selected, onSelect, onOpen, onAdd, onDone, onDelete, onSettings, onQuickCreate, onQuickForm }) {
+export default function HomeView({ payStrip = null, projects = [], onOpenProject, onOpenProjects, meetings, now, selected, onSelect, onOpen, onAdd, onDone, onDelete, onSettings, onQuickCreate, onQuickForm }) {
   const [searching, setSearching] = useState(false);
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
@@ -110,6 +110,7 @@ export default function HomeView({ projects = [], onOpenProject, onOpenProjects,
         !searching && (
           <>
             <QuickAdd now={now} onCreate={onQuickCreate} onOpenForm={onQuickForm} />
+            {payStrip}
             <HeroCard meeting={upcoming[0]} now={now} onOpen={onOpen} onAdd={onAdd} />
             {deadlines.length > 0 && (
               <section className="block rail-block">

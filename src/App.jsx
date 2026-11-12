@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import HomeView from './components/HomeView.jsx';
 import CalendarView from './components/CalendarView.jsx';
-import StatsView from './components/StatsView.jsx';
+import MoneyView from './components/MoneyView.jsx';
+import QuickMenu from './components/QuickMenu.jsx';
 import ProjectsView from './components/ProjectsView.jsx';
 import ProjectDetail from './components/ProjectDetail.jsx';
 import ProjectForm from './components/ProjectForm.jsx';
@@ -30,6 +31,9 @@ import { addDays, fromISODate, meetingStart, toISODate, todayISO } from './lib/d
 import { haptic, isTelegram, openExternal, openTelegramLink } from './lib/telegram.js';
 import { useBackButton, useNow } from './lib/hooks.js';
 import { getLang, hasSavedLang, setLang, t, useLang } from './lib/i18n.js';
+import { summary as paySummary } from './lib/payables.js';
+import { money } from './lib/projects.js';
+import { IconWallet, IconChevronRight } from './components/Icons.jsx';
 
 const blank = { status: '', from: '', src: '', guests: 0, lat: null, lon: null, location: '', phone: '', cat: '', notes: '', checklist: [] };
 
@@ -273,6 +277,7 @@ export default function App() {
     if (!p) return;
     const projId = p.get('proj');
     if (p.get('tab') === 'projects') setTab('projects');
+    if (p.get('tab') === 'money' || p.get('view') === 'pay') setTab('stats');
     if (projId && projects.some((x) => x.id === projId)) {
       setTab('projects');
       setSheet({ type: 'pdetail', id: projId });
@@ -339,6 +344,26 @@ export default function App() {
   const openAdd = (date) => {
     haptic.tap();
     setSheet({ type: 'form', date });
+  };
+  const todayStr = toISODate(now);
+  const moneyInit = useMemo(() => { try { const v = new URLSearchParams(window.location.search).get('view'); return v === 'income' || v === 'stats' ? v : 'pay'; } catch { return 'pay'; } }, []);
+  const paySum = useMemo(() => paySummary(payables, projects, subs, todayStr), [payables, projects, subs, todayStr]);
+  const payStrip = paySum.open.length ? (
+    <button type="button" className="pay-strip" onClick={() => { haptic.tap(); setTab('stats'); }}>
+      <span className="ps-ico"><IconWallet width={20} height={20} /></span>
+      <span className="ps-txt"><small>{t('pvTitle')}</small><b>{money(paySum.week)} <i>· {t('pvWeekLbl')}</i></b></span>
+      {paySum.overdue > 0 && <span className="ps-over">{money(paySum.overdue)}</span>}
+      <IconChevronRight width={18} height={18} />
+    </button>
+  ) : null;
+  const quickPick = (k) => {
+    haptic.tap();
+    if (k === 'pay') { setTab('stats'); setSheet({ type: 'payable' }); }
+    else if (k === 'expense') setSheet({ type: 'expense' });
+    else if (k === 'meeting') setSheet({ type: 'form', date: tab === 'calendar' ? selectedDate : undefined });
+    else if (k === 'project') setSheet({ type: 'pform' });
+    else if (k === 'sub') setSheet({ type: 'sub' });
+    else if (k === 'service') setSheet({ type: 'service' });
   };
   const openSettings = () => {
     haptic.tap();
@@ -742,7 +767,7 @@ export default function App() {
       <div className="aurora" aria-hidden="true"><i /><i /><i /></div>
 
       {tab === 'home' && (
-        <HomeView {...common} projects={projects} onOpenProject={openProject} onOpenProjects={() => changeTab('projects')} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} onQuickCreate={quickCreate} onQuickForm={quickForm} />
+        <HomeView {...common} payStrip={payStrip} projects={projects} onOpenProject={openProject} onOpenProjects={() => changeTab('projects')} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} onQuickCreate={quickCreate} onQuickForm={quickForm} />
       )}
       {tab === 'calendar' && (
         <CalendarView {...common} selected={selectedDate} onSelect={setSelectedDate} onDone={swipeDone} onDelete={swipeDelete} />
@@ -750,9 +775,9 @@ export default function App() {
       {tab === 'projects' && (
         <ProjectsView projects={projects} subs={subs} services={services} payables={payables} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
-      {tab === 'stats' && <StatsView meetings={meetings} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} now={now} onSettings={openSettings} />}
+      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} initial={moneyInit} />}
 
-      <TabBar tab={tab} onTab={changeTab} onAdd={() => (tab === 'projects' ? openProjectForm() : openAdd(tab === 'calendar' ? selectedDate : undefined))} />
+      <TabBar tab={tab} onTab={changeTab} onAdd={() => { haptic.tap(); setSheet({ type: 'quick' }); }} />
 
       {sheet?.type === 'detail' && current && (
         <MeetingDetail
@@ -852,6 +877,7 @@ export default function App() {
         />
       )}
 
+      {sheet?.type === 'quick' && <QuickMenu onClose={closeTop} onPick={quickPick} />}
       {sheet?.type === 'expense' && <ExpenseSheet projects={projects} onSave={addExpense} onClose={closeTop} />}
 
       {sheet?.type === 'sub' && (!sheet.sid || curSub) && (

@@ -45,7 +45,7 @@ function Donut({ data, total }) {
   );
 }
 
-export default function StatsView({ meetings, projects = [], subs = [], expenses = [], goal = 0, onAddExpense, onDeleteExpense, onSetGoal, now, onSettings }) {
+export default function StatsView({ meetings, projects = [], subs = [], expenses = [], goal = 0, onAddExpense, onDeleteExpense, onSetGoal, now, onSettings, noIncome = false, top = null }) {
   const [cur, setCur] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const s = useMemo(() => monthStats(meetings, cur.y, cur.m, now), [meetings, cur, now]);
   const shift = (d) => {
@@ -79,7 +79,8 @@ export default function StatsView({ meetings, projects = [], subs = [], expenses
         </div>
       </header>
 
-      <IncomeCard projects={projects} subs={subs} expenses={expenses} goal={goal} onAddExpense={onAddExpense} onDeleteExpense={onDeleteExpense} onSetGoal={onSetGoal} />
+      {top}
+      {!noIncome && <IncomeCard projects={projects} subs={subs} expenses={expenses} goal={goal} onAddExpense={onAddExpense} onDeleteExpense={onDeleteExpense} onSetGoal={onSetGoal} />}
 
       {s.total === 0 ? (
         <section className="empty small">
