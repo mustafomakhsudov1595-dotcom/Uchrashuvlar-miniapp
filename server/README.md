@@ -36,6 +36,9 @@
 - `functions/vision.js` — rasm yuborilsa AI tahlil qiladi (chek: summa/sana va `/xarajat` taklifi, mijoz yozishmasi skrinshoti, sayt dizayni, hujjat). Izoh (caption) savol sifatida olinadi. JPG/PNG/WebP, 5 MB gacha, albomda faqat birinchi rasm. Model: Mistral Small 3.1, zaxira Llama 4 Scout.
 - Ovoz: voice, audio fayl va video-xabar matnga aylantiriladi. Aniq soat boʻlsa — uchrashuv, boshqa hammasi AI suhbatga (transkript xatolari hisobga olinadi).
 
+- `functions/web.js` — internet: AI avval vositani tanlaydi (router, Mistral), natija javob uchun kontekst boʻladi. Vositalar: ob-havo (Open-Meteo), valyuta (cbu.uz) va kripto (Coinbase), namoz vaqti (Aladhan), shahar vaqti, yangiliklar (kun.uz, BBC), Vikipediya, futbol (ESPN: natija, jonli hisob, keyingi oʻyin) va umumiy veb-qidiruv (Bing: bir nechta qisqa soʻrov + dolzarblik saralash + sahifa oʻqish). Soʻrov inglizcha/ruscha kalit soʻzlarga oʻgiriladi. Manba havolalari javob oxirida. Cheklov: DuckDuckGo/Google/Brave Cloudflare IP'larini bloklaydi; Bing mahalliy narxlarni (masalan Oʻzbekistondagi iPhone narxi) yaxshi topmaydi.
+- Tuzatish: `DEBUG_AI=1` oʻzgaruvchisi bilan deploy qilinsa AI javoblari logga yoziladi (odatda oʻchiq).
+
 ## Deploy
 
 ```bash
