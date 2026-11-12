@@ -33,6 +33,9 @@
 
 - `functions/chat.js` — suhbatdosh AI: buyruq va oqim boʻlmagan har qanday matn (yoki ovozli xabar) savol boʻlsa AI javob beradi. U foydalanuvchi maʼlumotlarini (uchrashuv, loyiha, qarz, servis, daromad) koʻrib turadi, oxirgi 8 xabarni 8 soat eslab qoladi (`/tozala` yoki “🆕 Yangi suhbat” tozalaydi). Maʼlumotni oʻzi oʻzgartirmaydi, tegishli buyruqni aytadi. Kuniga 80 ta AI soʻrov.
 
+- `functions/vision.js` — rasm yuborilsa AI tahlil qiladi (chek: summa/sana va `/xarajat` taklifi, mijoz yozishmasi skrinshoti, sayt dizayni, hujjat). Izoh (caption) savol sifatida olinadi. JPG/PNG/WebP, 5 MB gacha, albomda faqat birinchi rasm. Model: Mistral Small 3.1, zaxira Llama 4 Scout.
+- Ovoz: voice, audio fayl va video-xabar matnga aylantiriladi. Aniq soat boʻlsa — uchrashuv, boshqa hammasi AI suhbatga (transkript xatolari hisobga olinadi).
+
 ## Deploy
 
 ```bash

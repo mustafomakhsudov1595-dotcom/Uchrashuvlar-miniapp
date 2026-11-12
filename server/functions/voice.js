@@ -29,4 +29,4 @@ async function transcribe(voice, lang) {
     return { text };
   } catch (e) { console.error('voice', e.message); return { error: 'fail' }; }
 }
-module.exports = { transcribe, toLatin };
+module.exports = { transcribe, toLatin, b64 };

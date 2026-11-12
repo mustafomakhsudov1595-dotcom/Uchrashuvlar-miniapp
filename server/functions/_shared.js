@@ -22,6 +22,18 @@ async function tg(method, body) {
   if (!j.ok) console.error('telegram', method, j.description);
   return j;
 }
+// Telegram faylini yuklaydi: { bytes, path } yoki { error: 'big' | 'fail' }
+async function tgFile(fileId, maxBytes = 5e6) {
+  try {
+    const f = await tg('getFile', { file_id: fileId });
+    if (!f.ok || !f.result || !f.result.file_path) return { error: 'fail' };
+    if (f.result.file_size && f.result.file_size > maxBytes) return { error: 'big' };
+    const r = await fetch(`https://api.telegram.org/file/bot${TOKEN()}/${f.result.file_path}`);
+    if (!r.ok) return { error: 'fail' };
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    return bytes.length > maxBytes ? { error: 'big' } : { bytes, path: f.result.file_path };
+  } catch { return { error: 'fail' }; }
+}
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 function checkInitData(initData, maxAgeSec = 7 * 86400) {
@@ -532,5 +544,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

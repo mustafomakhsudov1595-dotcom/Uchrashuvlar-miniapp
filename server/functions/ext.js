@@ -218,14 +218,19 @@ const pickText = (out) => String((out && (out.response || (out.choices && out.ch
 const normalizeUz = (t) => voice.toLatin(t).replace(/([oOgG])['’‘`´ʻʼ]/g, '$1ʻ').replace(/([A-Za-z])['’‘`´ʼ]([A-Za-z])/g, '$1ʼ$2');
 const cleanAi = (t, lang) => { let x = t.replace(/\*\*|__|^#{1,6}\s+/gm, '').replace(/^["“«]|["”»]$/g, '').trim(); if (lang === 'uz' || !lang) x = normalizeUz(x); return x; };
 const AI_LIMIT = 80;
+// Rasm tahlili: Mistral Small 3.1 (tez, arzon), zaxira — Llama 4 Scout
+const VISION_MODELS = [
+  { m: '@cf/mistralai/mistral-small-3.1-24b-instruct', max: 1000 },
+  { m: '@cf/meta/llama-4-scout-17b-16e-instruct', max: 1000 },
+];
 async function aiCall(u, system, prompt, opts = {}) {
   const today = S.todayISO(u.tz), AI = getAI();
   if (!AI) return { error: 'fail' };
   u.ai = u.ai && u.ai.d === today ? u.ai : { d: today, n: 0 };
   if (u.ai.n >= AI_LIMIT) return { error: 'limit' };
   const langRule = opts.auto ? '' : ` Reply in ${LANGNAME[u.lang] || LANGNAME.uz}.`;
-  const messages = [{ role: 'system', content: `${system}${langRule} Be concise and practical, no preface, no markdown symbols like ** or ##. ${RULES}` }, ...(opts.history || []), { role: 'user', content: prompt }];
-  for (const cfg of MODELS) {
+  const messages = [{ role: 'system', content: `${system}${langRule} Be concise and practical, no preface, no markdown symbols like ** or ##. ${RULES}` }, ...(opts.history || []), { role: 'user', content: opts.image ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: opts.image } }] : prompt }];
+  for (const cfg of (opts.image ? VISION_MODELS : MODELS)) {
     try {
       const out = await AI.run(cfg.m, { messages, max_tokens: cfg.max, temperature: 0.5, ...(cfg.extra || {}) });
       const text = cleanAi(pickText(out), u.lang);

@@ -10,6 +10,7 @@ const team = require('./team');
 const msgs = require('./msgs');
 const insight = require('./insight');
 const chatAi = require('./chat');
+const vision = require('./vision');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -331,10 +332,14 @@ async function onMessage(st, m) {
   // Zaxira fayli (JSON) yuborilsa — tiklaymiz
   if (m.document && !text && await ext.onDocument(chat, u, m.document)) return S.saveUser(st, u);
 
-  // Ovozli xabar: matnga aylantirib, oddiy matn sifatida qayta ishlaymiz
+  // Rasm (yoki rasm-fayl): AI tahlil qilib javob beradi
+  if (!text && (m.photo || vision.isImageDoc(m.document)) && await vision.onPhoto(st, chat, u, m)) return S.saveUser(st, u);
+
+  // Ovozli xabar / audio / video-xabar: matnga aylantirib, oddiy matn sifatida qayta ishlaymiz
   let fromVoice = false;
-  if (m.voice && !text) {
-    const tr = await voice.transcribe(m.voice, u.lang);
+  const vsrc = m.voice || m.audio || m.video_note;
+  if (vsrc && !text) {
+    const tr = await voice.transcribe(vsrc, u.lang);
     if (tr.error === 'long') { await send(chat, T.p.voiceLong); return S.saveUser(st, u); }
     if (!tr.text) { await send(chat, T.p.voiceFail); return S.saveUser(st, u); }
     await send(chat, `🎙 «${esc(tr.text)}»`);
@@ -393,10 +398,9 @@ async function onMessage(st, m) {
   else if (cmd) { await send(chat, T.unknownCmd, kbFor(T)); }
   else if (u.state && u.state.step && u.state.step !== 'confirm') {
     if (!text) await send(chat, T.pleaseText); else await handleFlowText(chat, u, text);
-  } else if (text && chatAi.looksLikeQuestion(text)) { await chatAi.answer(chat, u, text); }
-  else if (text && await quickAdd(chat, u, text)) { /* tez qo'shish */ }
-  else if (fromVoice) { await startFlow(chat, u, { name: text.slice(0, 120) }); }
-  else if (text) { await chatAi.answer(chat, u, text); }
+  } else if (text && chatAi.looksLikeQuestion(text)) { await chatAi.answer(chat, u, text, { voice: fromVoice }); }
+  else if (text && !(fromVoice && !S.parseQuick(text, u.tz).found.time) && await quickAdd(chat, u, text)) { /* tez qo'shish (ovozda — faqat aniq soat boʻlsa) */ }
+  else if (text) { await chatAi.answer(chat, u, text, { voice: fromVoice }); }
   else { await send(chat, T.useMenu, kbFor(T)); }
   await S.saveUser(st, u);
 }

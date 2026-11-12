@@ -8,6 +8,14 @@ You can see a snapshot of the user's data below. Answer questions about their da
 You CANNOT change any data yourself. When the user wants to add or change something, tell them the exact command or button: /yangi (a meeting; or just write "ertaga 15:00 Anvar bilan"), /loyiha, /xarajat 150000 reklama, /obuna, /servis, /qarz, /daromad, /maqsad, /mijozlar, /saytlar, /zaxira, /tahlil.
 Keep answers short (up to about 8 lines), warm and concrete. Reply in the language the user writes in (Uzbek in Latin script, Russian or English); default to Uzbek. Never use markdown symbols.`;
 
+const IMAGE_RULES = `The user sent an IMAGE (their text, if any, is the caption/question). First work out what it is, then answer the caption; if there is no caption, give a useful analysis:
+- receipt, invoice or payment screenshot: read merchant, date and total exactly as printed, then suggest the command to record it, e.g. /xarajat 130000 oziq-ovqat (expense) — never record it yourself;
+- screenshot of a client chat or request: summarize what the client wants and suggest which service card/command to use and what to tell Claude;
+- website or app design: 3 concrete improvements (clarity, layout, call-to-action, Google visibility);
+- document, poster or text: read the text and summarize it;
+- anything else: describe it briefly and say how it could be useful.
+Copy numbers and names exactly as visible. If something is blurry or unreadable, say so instead of guessing.`;
+const VOICE_RULES = 'The user message below is a speech-to-text transcript of a voice message and may contain recognition mistakes (names, numbers, Uzbek words). Infer the intended meaning, answer it, and if a number or name looks doubtful, mention what you assumed.';
 const HIST_MAX = 8, HIST_TTL = 8 * 3600000;
 
 /* ---------- savol yoki oddiy matnmi? ---------- */
@@ -40,15 +48,16 @@ function context(u, now = Date.now()) {
 }
 
 /* ---------- javob ---------- */
-async function answer(chat, u, text) {
+async function answer(chat, u, text, opts = {}) {
   const P = S.Tof(u).p, now = Date.now();
   tg('sendChatAction', { chat_id: chat, action: 'typing' });
   let hist = Array.isArray(u.chatH) ? u.chatH : [];
   if (hist.length && now - (hist[hist.length - 1].at || 0) > HIST_TTL) hist = [];
   const ext = require('./ext');
-  const r = await ext.aiCall(u, `${SYSTEM}\n\nUSER DATA SNAPSHOT:\n${context(u, now)}`, text.slice(0, 1500), { history: hist.map((h) => ({ role: h.r === 'u' ? 'user' : 'assistant', content: h.t })), auto: true });
+  const extra = opts.image ? `\n\n${IMAGE_RULES}` : opts.voice ? `\n\n${VOICE_RULES}` : '';
+  const r = await ext.aiCall(u, `${SYSTEM}${extra}\n\nUSER DATA SNAPSHOT:\n${context(u, now)}`, text.slice(0, 1500), { history: hist.map((h) => ({ role: h.r === 'u' ? 'user' : 'assistant', content: h.t })), auto: true, image: opts.image });
   if (!r.text) { await send(chat, r.error === 'limit' ? P.aiLimit : P.aiFail); return true; }
-  u.chatH = [...hist, { r: 'u', t: text.slice(0, 600), at: now }, { r: 'a', t: r.text.slice(0, 900), at: now }].slice(-HIST_MAX);
+  u.chatH = [...hist, { r: 'u', t: (opts.image ? `[rasm] ${text}` : text).slice(0, 600), at: now }, { r: 'a', t: r.text.slice(0, 900), at: now }].slice(-HIST_MAX);
   await send(chat, esc(r.text), { inline_keyboard: [[{ text: P.bChatNew, callback_data: 'ch:new' }]] });
   return true;
 }
