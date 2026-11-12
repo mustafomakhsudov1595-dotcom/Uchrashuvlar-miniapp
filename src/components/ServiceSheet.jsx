@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
+import Choice from './Choice.jsx';
 import { IconCheck, IconClose } from './Icons.jsx';
 import { addMonths, digits, fullUrl, serviceDays, serviceElapsed, serviceEnd, svKind, tgPhoneLink } from '../lib/services.js';
 import { formatFull, formatShort, todayISO, toISODate } from '../lib/dates.js';
@@ -278,10 +279,8 @@ export default function ServiceSheet({ service: x, fromProject, onSeo, onPrompt,
               <input id={`${uid}-d`} className="input" type="date" value={f.doneAt} onChange={set('doneAt')} />
             </div>
             <div className="field">
-              <label htmlFor={`${uid}-m`}>{t('svPeriod')}</label>
-              <select id={`${uid}-m`} className="input" value={f.months} onChange={set('months')}>
-                {[...new Set([...MONTHS, Number(f.months)])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{t('svMonths', m)}</option>)}
-              </select>
+              <span className="label-like">{t('svPeriod')}</span>
+              <Choice value={f.months} onChange={(v) => setF((p) => ({ ...p, months: v }))} options={[...new Set([...MONTHS, Number(f.months)])].sort((a, b) => a - b).map((m) => ({ v: m, label: t('svMonths', m) }))} />
             </div>
           </div>
           <p className="auto-note">{t('svEnds')}: {formatFull(addMonths(f.doneAt || today, Number(f.months) || 12))}</p>

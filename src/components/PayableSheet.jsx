@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import Sheet from './Sheet.jsx';
+import Choice from './Choice.jsx';
 import { EXCATS } from '../lib/storage.js';
 import { dueKind, left, shiftDays } from '../lib/payables.js';
 import { money } from '../lib/projects.js';
@@ -119,11 +120,8 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
             </div>
           </div>
           <div className="field">
-            <label htmlFor={`${uid}-p`}>{t('exProject')}</label>
-            <select id={`${uid}-p`} className="input" value={f.pid} onChange={set('pid')}>
-              <option value="">—</option>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <span className="label-like">{t('exProject')}</span>
+            <Choice value={f.pid} onChange={(v) => setF((p) => ({ ...p, pid: v }))} options={[{ v: '', label: t('exNoProject') }, ...projects.map((p) => ({ v: p.id, label: p.name }))]} />
           </div>
           <label className="check-line">
             <input type="checkbox" checked={f.credit} onChange={set('credit')} />

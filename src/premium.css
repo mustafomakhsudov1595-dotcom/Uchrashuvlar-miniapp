@@ -331,3 +331,12 @@ h1, h2, h3, .hero-name, .d-name, .sheet-title, .dialog h3, .empty h2, .empty-day
 .ps-txt b { font-size: 16px; font-weight: 800; }
 .ps-txt i { font-style: normal; font-weight: 600; font-size: 12px; color: var(--muted); }
 .ps-over { padding: 4px 9px; border-radius: 99px; font-size: 12px; font-weight: 800; background: color-mix(in srgb, #e5484d 16%, transparent); color: #e5484d; }
+
+/* Tanlov tugmalari va tumbler */
+.choice { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-line { padding: 12px 14px; border-radius: 16px; background: var(--glass); border: 1px solid var(--line); cursor: pointer; }
+.check-line input { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 44px; height: 26px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 30%, transparent); transition: background 0.2s; margin: 0; }
+.check-line input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); transition: transform 0.2s; }
+.check-line input:checked { background: var(--grad); }
+.check-line input:checked::after { transform: translateX(18px); }
+.check-line input:focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
