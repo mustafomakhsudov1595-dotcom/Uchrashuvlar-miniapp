@@ -6,6 +6,7 @@ import cal from './functions/cal.js';
 import remind from './functions/remind.js';
 import report from './functions/report.js';
 import alert from './functions/alert.js';
+import ig from './functions/ig.js';
 
 async function toEvent(request) {
   const url = new URL(request.url);
@@ -19,6 +20,7 @@ const toResponse = (r) => new Response(r.body ?? null, { status: r.statusCode ||
 function route(pathname) {
   if (pathname === '/api/tg') return bot.handler;
   if (pathname === '/api/meetings') return api.handler;
+  if (pathname === '/api/ig') return ig.handler;
   if (pathname.startsWith('/api/cal')) return cal.handler;
   if (pathname.startsWith('/r/')) return report.handler;
   return null;

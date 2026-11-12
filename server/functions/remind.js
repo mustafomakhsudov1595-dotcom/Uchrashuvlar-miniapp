@@ -7,6 +7,7 @@ const fin = require('./fin');
 const ext = require('./ext');
 const svc = require('./svc');
 const pay = require('./pay');
+const ig = require('./ig');
 
 async function processUser(u, now) {
   const T = S.Tof(u);
@@ -51,7 +52,8 @@ async function processUser(u, now) {
   const er = await ext.remind(u, now);
   const sr = await svc.remind(u, now);
   const pr2 = await pay.remind(u, now);
-  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty || pr2.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent + pr2.sent, slow: Boolean(er.slow) };
+  const ir = await ig.remind(u, now).catch((e) => { console.error('ig', e.message); return { dirty: false, sent: 0 }; });
+  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty || pr2.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent + pr2.sent + ir.sent, slow: Boolean(er.slow) };
 }
 
 exports.handler = async (event) => {

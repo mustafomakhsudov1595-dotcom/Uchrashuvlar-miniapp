@@ -64,6 +64,12 @@ exports.handler = async (event) => {
     return json(200, { ok: true, ai: Boolean(ai.text), text: ai.text || seo.requestPrompt(u.lang || 'uz', x, r.text) });
   }
 
+  if (b.action === 'leads') {
+    if (!S.isAdmin(user.id)) return json(403, { ok: false, error: 'admin' });
+    const leads = await require('./ig').recentLeads(st, 60);
+    return json(200, { ok: true, leads: leads.filter((l) => !l.spam).map((l) => ({ id: l.id, name: l.name, username: l.username, intent: l.intent, phone: l.phone, hot: l.hot, handoff: l.handoff, last: l.last, first: l.first, n: l.n, msgs: l.msgs.slice(-8) })) });
+  }
+
   if (b.action === 'report') {
     const link = await S.reportLink(st, u, String(b.id || ''), b.revoke === true);
     if (link === null) return json(404, { ok: false, error: 'not found' });

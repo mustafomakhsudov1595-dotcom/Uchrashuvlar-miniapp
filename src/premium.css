@@ -371,3 +371,16 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .dd.on { background: var(--grad); color: var(--on-a); box-shadow: 0 8px 16px -10px var(--a1); }
 .row2:has(.datefield.open) { grid-template-columns: 1fr; }
 .home-head h1 { font-size: clamp(16px, 4.9vw, 21px); letter-spacing: -0.03em; }
+
+/* Instagram lidlar */
+.lead-card { flex-wrap: wrap; }
+.lead-chat { width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 10px 4px 4px; }
+.lm { max-width: 86%; padding: 8px 12px; border-radius: 16px; font-size: 13.5px; line-height: 1.35; background: var(--glass); border: 1px solid var(--line); }
+.lm.u { align-self: flex-start; }
+.lm.b, .lm.o { align-self: flex-end; background: var(--a-soft); }
+.pcard.lead-card { display: block; }
+.lead-card .sub-main { width: 100%; }
+.lead-chat .btn { align-self: stretch; text-align: center; margin-top: 4px; }
+.lead-card .sub-main { display: flex; align-items: center; gap: 12px; text-align: left; }
+.lead-card .pc-main { display: flex; flex-direction: column; min-width: 0; }
+.lead-chat .btn { text-decoration: none; }

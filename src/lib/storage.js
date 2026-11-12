@@ -432,6 +432,13 @@ export async function createReport(id) {
   return (await res.json()).link;
 }
 
+// Instagram lidlar (faqat admin; boshqalarga 403)
+export async function fetchLeads() {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'leads' }) });
+  if (!res.ok) throw new Error(`leads ${res.status}`);
+  return (await res.json()).leads || [];
+}
+
 // Sayt SEO tekshiruvi va mijoz soʻrovi uchun Claude topshirigʻi (server bajaradi)
 export async function runSeo(id) {
   const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'seo', id }) });

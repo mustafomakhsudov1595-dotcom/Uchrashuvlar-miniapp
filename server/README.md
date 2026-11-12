@@ -58,3 +58,4 @@ Eslatma: cron har daqiqa barcha foydalanuvchilarni o'qiydi — Workers bepul rej
 - `alert.js` — xatolar haqida adminga ogohlantirish (bir xil xato 30 daqiqada 1 marta, soatiga ≤6).
 - `pdf.js` — oylik PDF hisobot (kutubxonasiz). `/hisobot` yoki Daromad ekranidagi «📄 PDF»; har oyning 1-sanasi 09:30 dan avtomatik yuboriladi (`dsent.r`).
 - Ertalabki xabarga «💰 Pul holati» qatori (`pay.moneyBlock`).
+- `ig.js` — Instagram Direct lid boti. Webhook: `/api/ig` (GET tasdiqlash, POST xabarlar). Sirlar (`wrangler secret put`): `IG_TOKEN` (Instagram Login token), `IG_ACCOUNT_ID`, `IG_VERIFY_TOKEN` (oʻzingiz tanlagan soʻz), `IG_APP_SECRET` (imzo tekshiruvi). Telegramda: `/ig` (boshqaruv), `/igtest` (Meta'siz sinash). Lidlar KV'da `iglead/<id>`, kunlik hisobot 20:00 (sozlanadi). Mini ilovada Loyihalar → Lidlar (faqat admin).
