@@ -10,7 +10,7 @@ const uz = {
   bMsg: '✉️ Mijozga xabar', msgTitle: (n) => `✉️ <b>${n}</b> — qanday xabar?`, msgKinds: { pay: '💵 Toʻlov eslatmasi', done: '✅ Ish tayyor', delay: '⏳ Muddat koʻchdi', renew: '🔁 Servisni uzaytirish', upd: '🛠 Oʻzgartirish bajarildi' },
   msgSend: '✈️ Telegramʼda yuborish', msgWrite: '👤 Mijozga yozish', msgLang: 'Mijoz tili:', msgNoOwed: 'Qarz yoʻq — toʻlov xabari kerak emas.', msgCopy: 'Nusxalang yoki “Telegramʼda yuborish”ni bosing:',
   rekvAsk: '💳 <b>Toʻlov rekvizitlari</b>\nMijozga yuboriladigan xabarlarga qoʻshiladi. Yozing (masalan karta raqami va ism):\n<code>/rekvizit Karta: 8600 1234 5678 9012, Anvar K.</code>', rekvSaved: '✅ Rekvizit saqlandi.', rekvOff: 'Rekvizit oʻchirildi.', rekvNow: (t) => `💳 Hozirgi rekvizit: <code>${t}</code>\nOʻzgartirish: /rekvizit yangi matn · oʻchirish: /rekvizit off`,
-  insTitle: '✨ <b>Haftalik tahlil</b>', insFail: 'Tahlil hozir tayyorlanmadi. Birozdan keyin /tahlil ni qayta bosing.', cmdK: '✨ /tahlil — AI tahlil · 💳 /rekvizit — toʻlov rekviziti',
+  bChatNew: '🆕 Yangi suhbat', chatCleared: '🧹 Suhbat tozalandi. Yangi savol bering.', insTitle: '✨ <b>Haftalik tahlil</b>', insFail: 'Tahlil hozir tayyorlanmadi. Birozdan keyin /tahlil ni qayta bosing.', cmdK: '💬 Shunchaki yozing — AI yordamchi javob beradi · ✨ /tahlil — AI tahlil · 💳 /rekvizit — toʻlov rekviziti',
 };
 const ru = {
   ...uz,
@@ -23,7 +23,7 @@ const ru = {
   bMsg: '✉️ Сообщение клиенту', msgTitle: (n) => `✉️ <b>${n}</b> — какое сообщение?`, msgKinds: { pay: '💵 Напоминание об оплате', done: '✅ Работа готова', delay: '⏳ Срок сдвинулся', renew: '🔁 Продлить сервис', upd: '🛠 Правка выполнена' },
   msgSend: '✈️ Отправить в Telegram', msgWrite: '👤 Написать клиенту', msgLang: 'Язык клиента:', msgNoOwed: 'Долга нет — сообщение об оплате не нужно.', msgCopy: 'Скопируйте или нажмите «Отправить в Telegram»:',
   rekvAsk: '💳 <b>Платёжные реквизиты</b>\nДобавляются в сообщения клиентам. Напишите (например номер карты и имя):\n<code>/rekvizit Карта: 8600 1234 5678 9012, Анвар К.</code>', rekvSaved: '✅ Реквизиты сохранены.', rekvOff: 'Реквизиты удалены.', rekvNow: (t) => `💳 Текущие реквизиты: <code>${t}</code>\nИзменить: /rekvizit новый текст · удалить: /rekvizit off`,
-  insTitle: '✨ <b>Недельный анализ</b>', insFail: 'Анализ сейчас не получился. Нажмите /tahlil чуть позже.', cmdK: '✨ /tahlil — AI-анализ · 💳 /rekvizit — реквизиты',
+  bChatNew: '🆕 Новый диалог', chatCleared: '🧹 Диалог очищен. Задайте новый вопрос.', insTitle: '✨ <b>Недельный анализ</b>', insFail: 'Анализ сейчас не получился. Нажмите /tahlil чуть позже.', cmdK: '💬 Просто напишите — ответит AI-помощник · ✨ /tahlil — AI-анализ · 💳 /rekvizit — реквизиты',
 };
 const en = {
   ...uz,
@@ -36,6 +36,6 @@ const en = {
   bMsg: '✉️ Message to client', msgTitle: (n) => `✉️ <b>${n}</b> — which message?`, msgKinds: { pay: '💵 Payment reminder', done: '✅ Work is ready', delay: '⏳ Deadline moved', renew: '🔁 Renew service', upd: '🛠 Change completed' },
   msgSend: '✈️ Send via Telegram', msgWrite: '👤 Message the client', msgLang: 'Client language:', msgNoOwed: 'Nothing is owed — no payment message needed.', msgCopy: 'Copy it or tap “Send via Telegram”:',
   rekvAsk: '💳 <b>Payment details</b>\nAdded to messages for clients. Type them (e.g. card number and name):\n<code>/rekvizit Card: 8600 1234 5678 9012, Anvar K.</code>', rekvSaved: '✅ Payment details saved.', rekvOff: 'Payment details removed.', rekvNow: (t) => `💳 Current details: <code>${t}</code>\nChange: /rekvizit new text · remove: /rekvizit off`,
-  insTitle: '✨ <b>Weekly insight</b>', insFail: 'Could not prepare the insight now. Try /tahlil again shortly.', cmdK: '✨ /tahlil — AI insight · 💳 /rekvizit — payment details',
+  bChatNew: '🆕 New chat', chatCleared: '🧹 Chat cleared. Ask a new question.', insTitle: '✨ <b>Weekly insight</b>', insFail: 'Could not prepare the insight now. Try /tahlil again shortly.', cmdK: '💬 Just type — the AI assistant replies · ✨ /tahlil — AI insight · 💳 /rekvizit — payment details',
 };
 module.exports = { uz, ru, en };

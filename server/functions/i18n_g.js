@@ -23,7 +23,7 @@ const uz = {
   digBackup: '💾 Zaxira (dushanba):', digBackupState: (at) => `💾 Haftalik zaxira: ${at ? `har dushanba <b>${at}</b> da` : '<b>oʻchirilgan</b>'}`,
   aiBtnInsta: '📸 Instagram post', aiBtnScript: '🎬 Video ssenariy', aiBtnSite: '🌐 Sayt matni', aiSkip: '⏭ Shundayligicha yoz', aiAgain: '🔄 Qayta yoz',
   aiAsk: (n) => `✨ <b>${n}</b> uchun qisqacha yozing (masalan: kafe, ochilish aksiyasi, 20% chegirma) yoki tugmani bosing.`, aiWait: '✨ Yozyapman…',
-  aiFail: '✨ Hozir javob bera olmadim. Birozdan keyin qayta urinib koʻring.', aiLimit: '✨ Bugungi AI limiti tugadi (30 ta). Ertaga davom etamiz.',
+  aiFail: '✨ Hozir javob bera olmadim. Birozdan keyin qayta urinib koʻring.', aiLimit: '✨ Bugungi AI limiti tugadi (80 ta). Ertaga davom etamiz.',
   aiFree: '✨ Savolingizni yozing: <code>/ai Kafe uchun Instagram reklama sarlavhasi</code>', aiNone: '✨ Loyiha topilmadi.',
   cmdG: '💸 /xarajat · 🎯 /maqsad · 🔗 /saytlar · 💾 /zaxira · ✨ /ai',
 };
@@ -49,7 +49,7 @@ const ru = {
   digBackup: '💾 Копия (понедельник):', digBackupState: (at) => `💾 Недельная резервная копия: ${at ? `каждый понедельник в <b>${at}</b>` : '<b>выключена</b>'}`,
   aiBtnInsta: '📸 Пост для Instagram', aiBtnScript: '🎬 Сценарий видео', aiBtnSite: '🌐 Текст для сайта', aiSkip: '⏭ Пиши как есть', aiAgain: '🔄 Переписать',
   aiAsk: (n) => `✨ Коротко опишите задачу для <b>${n}</b> (например: кафе, акция на открытие, скидка 20%) или нажмите кнопку.`, aiWait: '✨ Пишу…',
-  aiFail: '✨ Сейчас не получилось. Попробуйте чуть позже.', aiLimit: '✨ Лимит AI на сегодня исчерпан (30). Продолжим завтра.',
+  aiFail: '✨ Сейчас не получилось. Попробуйте чуть позже.', aiLimit: '✨ Лимит AI на сегодня исчерпан (80). Продолжим завтра.',
   aiFree: '✨ Напишите запрос: <code>/ai Заголовок рекламы в Instagram для кафе</code>', aiNone: '✨ Проект не найден.',
   cmdG: '💸 /xarajat · 🎯 /maqsad · 🔗 /saytlar · 💾 /zaxira · ✨ /ai',
 };
@@ -75,7 +75,7 @@ const en = {
   digBackup: '💾 Backup (Monday):', digBackupState: (at) => `💾 Weekly backup: ${at ? `every Monday at <b>${at}</b>` : '<b>off</b>'}`,
   aiBtnInsta: '📸 Instagram post', aiBtnScript: '🎬 Video script', aiBtnSite: '🌐 Website copy', aiSkip: '⏭ Just write it', aiAgain: '🔄 Rewrite',
   aiAsk: (n) => `✨ Briefly describe what you need for <b>${n}</b> (e.g. cafe, opening promo, 20% off) or tap the button.`, aiWait: '✨ Writing…',
-  aiFail: '✨ Could not answer right now. Try again in a moment.', aiLimit: '✨ Daily AI limit reached (30). Back tomorrow.',
+  aiFail: '✨ Could not answer right now. Try again in a moment.', aiLimit: '✨ Daily AI limit reached (80). Back tomorrow.',
   aiFree: '✨ Type your request: <code>/ai Instagram ad headline for a cafe</code>', aiNone: '✨ Project not found.',
   cmdG: '💸 /xarajat · 🎯 /maqsad · 🔗 /saytlar · 💾 /zaxira · ✨ /ai',
 };

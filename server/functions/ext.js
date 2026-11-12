@@ -217,12 +217,14 @@ const pickText = (out) => String((out && (out.response || (out.choices && out.ch
 // Oʻzbekcha: lotin yozuvi va toʻgʻri apostroflar (oʻ, gʻ — U+02BB; maʼlumot — U+02BC)
 const normalizeUz = (t) => voice.toLatin(t).replace(/([oOgG])['’‘`´ʻʼ]/g, '$1ʻ').replace(/([A-Za-z])['’‘`´ʼ]([A-Za-z])/g, '$1ʼ$2');
 const cleanAi = (t, lang) => { let x = t.replace(/\*\*|__|^#{1,6}\s+/gm, '').replace(/^["“«]|["”»]$/g, '').trim(); if (lang === 'uz' || !lang) x = normalizeUz(x); return x; };
-async function aiCall(u, system, prompt) {
+const AI_LIMIT = 80;
+async function aiCall(u, system, prompt, opts = {}) {
   const today = S.todayISO(u.tz), AI = getAI();
   if (!AI) return { error: 'fail' };
   u.ai = u.ai && u.ai.d === today ? u.ai : { d: today, n: 0 };
-  if (u.ai.n >= 30) return { error: 'limit' };
-  const messages = [{ role: 'system', content: `${system} Reply in ${LANGNAME[u.lang] || LANGNAME.uz}. Be concise and practical, no preface, no markdown symbols like ** or ##. ${RULES}` }, { role: 'user', content: prompt }];
+  if (u.ai.n >= AI_LIMIT) return { error: 'limit' };
+  const langRule = opts.auto ? '' : ` Reply in ${LANGNAME[u.lang] || LANGNAME.uz}.`;
+  const messages = [{ role: 'system', content: `${system}${langRule} Be concise and practical, no preface, no markdown symbols like ** or ##. ${RULES}` }, ...(opts.history || []), { role: 'user', content: prompt }];
   for (const cfg of MODELS) {
     try {
       const out = await AI.run(cfg.m, { messages, max_tokens: cfg.max, temperature: 0.5, ...(cfg.extra || {}) });
@@ -283,9 +285,7 @@ async function onMessage(chat, u, cmd, args, text) {
   if (cmd === '/zaxira' || cmd === '/backup') { await sendBackup(chat, u); return true; }
   if (cmd === '/ai') {
     if (!args) { await send(chat, P.aiFree); return true; }
-    const out = await aiRun(chat, u, SYS, args);
-    if (out) await send(chat, esc(out));
-    return true;
+    return require('./chat').answer(chat, u, args);
   }
   if (!cmd && u.state && u.state.kind === 'ai') {
     const st = u.state; u.state = null;

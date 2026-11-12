@@ -9,6 +9,7 @@ const svc = require('./svc');
 const team = require('./team');
 const msgs = require('./msgs');
 const insight = require('./insight');
+const chatAi = require('./chat');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -354,7 +355,7 @@ async function onMessage(st, m) {
   if (cmd && cmd !== '/yangi') u.state = null;
   if (!cmd && u.state && u.state.kind === 'p' && !text) { await send(chat, T.pleaseText); return S.saveUser(st, u); }
 
-  if (await team.onMessage(chat, u, cmd, st) || await insight.onMessage(chat, u, cmd) || await msgs.onMessage(chat, u, cmd, args) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
+  if (await team.onMessage(chat, u, cmd, st) || await insight.onMessage(chat, u, cmd) || await chatAi.onMessage(chat, u, cmd) || await msgs.onMessage(chat, u, cmd, args) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
 
   if (cmd === '/start') {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
@@ -392,8 +393,10 @@ async function onMessage(st, m) {
   else if (cmd) { await send(chat, T.unknownCmd, kbFor(T)); }
   else if (u.state && u.state.step && u.state.step !== 'confirm') {
     if (!text) await send(chat, T.pleaseText); else await handleFlowText(chat, u, text);
-  } else if (text && await quickAdd(chat, u, text)) { /* tez qo'shish */ }
+  } else if (text && chatAi.looksLikeQuestion(text)) { await chatAi.answer(chat, u, text); }
+  else if (text && await quickAdd(chat, u, text)) { /* tez qo'shish */ }
   else if (fromVoice) { await startFlow(chat, u, { name: text.slice(0, 120) }); }
+  else if (text) { await chatAi.answer(chat, u, text); }
   else { await send(chat, T.useMenu, kbFor(T)); }
   await S.saveUser(st, u);
 }
@@ -426,6 +429,7 @@ async function onCallback(st, q) {
   else if (fin.ACTS.includes(act)) { toast = await fin.onCallback(ctx, u, act, a, b); }
   else if (ext.ACTS.includes(act)) { toast = await ext.onCallback(ctx, u, act, a, b); }
   else if (svc.ACTS.includes(act)) { toast = await svc.onCallback(ctx, u, act, a, b); }
+  else if (chatAi.ACTS.includes(act)) { toast = await chatAi.onCallback(ctx, u, act, a); }
   else if (msgs.ACTS.includes(act)) { toast = await msgs.onCallback(ctx, u, act, a, b, c); }
   else if (team.ACTS.includes(act)) { toast = await team.onCallback(ctx, st, u, act, a); }
   else if (act === 'noop') { /* sahifa raqami */ }

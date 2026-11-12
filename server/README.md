@@ -31,6 +31,8 @@
 - AI: asosiy model `gpt-oss-120b` (reasoning_effort low), ishlamasa `mistral-small-3.1`, keyin `llama-3.3`. Oʻzbekcha uchun lotin yozuvi va toʻgʻri apostroflar (oʻ, gʻ, maʼ) majburlanadi, "toʻqima" qoidasi bor.
 - Oflayn: `public/sw.js` ilova qobigʻini keshlaydi, oflayn paytda yuqorida belgi chiqadi, internet kelganda avtomatik sinxronlanadi.
 
+- `functions/chat.js` — suhbatdosh AI: buyruq va oqim boʻlmagan har qanday matn (yoki ovozli xabar) savol boʻlsa AI javob beradi. U foydalanuvchi maʼlumotlarini (uchrashuv, loyiha, qarz, servis, daromad) koʻrib turadi, oxirgi 8 xabarni 8 soat eslab qoladi (`/tozala` yoki “🆕 Yangi suhbat” tozalaydi). Maʼlumotni oʻzi oʻzgartirmaydi, tegishli buyruqni aytadi. Kuniga 80 ta AI soʻrov.
+
 ## Deploy
 
 ```bash
