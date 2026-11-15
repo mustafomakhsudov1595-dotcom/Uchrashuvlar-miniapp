@@ -173,7 +173,9 @@ function parseTime(text) {
 }
 async function handleFlowText(chat, u, text) {
   const T = S.Tof(u), st = u.state, d = st.draft;
+  if (st.step === 'name' && /\?\s*$/.test(text)) { u.state = null; return chatAi.answer(chat, u, text, {}); } // ism oʻrniga savol yozilsa — javob beramiz
   if (st.step === 'name') { d.name = text.slice(0, 120); return proceed(chat, u); }
+  if (['date', 'time', 'phone'].includes(st.step) && chatAi.looksLikeQuestion(text) && !(st.step === 'time' && parseTime(text)) && !(st.step === 'date' && parseDate(text, u))) { u.state = null; return chatAi.answer(chat, u, text, {}); } // savol boʻlsa — amalni toʻxtatib javob beramiz
   if (st.step === 'date') { const iso = parseDate(text, u); if (!iso) return send(chat, T.badDate, dateButtons(u)); d.date = iso; return proceed(chat, u); }
   if (st.step === 'time') { const t = parseTime(text); if (!t) return send(chat, T.badTime, timeButtons(T)); d.time = t; return proceed(chat, u); }
   if (st.step === 'loc') { d.location = text.slice(0, 200); d.lat = null; d.lon = null; return done(chat, u, 'loc'); }
@@ -186,6 +188,7 @@ async function handleFlowText(chat, u, text) {
 async function quickAdd(chat, u, text) {
   const T = S.Tof(u), r = S.parseQuick(text, u.tz);
   if (!r.found.date && !r.found.time) return false;
+  if (!r.found.time && /ob-?havo|havo harorat|kurs|dollar|valyuta|yangilik|namoz|futbol|погод|курс|новост|weather|exchange rate|news|prayer/i.test(text)) return false; // maʼlumot soʻrovi, uchrashuv emas
   const draft = { name: r.name, date: r.date, time: r.time, location: r.location, phone: r.phone, cat: r.cat, notes: r.notes };
   for (const k of Object.keys(draft)) if (!draft[k]) delete draft[k];
   u.state = { step: 'name', draft, quick: true, asked: [] };
@@ -317,6 +320,8 @@ async function onMessage(st, m) {
   const u = await S.getUser(st, from.id);
   u.chat = String(chat);
   u.name = [from.first_name, from.last_name].filter(Boolean).join(' ');
+  // 20 daqiqadan oshgan yarim qolgan amal (masalan, uchrashuv qoralamasi) kelgusi xabarlarni ushlab qolmasin
+  if (u.state && (!u.state.at || Date.now() - u.state.at > 20 * 60000)) u.state = null; // `at` saveUser'da yoziladi; yoʻqligi — eski tiqilib qolgan holat
   let text = (m.text || '').trim();
   if (BTN[text]) text = BTN[text];
   let cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '';

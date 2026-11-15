@@ -65,7 +65,10 @@ async function getUser(st, id) {
   const d = blankUser(id);
   return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, services: u.services || [], svdeleted: u.svdeleted || {}, payables: u.payables || [], pvdeleted: u.pvdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
 }
-const saveUser = (st, u) => st.setJSON(userKey(u.id), u);
+const saveUser = (st, u) => {
+  if (u.state && typeof u.state === 'object' && !u.state.at) u.state.at = Date.now(); // yarim qolgan amal vaqti
+  return st.setJSON(userKey(u.id), u);
+};
 const Tof = (u) => getT(u.lang);
 
 /* ---------- sana va vaqt ---------- */
