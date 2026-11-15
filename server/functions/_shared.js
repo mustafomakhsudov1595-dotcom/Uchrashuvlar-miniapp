@@ -65,6 +65,12 @@ async function getUser(st, id) {
   const d = blankUser(id);
   return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, services: u.services || [], svdeleted: u.svdeleted || {}, payables: u.payables || [], pvdeleted: u.pvdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
 }
+// Uzoq ishni fonda bajaradi (Telegram webhook 60 soniyada uziladi); testda/oddiy muhitda kutadi.
+const bg = async (p) => {
+  const wu = globalThis.__wu;
+  if (wu) { wu(Promise.resolve(p).catch((e) => console.error('bg', e && e.message))); return; }
+  await p;
+};
 const saveUser = (st, u) => {
   if (u.state && typeof u.state === 'object' && !u.state.at) u.state.at = Date.now(); // yarim qolgan amal vaqti
   return st.setJSON(userKey(u.id), u);
@@ -620,7 +626,7 @@ function parseQuick(input, tz, now = Date.now()) {
 
 module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
-  tg, esc, checkInitData, openStore, getUser, saveUser, blankUser,
+  tg, esc, bg, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
   tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

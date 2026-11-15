@@ -137,22 +137,24 @@ async function onMessage(chat, u, cmd, args, text) {
     if (!text) return true;
     const { t, id } = u.state; u.state = null;
     if (t === 's') { await editSite(chat, u, id, text); return true; }
-    const st = store(), d = await st.get(`agent/v/${id}`, { type: 'json' });
-    if (!d || d.owner !== String(u.id)) return true;
+    const uu = { id: u.id, lang: u.lang, tz: u.tz };
+    await S.bg((async () => { const u = uu; const st = store(), d = await st.get(`agent/v/${id}`, { type: 'json' });
+    if (!d || d.owner !== String(u.id)) return;
     const q = await quota(u, 'video');
-    if (!S.isAdmin(u.id) && q.edits >= EDIT_CAP) { await send(chat, tr(u, T.editcap)); return true; }
+    if (!S.isAdmin(u.id) && q.edits >= EDIT_CAP) { await send(chat, tr(u, T.editcap)); return; }
     tg('sendChatAction', { chat_id: chat, action: 'typing' });
     const raw = await require('./ubot').genJson(u, `${VID_SYS}\nYou are EDITING an existing script. Apply the owner's instruction (any change: tone, length, scenes, language, wording) and return the FULL updated JSON in the same format. Keep what was not asked to change.`, `Current script:\n${JSON.stringify({ title: d.title, scenes: d.scenes, hashtags: d.tags })}\n\nInstruction:\n${text.slice(0, 1500)}`);
     const nd = cleanVideo(raw, d);
-    if (!nd) { await send(chat, tr(u, T.fail)); return true; }
+    if (!nd) { await send(chat, tr(u, T.fail)); return; }
     Object.assign(d, nd); await st.setJSON(`agent/v/${id}`, d); await q.bump(`edit/${u.id}`, q.edits + 1);
     await send(chat, scriptText(u, d), videoKb(u, id));
+    })());
     return true;
   }
   if (cmd !== '/video' && cmd !== '/sayt' && cmd !== '/agent' && cmd !== '/mening') return false;
   if (cmd === '/mening') { await showMine(chat, u); return true; }
   if (cmd === '/agent' || !args) { await send(chat, HELP(u)); return true; }
-  if (cmd === '/video') await newVideo(chat, u, args); else await newSite(chat, u, args);
+  if (cmd === '/video') { await send(chat, tr(u, { uz: '⏳ Ssenariy yozilmoqda…', ru: '⏳ Пишу сценарий…', en: '⏳ Writing the script…' })); const uu = { id: u.id, lang: u.lang, tz: u.tz }; await S.bg(newVideo(chat, uu, args)); } else await newSite(chat, u, args);
   return true;
 }
 async function onCallback(ctx, u, act, a, b, c) {

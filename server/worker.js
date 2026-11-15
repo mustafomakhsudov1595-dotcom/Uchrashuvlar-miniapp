@@ -30,8 +30,9 @@ function route(pathname) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     setKV(env.KV); setAI(env.AI);
+    globalThis.__wu = (p) => ctx.waitUntil(p);
     const { pathname } = new URL(request.url);
     if (pathname === '/privacy' || pathname === '/privacy.html') return new Response(privacyHtml, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
     const handler = route(pathname);

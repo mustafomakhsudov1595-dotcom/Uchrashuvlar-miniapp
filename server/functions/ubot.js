@@ -55,14 +55,19 @@ function parseJsonLoose(t) {
 async function genJson(u, system, prompt) {
   const key = process.env.GEMINI_API_KEY;
   if (key) {
-    for (const model of ['gemini-flash-latest', 'gemini-2.5-flash']) {
-      try {
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-          body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.6, responseMimeType: 'application/json' } }) });
-        if (!r.ok) continue;
-        const j = await r.json(), out = parseJsonLoose((j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(''));
-        if (out) return out;
-      } catch { /* keyingisi */ }
+    for (const model of ['gemini-flash-latest']) {
+      for (const think of [true, false]) {
+        try {
+          const gc = { temperature: 0.6, responseMimeType: 'application/json', ...(think ? { thinkingConfig: { thinkingBudget: 0 } } : {}) };
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: 'POST', signal: AbortSignal.timeout(22000), headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+            body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gc }) });
+          if (r.status === 400 && think) continue; // model fikrlashni oʻchirishni qoʻllamasa — oddiy soʻrov
+          if (!r.ok) break;
+          const j = await r.json(), out = parseJsonLoose((j.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join(''));
+          if (out) return out;
+          break;
+        } catch (e) { console.error('gemini', e.name); break; } // vaqt tugadi yoki xato — Workers AI'ga oʻtamiz
+      }
     }
   }
   const r = await ext.aiCall({ ...u, ai: undefined }, `${system}\nReturn ONLY valid JSON, nothing else.`, prompt, { auto: true, limit: 1000 });
@@ -198,6 +203,8 @@ async function onMessage(chat, u, cmd, args, text) {
     const me = await utg(token, 'getMe', {});
     if (!me.ok) { await send(chat, tr(u, TX.badToken)); return true; }
     const desc = u.state.desc; u.state = null;
+    const lang = u.lang; const uu = { id: u.id, lang, tz: u.tz };
+    await S.bg((async () => { const u = uu;
     const exist = await st.get(`ub/by/${me.result.id}`);
     if (exist) { await send(chat, tr(u, TX.dup)); return true; }
     await send(chat, tr(u, TX.working));
@@ -213,12 +220,14 @@ async function onMessage(chat, u, cmd, args, text) {
     const bots = await own(st, u.id); bots.push(id); await st.setJSON(`ub/own/${u.id}`, bots);
     const us = await usageToday(u); await st.set(us.k, us.n + 1);
     await send(chat, `✅ ${tr(u, { uz: 'Bot tayyor va ishlayapti!', ru: 'Бот готов и работает!', en: 'Your bot is live!' })}\n\n${card(b)}`, botKb(b, u));
+    })());
     return true;
   }
   if (!cmd && u.state && u.state.kind === 'ubedit') {
     if (!text) return true;
-    const st = store(), b = await getBot(st, u.state.id); u.state = null;
-    if (!b || b.owner !== String(u.id)) return true;
+    const eid = u.state.id; u.state = null; const uu = { id: u.id, lang: u.lang, tz: u.tz };
+    await S.bg((async () => { const u = uu; const st = store(), b = await getBot(st, eid);
+    if (!b || b.owner !== String(u.id)) return;
     tg('sendChatAction', { chat_id: chat, action: 'typing' });
     const raw = await genJson(u, `${SPEC_SYS}\nYou are EDITING an existing bot. Apply the owner's instruction to the current spec and return {"spec": <the FULL updated spec>, "summary": "one short sentence of what changed, in the owner's language"}. Keep everything the owner did not ask to change.`, `Current spec:\n${JSON.stringify(b.spec)}\n\nOwner instruction:\n${text.slice(0, 1500)}`);
     const next = raw && (raw.spec || raw);
@@ -226,6 +235,7 @@ async function onMessage(chat, u, cmd, args, text) {
     b.spec = cleanSpec(next, b.spec); await saveBot(st, b);
     await applyProfile(await dec(b.tokenEnc), b.spec);
     await send(chat, `${tr(u, TX.edited)}${raw.summary ? `: ${esc(String(raw.summary).slice(0, 200))}` : ''}\n\n${card(b)}`, botKb(b, u));
+    })());
     return true;
   }
   if (!cmd && u.state && u.state.kind === 'ubbc') {
