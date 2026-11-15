@@ -1,0 +1,34 @@
+# Impro It Notes — sessiyani davom ettirish yozuvi
+
+Oxirgi yangilanish: 2026-11-15 · Branch: `bot-eslatma` · Deploy: Cloudflare Worker `impro-notes`
+Sayt: https://impro-notes.uchrashuvlar-mini-app.workers.dev · Bot: @Improitnotes_bot
+
+## Loyiha nima
+Faqat jamoa (egasi Mustafo, oʻzbek tilida muloqot) uchun Telegram bot + mini ilova. Mijozlar botdan foydalanmaydi.
+Stack: Cloudflare Worker (`server/worker.js`), KV, Workers AI, cron har daqiqa; mini ilova React 19 + Vite (`src/`).
+Hujjat: `server/README.md` (modullar roʻyxati).
+
+## Qilingan ishlar (hammasi deploy va push qilingan)
+- Uchrashuvlar, loyihalar (toʻlov/qarz), mijozlar, oylik toʻlovlar, daromad/xarajat/maqsad, sayt monitoringi, zaxira, Servis (tayyor saytlar), SEO tekshiruv, Claude-prompt generatori, xabar shablonlari, offline rejim.
+- AI chat (ma'lumot kontekstli), rasm/ovoz tahlili, internetga ulangan javoblar (ob-havo, kurs, yangilik, namoz, futbol, qidiruv).
+- **Chiqim (Toʻlash kerak):** kimga/qachon/qancha, eslatmalar (3/1/0 kun, kechikkan), hisob-prognoz, oylik takror, **kredit** (`cn`/`ci`: N oylik, har oy keyingi toʻlov, 7/3/1 kun oldin eslatma).
+- **Navigatsiya:** "+" tez qoʻshish menyusi (`QuickMenu`), pastki menyuda **Pul** boʻlimi (`MoneyView`: Chiqim | Daromad | Statistika), bosh sahifada "Toʻlash kerak" lentasi. Pastki menyu `fixed` xatosi tuzatilgan (`.app` transformi olib tashlangan).
+- **Dizayn:** shrift Sora + Manrope (serif olib tashlangan), chiroyli sana tanlash (`DateField`), tanlov tugmalari (`Choice`) va tumblerlar.
+- **Ertalabki xabar:** "💰 Pul holati" qatori. **Oylik PDF hisobot** (`pdf.js`): `/hisobot`, har oy 1-sana 09:30 avto.
+- **Xato ogohlantirish** (`alert.js`) va **salomatlik nazorati** (`health.js`): webhook har 30 daqiqada tekshiriladi/avto-tiklanadi, `/holat` (admin).
+- **Instagram lid boti** (`ig.js`): webhook `/api/ig`, AI javob (faqat Instagram'da), lidlar KV'da, kunlik hisobot 20:00, `/ig`, `/igtest`, mini ilovada Loyihalar → Lidlar (admin). Privacy Policy `/privacy`, token avto-yangilash qoʻshilgan (qarang: git log).
+- **Tuzatilgan xato:** yarim qolgan uchrashuv qoralamasi (`u.state`) AI'ni toʻsib qoʻyardi → holat 20 daqiqadan keyin (yoki `at` yoʻq boʻlsa) tozalanadi, savol boʻlsa AI javob beradi, "ob-havo/kurs" uchrashuvga aylanmaydi.
+
+## Kutilayotgan / ochiq masalalar
+1. **Instagram Meta ulanishi hali qilinmagan** (egasi bajaradi): Business akkaunt, Meta app, secrets `IG_TOKEN`, `IG_ACCOUNT_ID`, `IG_VERIFY_TOKEN` (`IG_APP_SECRET` ixtiyoriy) Cloudflare'ga, webhook `…/api/ig`, tester bilan sinash, soʻng App Review. Yoʻriqnoma suhbatda berilgan.
+2. Egasi Telegramda `/holat` va "Bugun ob-havo qanday?" bilan AI ishlashini tekshirishi kerak (oxirgi nosozlik tuzatildi, jonli tasdiq yoʻq).
+3. Bepul Workers AI kunlik limiti tugashi mumkin (`AI_LIMIT` 80/kun foydalanuvchiga) — pullik rejani maslahat berish.
+4. Keyingi gʻoyalar (egasi tasdiqlamagan): Tijoriy taklif (KP) PDF, toʻlov vaʼdasi, lidlar voronkasi, loyiha soatlik narxi.
+5. Xavfsizlik: avval chatga yopishtirilgan tokenlar bekor qilinishi kerak; sirlar faqat Cloudflare secrets / environment secrets orqali.
+
+## Ishlash qoidalari
+- Oʻzbekcha javob bering, qisqa va aniq tavsiya bering (uzun roʻyxat yoqmaydi).
+- Oʻzgarishdan keyin: `npx vite build` → `npx wrangler deploy` → commit va `git push origin bot-eslatma`. Tokenlar (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) sessiya environment'ida.
+- Sinov: mock testlar (`ptest*.js`) va Playwright skrinshotlar; jonli tekshiruv uchun vaqtinchalik admin yoʻli qoʻshib, soʻng albatta olib tashlang.
+- `git fetch origin bot-eslatma:refs/remotes/origin/bot-eslatma` — masofaviy branchda boshqa sessiya commitlari boʻlishi mumkin, push oldidan rebase qiling.
+- Stop-hook "yuborilmagan commit" xabari ba'zan eskirgan boʻladi; `git ls-remote origin bot-eslatma` bilan tekshiring.
