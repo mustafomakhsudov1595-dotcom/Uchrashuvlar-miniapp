@@ -53,14 +53,14 @@ def llm(prompt, system='', want_json=False):
     if not key:
         raise RuntimeError('GEMINI_API_KEY yoʻq')
     last = None
-    for model in [os.environ.get('GEMINI_MODEL'), 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash']:
+    for model in [os.environ.get('GEMINI_MODEL'), 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-2.5-flash']:
         if not model:
             continue
         body = {'contents': [{'role': 'user', 'parts': [{'text': prompt}]}], 'generationConfig': {'temperature': 0.7, **({'responseMimeType': 'application/json'} if want_json else {})}}
         if system:
             body['systemInstruction'] = {'parts': [{'text': system}]}
         try:
-            out = json.loads(http(f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}', json.dumps(body).encode(), {'content-type': 'application/json'}, timeout=180))
+            out = json.loads(http(f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent', json.dumps(body).encode(), {'content-type': 'application/json', 'x-goog-api-key': key}, timeout=180))
             txt = ''.join(p.get('text', '') for p in out['candidates'][0]['content']['parts']).strip()
             if txt:
                 return txt
