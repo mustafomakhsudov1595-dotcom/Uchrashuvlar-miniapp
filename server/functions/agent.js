@@ -6,7 +6,7 @@ const { tg, esc } = S;
 
 const send = (chat, text, markup) => tg('sendMessage', { chat_id: chat, text: String(text).slice(0, 3900), parse_mode: 'HTML', reply_markup: markup, disable_web_page_preview: true });
 const LIMIT = { video: 5, site: 5 }, GLOBAL = 120, EDIT_CAP = 60; // kuniga: yangi ishlar (har kimga) / umumiy / tahrirlar
-const REPO = () => process.env.GH_REPO || 'mustafomakhsudov1595-dotcom/uchrashuvlar-miniapp';
+const REPO = () => process.env.GH_REPO || 'mustafomakhsudov1595-dotcom/impro-notes';
 const SITE = () => String(process.env.SITE_URL || '').replace(/\/$/, '');
 const store = () => S.openStore({});
 const tr = (u, o) => o[u.lang] || o.uz;
@@ -38,7 +38,7 @@ async function dispatch(inputs) {
     const r = await fetch(`https://api.github.com/repos/${REPO()}/actions/workflows/agent.yml/dispatches`, {
       method: 'POST',
       headers: { authorization: `Bearer ${tok}`, accept: 'application/vnd.github+json', 'user-agent': 'impro-notes', 'x-github-api-version': '2022-11-28', 'content-type': 'application/json' },
-      body: JSON.stringify({ ref: process.env.AGENT_REF || 'bot-eslatma', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v == null ? '' : v).slice(0, 30000)])) }),
+      body: JSON.stringify({ ref: process.env.AGENT_REF || 'main', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v == null ? '' : v).slice(0, 30000)])) }),
     });
     if (r.status === 204) return { ok: true };
     const j = await r.json().catch(() => ({}));
