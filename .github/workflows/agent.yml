@@ -2,10 +2,14 @@ name: agent
 on:
   workflow_dispatch:
     inputs:
-      kind: { description: 'video | site', required: true }
+      kind: { description: 'video | site | site-edit', required: true }
       prompt: { description: 'buyurtma matni', required: true }
       chat: { description: 'Telegram chat id', required: true }
       lang: { description: 'uz | ru | en', required: false, default: 'uz' }
+      id: { description: 'ish id', required: false, default: '' }
+      name: { description: 'sayt nomi', required: false, default: '' }
+      url: { description: 'sayt linki', required: false, default: '' }
+      scenes: { description: 'video ssenariy JSON', required: false, default: '' }
 concurrency:
   group: agent-${{ inputs.chat }}
   cancel-in-progress: false
@@ -28,6 +32,10 @@ jobs:
           PROMPT: ${{ inputs.prompt }}
           CHAT: ${{ inputs.chat }}
           LANG_: ${{ inputs.lang }}
+          ITEM_ID: ${{ inputs.id }}
+          NAME: ${{ inputs.name }}
+          URL: ${{ inputs.url }}
+          SCENES: ${{ inputs.scenes }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}

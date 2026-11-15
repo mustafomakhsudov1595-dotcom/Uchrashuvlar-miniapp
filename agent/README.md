@@ -1,23 +1,20 @@
-# Agent (bepul): video va sayt yasash
+# Yaratish markazi (bepul): video, sayt, Telegram bot
 
-Telegram: `/video mavzu`, `/sayt tavsif`  →  Cloudflare Worker GitHub Actions workflow'ni ishga tushiradi (`.github/workflows/agent.yml`) →  `agent/run.py` ishlaydi →  natija Telegramga qaytadi.
+Hamma foydalanuvchi uchun, kuniga: **5 video, 5 sayt, 5 bot**. Yaratilganlarni **cheklovsiz** oʻzgartirish mumkin (himoya: kuniga 60 tahrir).
 
-## Nima bepul
-GitHub Actions (ochiq repoda cheksiz, yopiqda oyiga 2000 daq), Gemini API (bepul kalit), Edge TTS (ovoz), Pexels (rasm), Cloudflare Workers (sayt).
+## Buyruqlar
+- `/video mavzu` — ssenariy Telegramda koʻrsatiladi → ✏️ xohlagancha oʻzgartirasiz → 🎬 render (GitHub Actions, ovoz + rasm + ffmpeg).
+- `/sayt tavsif` — premium dizayndagi sayt Cloudflare'ga joylanadi (`site-<id>`); ✏️ tugmasi bilan istalgan joyini oʻzgartirasiz (link oʻzgarmaydi).
+- `/botyasa tavsif` — BotFather tokenini yuborasiz (xabar oʻchiriladi), AI bot tavsifini yozadi va bot **darrov** bizning Cloudflare'da ishlaydi. Oʻzgartirish, lidlar, xabar yuborish, toʻxtatish, oʻchirish: `/botlarim`.
+- `/mening` — hamma ishlar.
 
-## Sozlash
-1. **Gemini kaliti:** aistudio.google.com → Get API key.
-2. **Pexels kaliti:** pexels.com/api → bepul kalit (rasmsiz ham ishlaydi, fon rangli boʻladi).
-3. **GitHub repo secrets** (Settings → Secrets and variables → Actions): `BOT_TOKEN`, `GEMINI_API_KEY`, `PEXELS_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-4. **GitHub token (Worker uchun):** Settings → Developer settings → Fine-grained tokens → faqat shu repo → *Actions: Read and write*. Cloudflare'da `wrangler secret put GH_DISPATCH_TOKEN`.
-5. `agent.yml` **main** branchda boʻlishi kerak (workflow_dispatch uchun). Boshqa branch uchun Cloudflare vars: `AGENT_REF`.
+## Bot platformasi (`server/functions/ubot.js`)
+Begona kod ishga tushmaydi: AI faqat JSON tavsif yozadi (menyu, buyruqlar, AI-javob bilimi, lid yigʻish), uni Worker ijro etadi. Tokenlar AES-GCM bilan shifrlanib KV'da turadi (`UB_KEY` ixtiyoriy qoʻshimcha kalit). Webhook: `/api/ub/<id>`.
 
-## Eslatma
-- Repo ochiq boʻlsa, workflow kirishlari (buyurtma matni) hamma uchun koʻrinadi → reponi **private** qiling (2000 daq/oy yetadi).
-- `run.py` logga buyurtma matnini chop etmaydi.
-- Bot yasash rejimi keyingi bosqich (BotFather tokeni xavfsiz uzatilishi kerak).
-
-## Hamma uchun
-`/video` va `/sayt` botga kirgan **har kim** uchun ishlaydi (kirish qoidasi `BOT_ACCESS`). Foydalanuvchi oʻz tilida (uz/ru/en) javob oladi va video shu tilda ovozlanadi.
-Bepul limitlarni asrash uchun kuniga: har kimga 3 video va 3 sayt, umumiy 40 ta; adminlar cheklanmaydi (`server/functions/agent.js` → `LIMIT`, `GLOBAL`).
-Har foydalanuvchining buyurtmasi alohida navbatda (`agent-<chat>`), bir-birini kutib qolmaydi.
+## Sozlash (video va sayt uchun)
+1. Gemini kaliti (aistudio.google.com) va Pexels kaliti (pexels.com/api, ixtiyoriy).
+2. GitHub repo secrets: `BOT_TOKEN`, `GEMINI_API_KEY`, `PEXELS_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+3. Cloudflare secrets: `GH_DISPATCH_TOKEN` (fine-grained PAT, faqat shu repo, *Actions: Read and write*), ixtiyoriy `GEMINI_API_KEY` (ssenariy va bot tavsifi tezroq/sifatliroq boʻladi; yoʻq boʻlsa Workers AI ishlatiladi).
+4. `agent.yml` **main** branchda boʻlishi kerak. Boshqa branch: Cloudflare var `AGENT_REF`.
+5. Repo **private** boʻlsin (buyurtma matnlari loglarda koʻrinmasligi uchun).
+Bot yasash (`/botyasa`) 1-4 qadamlarsiz ham ishlaydi.

@@ -22,6 +22,7 @@ async function tick(now = Date.now()) {
   const alert = require('./alert');
   try {
     if (min % 5 === 0) await st.set('health/cron', now);
+    await require('./ubot').tick().catch((e) => console.error('ub tick', e.message));
     if (min % 30 === 7) {
       const w = await webhookInfo();
       if (w) {

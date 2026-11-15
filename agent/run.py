@@ -144,8 +144,8 @@ def render_scene(i, sc, lang, work):
     cap = textwrap.fill(sc.get('caption') or sc['voice'], 20)
     open(f'{work}/c{i}.txt', 'w', encoding='utf-8').write(cap)
     frames = int(d * FPS)
-    text = (f"drawtext=fontfile='{FONT}':textfile='{work}/c{i}.txt':fontcolor=white:fontsize=72:line_spacing=14:"
-            "x=(w-text_w)/2:y=h*0.66:box=1:boxcolor=black@0.55:boxborderw=32") if FONT else 'null'
+    text = (f"drawtext=fontfile='{FONT}':textfile='{work}/c{i}.txt':fontcolor=white:fontsize=74:line_spacing=16:shadowcolor=black@0.6:shadowx=3:shadowy=3:"
+            "x=(w-text_w)/2:y=h*0.64:box=1:boxcolor=0x0b0f1a@0.62:boxborderw=36") if FONT else 'null'
     if have_img:
         vf = (f"scale=2160:3840:force_original_aspect_ratio=increase,crop=2160:3840,"
               f"zoompan=z='min(zoom+0.0006,1.12)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={W}x{H}:fps={FPS},{text}")
@@ -153,15 +153,17 @@ def render_scene(i, sc, lang, work):
     else:
         vf = f'{text}'
         inp = ['-f', 'lavfi', '-i', f'color=c={COLORS[i % len(COLORS)]}:s={W}x{H}:r={FPS}']
-    run(['ffmpeg', '-y', *inp, '-i', aud, '-t', f'{d:.2f}', '-vf', vf, '-r', str(FPS), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-crf', '23',
+    vf += f',fade=t=in:st=0:d=0.35,fade=t=out:st={max(0.1, d - 0.35):.2f}:d=0.35'
+    af = f'afade=t=in:d=0.08,afade=t=out:st={max(0.1, d - 0.3):.2f}:d=0.3'
+    run(['ffmpeg', '-y', *inp, '-i', aud, '-t', f'{d:.2f}', '-vf', vf, '-af', af, '-r', str(FPS), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-crf', '23',
          '-c:a', 'aac', '-ar', '44100', '-ac', '2', '-shortest', seg])
     return seg
 
 
-def make_video(prompt, lang, scenes_file=None):
+def make_video(prompt, lang, scenes_file=None, scenes_json=''):
     work = tempfile.mkdtemp()
-    if scenes_file:
-        data = json.load(open(scenes_file))
+    if scenes_json or scenes_file:
+        data = json.loads(scenes_json) if scenes_json else json.load(open(scenes_file))
         title, scenes, tags = data.get('title', ''), data['scenes'], data.get('hashtags', [])
     else:
         tg('sendMessage', text='🧠 Ssenariy yozyapman…')
@@ -174,39 +176,73 @@ def make_video(prompt, lang, scenes_file=None):
     run(['ffmpeg', '-y', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', out])
     log('video tayyor', round(os.path.getsize(out) / 1e6, 1), 'MB')
     cap = (title + '\n\n' + ' '.join('#' + t.lstrip('#') for t in tags[:8]))[:1000]
-    r = tg_file('sendVideo', 'video', out, caption=cap, supports_streaming='true', width=W, height=H)
+    vid = os.environ.get('ITEM_ID', '')
+    kb = json.dumps({'inline_keyboard': [[{'text': '✏️ Ssenariyni oʻzgartirish', 'callback_data': f'agm:ve:{vid}'}]]}) if vid else ''
+    r = tg_file('sendVideo', 'video', out, caption=cap, supports_streaming='true', width=W, height=H, **({'reply_markup': kb} if kb else {}))
     if not (r and r.get('ok')):
         tg_file('sendDocument', 'document', out, caption=cap)
     return out
 
 
 # ---------------- SAYT ----------------
-def make_site(prompt, lang):
-    tg('sendMessage', text='🧠 Sayt kodini yozyapman…')
-    out = parse_json(llm(
-        f'Build a complete, modern, mobile-first single-page website for this business/request:\n{prompt}\n\n'
-        'Requirements: ONE self-contained HTML file with inline CSS and minimal JS; semantic HTML; good SEO (title, meta description, Open Graph, headings, alt texts, JSON-LD LocalBusiness if relevant); '
-        f'beautiful professional design (gradient hero, cards, sticky call-to-action, smooth scroll); content language: {"Uzbek (Latin)" if lang == "uz" else lang}. '
-        'Do NOT invent phone numbers, addresses or prices: use clearly marked placeholders like [telefon] if not provided. No external images; use CSS/SVG/emoji.\n'
-        'Return JSON: {"slug": "latin-kebab-3-20-chars", "html": "<full html>"}', want_json=True))
-    html = out.get('html', '')
-    if '<html' not in html.lower() or len(html) < 800:
-        raise RuntimeError('sayt kodi yaroqsiz')
-    slug = re.sub(r'[^a-z0-9-]+', '-', str(out.get('slug', 'site')).lower()).strip('-')[:20] or 'site'
-    name = f'site-{slug}-{uuid.uuid4().hex[:4]}'
-    d = tempfile.mkdtemp()
-    os.makedirs(f'{d}/public')
+PREMIUM = (
+    'DESIGN BRIEF (premium, award-level, not a template look): modern minimal luxury aesthetic with a confident colour palette chosen to fit the business '
+    '(2 brand colours + neutral, high contrast, accessible), generous whitespace, 8px spacing system, fluid typography with clamp(), Google Fonts pairing loaded via <link> '
+    '(e.g. Sora/Manrope/Inter or Playfair for luxury), large hero with gradient mesh or CSS-only abstract shapes, glassmorphism cards, subtle shadows, rounded 20-28px, '
+    'smooth scroll-reveal animations with IntersectionObserver (respect prefers-reduced-motion), sticky blurred navbar with mobile hamburger, '
+    'sections: hero + trust badges, services/benefits cards, how-it-works steps, results/numbers, testimonials (clearly marked placeholders), FAQ accordion, final CTA band, footer. '
+    'Floating Telegram/phone call-to-action button (use placeholders if contact not given), dark/light friendly, perfect on 360px phones, 95+ Lighthouse: semantic HTML, '
+    'meta description, Open Graph, favicon via inline SVG data URI, JSON-LD, alt texts, no layout shift. Pure CSS/SVG art or emoji instead of images. '
+    'Make it feel expensive and unique, with micro-interactions (hover lift, button shine).')
+
+
+def deploy_site(html, name, d):
+    os.makedirs(f'{d}/public', exist_ok=True)
     open(f'{d}/public/index.html', 'w', encoding='utf-8').write(html)
     json.dump({'name': name, 'compatibility_date': '2025-09-01', 'assets': {'directory': './public'}}, open(f'{d}/wrangler.jsonc', 'w'))
-    tg('sendMessage', text='🚀 Cloudflare’ga joylayapman…')
     res = subprocess.run(['npx', '--yes', 'wrangler@4', 'deploy'], cwd=d, capture_output=True, text=True, timeout=600)
     m = re.search(r'https://[\w.-]+\.workers\.dev', res.stdout + res.stderr)
     if res.returncode != 0 or not m:
         raise RuntimeError('joylashda xato: ' + (res.stderr or res.stdout)[-300:])
-    url = m.group(0)
-    tg('sendMessage', text=f'✅ Sayt tayyor:\n{url}\n\nKod faylini ham yuboraman.')
+    return m.group(0)
+
+
+def finish_site(url, d, name, item, edited=False):
+    kb = json.dumps({'inline_keyboard': [[{'text': '✏️ Oʻzgartirish', 'callback_data': f'agm:se:{item}'}]]}) if item else ''
+    tg('sendMessage', text=('✅ Yangilandi:\n' if edited else '✅ Sayt tayyor:\n') + url + '\n\nHohlagan joyini oʻzgartirishingiz mumkin 👇', **({'reply_markup': json.loads(kb)} if kb else {}))
     tg_file('sendDocument', 'document', f'{d}/public/index.html', caption=f'{name} · index.html')
-    return url
+
+
+def make_site(prompt, lang):
+    name, item = os.environ.get('NAME') or f'site-{uuid.uuid4().hex[:8]}', os.environ.get('ITEM_ID', '')
+    tg('sendMessage', text='🧠 Premium dizayn yaratilmoqda…')
+    out = parse_json(llm(
+        f'Build a complete single-page website for this business/request:\n{prompt}\n\n{PREMIUM}\n\n'
+        f'ONE self-contained HTML file (inline CSS + minimal JS). Content language: {"Uzbek (Latin)" if lang == "uz" else lang}. '
+        'Do NOT invent phone numbers, addresses or prices: use clearly marked placeholders like [telefon] if not provided.\n'
+        'Return JSON: {"html": "<full html>"}', want_json=True))
+    html = out.get('html', '')
+    if '<html' not in html.lower() or len(html) < 1500:
+        raise RuntimeError('sayt kodi yaroqsiz')
+    d = tempfile.mkdtemp()
+    tg('sendMessage', text='🚀 Cloudflare’ga joylayapman…')
+    finish_site(deploy_site(html, name, d), d, name, item)
+
+
+def edit_site(instr, lang):
+    name, item, url = os.environ.get('NAME', ''), os.environ.get('ITEM_ID', ''), os.environ.get('URL', '')
+    if not (name and url.startswith('https://')):
+        raise RuntimeError('sayt maʼlumoti yoʻq')
+    tg('sendMessage', text='✏️ Oʻzgartirishni qoʻllayapman…')
+    cur = http(url, headers={'User-Agent': 'Mozilla/5.0'}).decode('utf-8', 'replace')
+    out = parse_json(llm(
+        f'You are editing a live website. CURRENT HTML:\n{cur}\n\nOWNER INSTRUCTION (apply exactly, any kind of change: text, colours, design, sections, language, layout, contact info):\n{instr}\n\n'
+        f'Keep everything else unchanged and keep the premium quality. {PREMIUM}\nReturn JSON: {{"html": "<the FULL updated html>"}}', want_json=True))
+    html = out.get('html', '')
+    if '<html' not in html.lower() or len(html) < 800:
+        raise RuntimeError('yangilangan kod yaroqsiz')
+    d = tempfile.mkdtemp()
+    finish_site(deploy_site(html, name, d), d, name, item, edited=True)
 
 
 def main():
@@ -214,9 +250,11 @@ def main():
     prompt, lang = os.environ.get('PROMPT', ''), os.environ.get('LANG_', 'uz')
     try:
         if kind == 'video':
-            make_video(prompt, lang, os.environ.get('SCENES_FILE'))
+            make_video(prompt, lang, os.environ.get('SCENES_FILE'), os.environ.get('SCENES', ''))
         elif kind == 'site':
             make_site(prompt, lang)
+        elif kind == 'site-edit':
+            edit_site(prompt, lang)
         else:
             raise RuntimeError('nomaʼlum rejim')
     except Exception as e:  # noqa
