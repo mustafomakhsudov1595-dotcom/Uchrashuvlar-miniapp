@@ -12,8 +12,8 @@ Hamma foydalanuvchi uchun, kuniga: **5 video, 5 sayt, 5 bot**. Yaratilganlarni *
 Begona kod ishga tushmaydi: AI faqat JSON tavsif yozadi (menyu, buyruqlar, AI-javob bilimi, lid yigʻish), uni Worker ijro etadi. Tokenlar AES-GCM bilan shifrlanib KV'da turadi (`UB_KEY` ixtiyoriy qoʻshimcha kalit). Webhook: `/api/ub/<id>`.
 
 ## Sozlash (video va sayt uchun)
-1. Gemini kaliti (aistudio.google.com) va Pexels kaliti (pexels.com/api, ixtiyoriy).
-2. GitHub repo secrets: `BOT_TOKEN`, `GEMINI_API_KEY`, `PEXELS_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+1. Gemini kaliti (aistudio.google.com) va rasm kaliti (ixtiyoriy): **Pixabay** (pixabay.com/api/docs, tijoriy foydalanish bepul) yoki Pexels (hozir yangi kalit bermayapti). Kalitsiz video rangli fon bilan chiqadi.
+2. GitHub repo secrets: `BOT_TOKEN`, `GEMINI_API_KEY`, `PIXABAY_API_KEY` (yoki `PEXELS_API_KEY`), `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 3. Cloudflare secrets: `GH_DISPATCH_TOKEN` (fine-grained PAT, faqat shu repo, *Actions: Read and write*), ixtiyoriy `GEMINI_API_KEY` (ssenariy va bot tavsifi tezroq/sifatliroq boʻladi; yoʻq boʻlsa Workers AI ishlatiladi).
 4. `agent.yml` yangi `impro-notes` reponing **main** branchida (kodni shu repoga main qilib yuklaymiz). Boshqacha boʻlsa: Cloudflare vars `GH_REPO`, `AGENT_REF`.
 5. Repo **private** boʻlsin (buyurtma matnlari loglarda koʻrinmasligi uchun).

@@ -104,7 +104,25 @@ def plan_scenes(prompt, lang):
     return out.get('title', ''), scenes, out.get('hashtags', [])
 
 
+def fetch_pixabay(query, dest):
+    key = os.environ.get('PIXABAY_API_KEY')
+    if not key:
+        return False
+    try:
+        d = json.loads(http('https://pixabay.com/api/?' + urllib.parse.urlencode({'key': key, 'q': query, 'image_type': 'photo', 'orientation': 'vertical', 'per_page': 5, 'safesearch': 'true', 'min_height': 1000})))
+        hits = d.get('hits') or []
+        if not hits:
+            return False
+        open(dest, 'wb').write(http(hits[0].get('largeImageURL') or hits[0]['webformatURL']))
+        return True
+    except Exception as e:  # noqa
+        log('pixabay xato', type(e).__name__)
+        return False
+
+
 def fetch_image(query, dest):
+    if fetch_pixabay(query, dest):
+        return True
     key = os.environ.get('PEXELS_API_KEY')
     if not key:
         return False
