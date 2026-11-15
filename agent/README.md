@@ -16,3 +16,8 @@ GitHub Actions (ochiq repoda cheksiz, yopiqda oyiga 2000 daq), Gemini API (bepul
 - Repo ochiq boʻlsa, workflow kirishlari (buyurtma matni) hamma uchun koʻrinadi → reponi **private** qiling (2000 daq/oy yetadi).
 - `run.py` logga buyurtma matnini chop etmaydi.
 - Bot yasash rejimi keyingi bosqich (BotFather tokeni xavfsiz uzatilishi kerak).
+
+## Hamma uchun
+`/video` va `/sayt` botga kirgan **har kim** uchun ishlaydi (kirish qoidasi `BOT_ACCESS`). Foydalanuvchi oʻz tilida (uz/ru/en) javob oladi va video shu tilda ovozlanadi.
+Bepul limitlarni asrash uchun kuniga: har kimga 3 video va 3 sayt, umumiy 40 ta; adminlar cheklanmaydi (`server/functions/agent.js` → `LIMIT`, `GLOBAL`).
+Har foydalanuvchining buyurtmasi alohida navbatda (`agent-<chat>`), bir-birini kutib qolmaydi.

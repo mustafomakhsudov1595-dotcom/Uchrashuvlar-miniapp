@@ -7,7 +7,7 @@ on:
       chat: { description: 'Telegram chat id', required: true }
       lang: { description: 'uz | ru | en', required: false, default: 'uz' }
 concurrency:
-  group: agent
+  group: agent-${{ inputs.chat }}
   cancel-in-progress: false
 jobs:
   run:
