@@ -7,6 +7,7 @@ import remind from './functions/remind.js';
 import report from './functions/report.js';
 import alert from './functions/alert.js';
 import ig from './functions/ig.js';
+import privacyHtml from './privacy.html'; // Meta App Review uchun maxfiylik siyosati (/privacy)
 
 async function toEvent(request) {
   const url = new URL(request.url);
@@ -29,7 +30,9 @@ function route(pathname) {
 export default {
   async fetch(request, env) {
     setKV(env.KV); setAI(env.AI);
-    const handler = route(new URL(request.url).pathname);
+    const { pathname } = new URL(request.url);
+    if (pathname === '/privacy' || pathname === '/privacy.html') return new Response(privacyHtml, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
+    const handler = route(pathname);
     if (!handler) return new Response('not found', { status: 404 });
     try {
       return toResponse(await handler(await toEvent(request)));

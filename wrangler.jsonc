@@ -7,7 +7,7 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/r/*"]
+    "run_worker_first": ["/api/*", "/r/*", "/privacy", "/privacy.html"]
   },
   "triggers": { "crons": ["* * * * *"] },
   "ai": { "binding": "AI" },

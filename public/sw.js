@@ -6,7 +6,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request, url = new URL(req.url);
-  if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/r/') || url.pathname.startsWith('/privacy')) return;
+  if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/r/')) return;
   if (req.mode === 'navigate') {
     // Sahifa: avval tarmoq, bo'lmasa kesh
     e.respondWith(fetch(req).then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('/', copy)); return res; }).catch(() => caches.match('/').then((r) => r || Response.error())));
