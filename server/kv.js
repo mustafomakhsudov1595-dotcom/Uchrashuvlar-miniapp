@@ -37,6 +37,7 @@ function openKV() {
   return {
     get: (key, opts) => KV.get(key, opts && opts.type === 'json' ? { type: 'json' } : { type: 'text' }),
     set: (key, value) => KV.put(key, String(value)),
+    delete: (key) => KV.delete(key),
     setJSON: async (key, value) => {
       await KV.put(key, JSON.stringify(value));
       if (key.startsWith('user/')) await addToIndex(key);

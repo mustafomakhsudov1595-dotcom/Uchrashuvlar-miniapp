@@ -29,8 +29,28 @@ async function getLead(st, id) { return (await st.get(`iglead/${id}`, { type: 'j
 async function saveLead(st, l) {
   await st.setJSON(`iglead/${l.id}`, l);
   const idx = (await st.get('ig/idx', { type: 'json' })) || [];
-  if (!idx.includes(l.id)) { idx.unshift(l.id); await st.setJSON('ig/idx', idx.slice(0, 400)); }
+  if (!idx.includes(l.id)) {
+    idx.unshift(l.id);
+    for (const old of idx.slice(400)) await st.delete(`iglead/${old}`); // roʻyxatdan chiqqan eski lid KV'da qolib ketmasin
+    await st.setJSON('ig/idx', idx.slice(0, 400));
+  }
 }
+// Maxfiylik siyosati: mijoz soʻrasa darhol, aks holda 12 oydan keyin oʻchiriladi.
+async function deleteLead(st, id) {
+  await st.delete(`iglead/${id}`);
+  const idx = (await st.get('ig/idx', { type: 'json' })) || [];
+  if (idx.includes(id)) await st.setJSON('ig/idx', idx.filter((x) => x !== id));
+}
+async function pruneLeads(st, now = Date.now()) {
+  const idx = (await st.get('ig/idx', { type: 'json' })) || [], keep = [];
+  for (const id of idx) {
+    const l = await getLead(st, id);
+    if (l && (l.last || 0) > now - 365 * 86400000) keep.push(id); else await st.delete(`iglead/${id}`);
+  }
+  if (keep.length !== idx.length) await st.setJSON('ig/idx', keep);
+  return idx.length - keep.length;
+}
+const isDeleteAsk = (t) => /^\s*(delete|delete my data|удалить|удалите мои данные|o['ʻ’`]?chirish|ma['ʼ’`]?lumotlarimni o['ʻ’`]?chiring)\s*[.!]*\s*$/i.test(String(t));
 async function recentLeads(st, n = 30) {
   const idx = (await st.get('ig/idx', { type: 'json' })) || [];
   const out = [];
@@ -85,9 +105,41 @@ async function aiReply(c, lead, text) {
   return { text: r.text.replace(/\[\[OPERATOR\]\]/gi, '').trim(), handoff };
 }
 
+/* ---------- token: Meta tokeni ~60 kun yashaydi, shuning uchun haftada bir yangilab KV'da saqlaymiz ---------- */
+// IG_TOKEN siri almashtirilsa (src mos kelmaydi), KV'dagi eski nusxa tashlab yuboriladi.
+const DAY = 86400000;
+const tokSrc = () => crypto.createHash('sha256').update(process.env.IG_TOKEN || '').digest('hex').slice(0, 16);
+async function tokState(st) {
+  if (!process.env.IG_TOKEN) return null;
+  const t = await st.get('ig/token', { type: 'json' });
+  return t && t.src === tokSrc() && t.token ? t : null;
+}
+async function igToken() {
+  const t = await tokState(store()).catch(() => null);
+  return t ? t.token : process.env.IG_TOKEN || '';
+}
+async function refreshToken(st, now = Date.now()) {
+  if (!process.env.IG_TOKEN) return { skip: 'no token' };
+  let t = await tokState(st);
+  if (!t) { t = { src: tokSrc(), token: process.env.IG_TOKEN, at: now, exp: 0 }; await st.setJSON('ig/token', t); return { skip: 'new' }; }
+  if (now - t.at < 7 * DAY) return { skip: 'fresh' };
+  try {
+    const r = await fetch(`https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(t.token)}`);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.access_token) throw new Error((j.error && j.error.message) || `HTTP ${r.status}`);
+    t.token = j.access_token; t.at = now; t.exp = now + (Number(j.expires_in) || 60 * 86400) * 1000; delete t.err;
+    await st.setJSON('ig/token', t);
+    return { ok: true, exp: t.exp };
+  } catch (e) {
+    t.err = String(e.message).slice(0, 200); await st.setJSON('ig/token', t);
+    await require('./alert').notify('Instagram token yangilash', new Error(`${t.err}. Meta'da yangi token olib, IG_TOKEN sirini almashtiring.`));
+    return { ok: false, error: t.err };
+  }
+}
+
 /* ---------- Instagram API ---------- */
 async function igSend(to, text) {
-  const token = process.env.IG_TOKEN, id = process.env.IG_ACCOUNT_ID || 'me';
+  const token = await igToken(), id = process.env.IG_ACCOUNT_ID || 'me';
   if (!token) return { ok: false, error: 'IG_TOKEN yoʻq' };
   try {
     const r = await fetch(`https://graph.instagram.com/v21.0/${id}/messages`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify({ recipient: { id: to }, message: { text: text.slice(0, 950) } }) });
@@ -96,7 +148,7 @@ async function igSend(to, text) {
   } catch (e) { return { ok: false, error: e.message }; }
 }
 async function igProfile(id) {
-  const token = process.env.IG_TOKEN;
+  const token = await igToken();
   if (!token) return {};
   try {
     const r = await fetch(`https://graph.instagram.com/v21.0/${id}?fields=name,username`, { headers: { authorization: `Bearer ${token}` } });
@@ -200,6 +252,11 @@ exports.handler = async (event) => {
         if (dup && m.mid && dup.mid === m.mid) continue;
         const text = m.text || (m.attachments && m.attachments.length ? '[rasm/ovoz]' : '');
         if (!text) continue;
+        if (isDeleteAsk(text)) { // maʼlumotni oʻchirish soʻrovi (/privacy sahifasidagi vaʼda)
+          await deleteLead(st, sender);
+          await igSend(sender, 'Your conversation and contact details have been deleted from our systems. / Suhbat va aloqa maʼlumotlaringiz tizimimizdan oʻchirildi.');
+          continue;
+        }
         const r = await handleIncoming(st, c, sender, text);
         if (m.mid) { r.lead.mid = m.mid; await saveLead(st, r.lead); }
         if (r.reply) {
@@ -234,7 +291,8 @@ function reportText(s, today) {
 }
 async function showMain(ctx, u) {
   const st = store(), c = await cfg(st), today = S.todayISO(u.tz), s = await dayStats(st, today, u.tz);
-  const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? '✅ ulangan' : '⏳ ulanmagan (Meta kalitlari kerak)';
+  const tk = await tokState(st);
+  const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? `✅ ulangan${tk && tk.err ? ' · ⚠️ token yangilanmadi' : tk && tk.exp ? ` · token ${new Date(tk.exp).toISOString().slice(8, 10)}.${new Date(tk.exp).toISOString().slice(5, 7)} gacha` : ''}` : '⏳ ulanmagan (Meta kalitlari kerak)';
   const text = `📸 <b>Instagram lidlar</b>\n\nMeta ulanishi: ${conn}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
   return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
 }
@@ -299,6 +357,7 @@ async function remind(u, now) {
   const st = store(), c = await cfg(st);
   if (String(c.owner) !== String(u.id)) return { dirty: false, sent: 0 };
   const loc = S.localNow(u.tz, now), hhmm = S.hhmmOfLocal(loc), today = S.isoOfLocal(loc);
+  if (c.tokDay !== today) { c.tokDay = today; await saveCfg(st, c); await refreshToken(st, now); if (today.endsWith('-01')) await pruneLeads(st, now); } // kuniga bir marta tekshiriladi
   if (c.lastReport === today) return { dirty: false, sent: 0 };
   const since = S.toMin(hhmm) - S.toMin(c.hour);
   if (since < 0 || since > 120) return { dirty: false, sent: 0 };
@@ -310,4 +369,4 @@ async function remind(u, now) {
   return { dirty: false, sent: r.ok ? 1 : 0 };
 }
 
-module.exports = { handler: exports.handler, onMessage, onCallback, remind, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign'] };
+module.exports = { handler: exports.handler, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign'] };
