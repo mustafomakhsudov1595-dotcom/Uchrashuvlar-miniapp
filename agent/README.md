@@ -15,6 +15,6 @@ Begona kod ishga tushmaydi: AI faqat JSON tavsif yozadi (menyu, buyruqlar, AI-ja
 1. Gemini kaliti (aistudio.google.com) va Pexels kaliti (pexels.com/api, ixtiyoriy).
 2. GitHub repo secrets: `BOT_TOKEN`, `GEMINI_API_KEY`, `PEXELS_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 3. Cloudflare secrets: `GH_DISPATCH_TOKEN` (fine-grained PAT, faqat shu repo, *Actions: Read and write*), ixtiyoriy `GEMINI_API_KEY` (ssenariy va bot tavsifi tezroq/sifatliroq boʻladi; yoʻq boʻlsa Workers AI ishlatiladi).
-4. `agent.yml` **main** branchda boʻlishi kerak. Boshqa branch: Cloudflare var `AGENT_REF`.
+4. `agent.yml` reponing **default branch**ida boʻlishi kerak (GitHub → Settings → Branches → default = `bot-eslatma`). Kodda standart `AGENT_REF=bot-eslatma`.
 5. Repo **private** boʻlsin (buyurtma matnlari loglarda koʻrinmasligi uchun).
 Bot yasash (`/botyasa`) 1-4 qadamlarsiz ham ishlaydi.

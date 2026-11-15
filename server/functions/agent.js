@@ -38,7 +38,7 @@ async function dispatch(inputs) {
     const r = await fetch(`https://api.github.com/repos/${REPO()}/actions/workflows/agent.yml/dispatches`, {
       method: 'POST',
       headers: { authorization: `Bearer ${tok}`, accept: 'application/vnd.github+json', 'user-agent': 'impro-notes', 'x-github-api-version': '2022-11-28', 'content-type': 'application/json' },
-      body: JSON.stringify({ ref: process.env.AGENT_REF || 'main', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v == null ? '' : v).slice(0, 30000)])) }),
+      body: JSON.stringify({ ref: process.env.AGENT_REF || 'bot-eslatma', inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, String(v == null ? '' : v).slice(0, 30000)])) }),
     });
     if (r.status === 204) return { ok: true };
     const j = await r.json().catch(() => ({}));
