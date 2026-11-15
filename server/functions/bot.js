@@ -14,6 +14,7 @@ const vision = require('./vision');
 const pay = require('./pay');
 const ig = require('./ig');
 const health = require('./health');
+const agent = require('./agent');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -368,7 +369,7 @@ async function onMessage(st, m) {
   if (cmd && cmd !== '/yangi') u.state = null;
   if (!cmd && u.state && u.state.kind === 'p' && !text) { await send(chat, T.pleaseText); return S.saveUser(st, u); }
 
-  if (await team.onMessage(chat, u, cmd, st) || await pay.onMessage(chat, u, cmd, args, text) || await ig.onMessage(chat, u, cmd, args, text) || await health.onMessage(chat, u, cmd) || await insight.onMessage(chat, u, cmd) || await chatAi.onMessage(chat, u, cmd) || await msgs.onMessage(chat, u, cmd, args) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
+  if (await team.onMessage(chat, u, cmd, st) || await pay.onMessage(chat, u, cmd, args, text) || await ig.onMessage(chat, u, cmd, args, text) || await health.onMessage(chat, u, cmd) || await agent.onMessage(chat, u, cmd, args) || await insight.onMessage(chat, u, cmd) || await chatAi.onMessage(chat, u, cmd) || await msgs.onMessage(chat, u, cmd, args) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
 
   if (cmd === '/start') {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
