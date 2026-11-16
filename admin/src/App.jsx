@@ -8,21 +8,23 @@ const imgUrl = (f) => (f.startsWith('data:') ? f : f.startsWith('/') ? ORIGIN + 
 const EMPTY = { id: 0, stock: '', name: '', cat: 'other', size: '', price: '', oldPrice: '', desc: '', hit: false, isNew: false, hidden: false, img: '' };
 
 // rasmni brauzerda kichraytirish (max 900px, JPEG)
-const shrink = (file) => new Promise((res, rej) => {
-  const fr = new FileReader();
-  fr.onload = () => {
-    const im = new Image();
-    im.onload = () => {
-      const k = Math.min(1, 900 / Math.max(im.width, im.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
-      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
-      res(c.toDataURL('image/jpeg', 0.82));
-    };
-    im.onerror = rej; im.src = fr.result;
-  };
-  fr.onerror = rej; fr.readAsDataURL(file);
-});
+const shrink = async (file) => {
+  const MAX = 900;
+  let src, w, h, revoke;
+  try {
+    src = await createImageBitmap(file); w = src.width; h = src.height; // EXIF burilishini o'zi hisobga oladi
+  } catch {
+    const url = URL.createObjectURL(file); revoke = url;
+    src = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
+    w = src.naturalWidth; h = src.naturalHeight;
+  }
+  const k = Math.min(1, MAX / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(src, 0, 0, c.width, c.height);
+  if (src.close) src.close(); if (revoke) URL.revokeObjectURL(revoke);
+  return c.toDataURL('image/jpeg', 0.82);
+};
 const fmt = (n) => Number(n).toLocaleString('ru-RU').replace(/ /g, ' ') + " so'm";
 const ST = { new: ['Yangi', 'amber'], done: ['Bajarildi', 'green'], cancel: ['Bekor', 'red'] };
 const FILTERS = [['new', 'Yangi'], ['done', 'Bajarilgan'], ['cancel', 'Bekor'], ['all', 'Hammasi']];
@@ -287,10 +289,13 @@ function Editor({ p, onClose, onSave, onDelete, onBotPhoto }) {
   };
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const isNew = !f.id;
+  const [prep, setPrep] = useState(false);
   const pick = async (e) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    setErr('');
-    try { setImage(await shrink(file)); } catch { setErr("Rasmni o'qib bo'lmadi. Boshqa rasm (JPG yoki PNG) tanlang."); }
+    const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
+    setErr(''); setPrep(true);
+    try { setImage(await shrink(file)); }
+    catch { setErr("Rasmni o'qib bo'lmadi. Boshqa rasm (JPG yoki PNG) tanlang yoki «Botdan rasm olish» dan foydalaning."); }
+    setPrep(false);
   };
   const save = async () => {
     setErr('');
@@ -305,14 +310,19 @@ function Editor({ p, onClose, onSave, onDelete, onBotPhoto }) {
         <div className="grab" />
         <div className="shead"><h3>{isNew ? "Yangi mahsulot" : 'Tahrirlash'}</h3><button className="xb" onClick={onClose}><IClose size={18} /></button></div>
         <div className="sbody">
-          <label className="upl">
-            {preview ? <img src={preview} alt="" /> : <div className="upl-ph"><ICamera size={34} /><span>Rasm yuklash</span></div>}
-            <input type="file" accept="image/*" onChange={pick} className="fileovl" />
-            {preview && <em>Almashtirish</em>}
-            {image && <small className="picked">✓ Rasm tanlandi</small>}
-          </label>
-          <button type="button" className="botphoto" onClick={fromBot} disabled={getting}>{getting ? 'Olinmoqda...' : '📲 Botdan rasm olish'}</button>
-          <div className="tip">Galereya ishlamasa: <b>1)</b> botga rasm yuboring <b>2)</b> shu yerda «Botdan rasm olish» ni bosing.</div>
+          <div className="imgblock">
+            <div className="imgprev">
+              {preview ? <img src={preview} alt="" /> : <div className="upl-ph"><ICamera size={38} /><span>Mahsulot rasmi</span><small>Pastdagi tugmalardan birini bosing</small></div>}
+              {prep && <div className="prep">Rasm tayyorlanmoqda...</div>}
+              {image && !prep && <small className="picked">✓ Rasm tanlandi</small>}
+            </div>
+            <div className="imgbtns">
+              <label className="ibtn"><span>🖼 Galereyadan</span><input type="file" accept="image/*" onChange={pick} className="fileovl" /></label>
+              <label className="ibtn"><span>📷 Kameradan</span><input type="file" accept="image/*" capture="environment" onChange={pick} className="fileovl" /></label>
+            </div>
+            <button type="button" className="botphoto" onClick={fromBot} disabled={getting}>{getting ? 'Olinmoqda...' : '📲 Botdan rasm olish'}</button>
+            <div className="tip">Rasm telefondan tanlanmasa: <b>1)</b> botga rasm yuboring <b>2)</b> «Botdan rasm olish» ni bosing.</div>
+          </div>
           {err && <div className="err inl">{err}</div>}
           <label>Nomi<input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Masalan: Persil 3 kg" /></label>
           <div className="two">
