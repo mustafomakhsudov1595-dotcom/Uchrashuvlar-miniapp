@@ -67,7 +67,12 @@ export async function onRequestPost({ request, env }) {
       const custom = await rd(env, 'custom', []);
       let id = Number(p.id) || 0;
       const isNew = !(id > 0);
-      if (isNew) id = Math.max(1000, ...custom.map((c) => c.id + 1));
+      if (isNew) {
+        // ikki marta bosilsa — takror qo'shmaymiz (2 daqiqa ichida bir xil nom va narx)
+        const dup = custom.find((c) => c.name.toLowerCase() === f.name.toLowerCase() && c.price === f.price && Date.now() - (c.created || 0) < 120000);
+        if (dup) return json({ ok: true, id: dup.id, dup: true });
+        id = Math.max(1000, ...custom.map((c) => c.id + 1));
+      }
       let imgUrl;
       if (typeof b.image === 'string' && b.image.startsWith('data:image/')) {
         const b64 = b.image.split(',')[1] || '';
@@ -78,7 +83,7 @@ export async function onRequestPost({ request, env }) {
       if (id >= 1000) {
         const i = custom.findIndex((c) => c.id === id);
         const prev = i >= 0 ? custom[i] : {};
-        const item = { ...prev, ...f, oldPrice: f.oldPrice || undefined, id, img: imgUrl || prev.img };
+        const item = { ...prev, ...f, oldPrice: f.oldPrice || undefined, id, img: imgUrl || prev.img, created: prev.created || Date.now() };
         if (stock === null) delete item.stock; else item.stock = stock;
         if (i >= 0) custom[i] = item; else custom.push(item);
       } else {
