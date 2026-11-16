@@ -71,10 +71,12 @@ async function createProduct(env, photos, caption, parsed) {
 export async function addProductFromPhoto(env, m) {
   const photos = m.photo || [];
   if (!photos.length) return { text: "❗ Rasmni <b>«Siqilgan»</b> (oddiy rasm) holida yuboring, fayl sifatida emas.\n\n" + HELP };
+  // admin ilovadagi «Botdan rasm olish» uchun oxirgi rasmni 1 soat saqlaymiz
+  await env.KV.put(`lp:${m.chat.id}`, JSON.stringify({ file_id: pickPhoto(photos).file_id, ts: Date.now() }), { expirationTtl: 3700 });
   const parsed = parseCaption(m.caption);
   if (parsed.name && parsed.price > 0) return createProduct(env, photos, m.caption, parsed);
   await env.KV.put(`pend:${m.chat.id}`, JSON.stringify({ photos, ts: Date.now() }), { expirationTtl: 900 });
-  return { text: "📸 <b>Rasm qabul qilindi.</b>\n\nEndi shu yerga mahsulot <b>nomi va narxini</b> yozing:\n\n<code>Persil gel 3 kg | 85000</code>\n\n(Ombordagi sonini ham yozsangiz bo'ladi: <code>Persil | 85000 | 20</code>)", waiting: true };
+  return { text: "📸 <b>Rasm qabul qilindi.</b>\n\nEndi shu yerga mahsulot <b>nomi va narxini</b> yozing:\n\n<code>Persil gel 3 kg | 85000</code>\n\n(Ombordagi sonini ham yozsangiz bo'ladi: <code>Persil | 85000 | 20</code>)\n\nYoki admin ilovada <b>Mahsulot → Mahsulot qo'shish → «Botdan rasm olish»</b> ni bosing.", waiting: true };
 }
 
 // Admin oddiy matn yubordi: agar oldin rasm yuborgan bo'lsa — shu rasm bilan mahsulot yaratamiz

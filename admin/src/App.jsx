@@ -262,7 +262,7 @@ export default function App() {
       )}
 
       {toast && <div className="toast">{toast}</div>}
-      {edit && <Editor p={edit} onClose={() => setEdit(null)} onSave={saveProduct} onDelete={delProduct} />}
+      {edit && <Editor p={edit} onClose={() => setEdit(null)} onSave={saveProduct} onDelete={delProduct} onBotPhoto={() => api({ action: 'last_photo', initData: window.Telegram?.WebApp?.initData || '' })} />}
 
       <nav className="tabbar">
         <button className={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}><span className="ti"><IBox size={22} />{newCount > 0 && <i>{newCount}</i>}</span><span className="tl">Buyurtma</span></button>
@@ -274,11 +274,17 @@ export default function App() {
 }
 
 /* ---------- Mahsulot tahrirlash oynasi ---------- */
-function Editor({ p, onClose, onSave, onDelete }) {
+function Editor({ p, onClose, onSave, onDelete, onBotPhoto }) {
   const [f, setF] = useState(p);
   const [image, setImage] = useState(null); // yangi rasm (dataURL)
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [getting, setGetting] = useState(false);
+  const fromBot = async () => {
+    setErr(''); setGetting(true);
+    try { const r = await onBotPhoto(); setImage(r.image); } catch (e) { setErr(e.message); }
+    setGetting(false);
+  };
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const isNew = !f.id;
   const pick = async (e) => {
@@ -305,8 +311,9 @@ function Editor({ p, onClose, onSave, onDelete }) {
             {preview && <em>Almashtirish</em>}
             {image && <small className="picked">✓ Rasm tanlandi</small>}
           </label>
+          <button type="button" className="botphoto" onClick={fromBot} disabled={getting}>{getting ? 'Olinmoqda...' : '📲 Botdan rasm olish'}</button>
+          <div className="tip">Galereya ishlamasa: <b>1)</b> botga rasm yuboring <b>2)</b> shu yerda «Botdan rasm olish» ni bosing.</div>
           {err && <div className="err inl">{err}</div>}
-          <div className="tip">💡 Rasm yuklanmasa: botga rasm yuboring va tagiga <b>Nomi | Narxi</b> yozing.</div>
           <label>Nomi<input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Masalan: Persil 3 kg" /></label>
           <div className="two">
             <label>Kategoriya<select value={f.cat} onChange={(e) => set('cat', e.target.value)}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></label>

@@ -1,3 +1,4 @@
+import { verifyInitData } from '../../../shop/src/lib/tgauth.js';
 // Admin API. Parol: ADMIN_PASSWORD secret. KV — do'kon bilan umumiy.
 const same = (a, b) => { if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; };
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
@@ -136,6 +137,26 @@ export async function onRequestPost({ request, env }) {
       const r = await fetch('https://chilling-report.uchrashuvlar-mini-app.workers.dev/send', { headers: { 'x-key': env.ADMIN_PASSWORD } });
       if (!r.ok) return json({ error: 'Hisobot yuborilmadi' }, 502);
       return json(await r.json());
+    }
+
+    // «Botdan rasm olish»: admin botga oxirgi yuborgan rasmini qaytaradi (data URL)
+    case 'last_photo': {
+      if (!env.BOT_TOKEN) return json({ error: 'Bot sozlanmagan' }, 500);
+      const user = b.initData ? await verifyInitData(b.initData, env.BOT_TOKEN) : null;
+      let rec = user ? await rd(env, 'lp:' + user.id, null) : null;
+      if (!rec) {
+        const admins = await rd(env, 'admins', []);
+        const all = (await Promise.all(admins.map((x) => rd(env, 'lp:' + x, null)))).filter(Boolean).sort((p, q) => q.ts - p.ts);
+        rec = all[0] || null;
+      }
+      if (!rec) return json({ error: 'Botga rasm topilmadi. Avval botga (@ElvanoFaxrum_bot) rasm yuboring, keyin shu tugmani bosing.' }, 404);
+      const f = await (await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/getFile?file_id=${encodeURIComponent(rec.file_id)}`)).json();
+      if (!f.ok) return json({ error: "Rasmni yuklab bo'lmadi. Botga qayta yuboring." }, 502);
+      const buf = await (await fetch(`https://api.telegram.org/file/bot${env.BOT_TOKEN}/${f.result.file_path}`)).arrayBuffer();
+      if (buf.byteLength > 1_100_000) return json({ error: 'Rasm juda katta. Kichikroq rasm yuboring.' }, 400);
+      let s = ''; const u = new Uint8Array(buf);
+      for (let i = 0; i < u.length; i += 0x1000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x1000));
+      return json({ image: 'data:image/jpeg;base64,' + btoa(s), age: Math.round((Date.now() - rec.ts) / 1000) });
     }
 
     case 'status': {

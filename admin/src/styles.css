@@ -124,3 +124,4 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;paddin
 @keyframes flashrow{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.35)}}
 .toast{white-space:normal!important;max-width:calc(100vw - 32px);text-align:center;width:max-content}
 .upl .picked{position:absolute;left:10px;bottom:10px;background:var(--green);color:#fff;font-weight:800;font-size:12px;padding:6px 10px;border-radius:10px;z-index:2}.tip{background:var(--surface2);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--muted);font-weight:600;line-height:1.4}.tip b{color:var(--text)}
+.botphoto{width:100%;background:rgba(79,70,229,.12);color:var(--p1);border:1.5px dashed var(--p1);border-radius:14px;padding:13px;font-weight:800;font-size:14.5px}.botphoto:disabled{opacity:.6}
