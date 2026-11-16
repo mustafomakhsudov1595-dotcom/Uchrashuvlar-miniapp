@@ -41,6 +41,7 @@ export default function App() {
   const [promos, setPromos] = useState([]);
   const [edit, setEdit] = useState(null);
   const [toast, setToast] = useState('');
+  const [flashId, setFlashId] = useState(null);
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState('new');
   const [q, setQ] = useState('');
@@ -87,7 +88,11 @@ export default function App() {
     try { await api({ action: 'prices', overrides: rows }); await load(); setMsg('Saqlandi ✓'); setTimeout(() => setMsg(''), 2200); } catch (e) { setMsg(e.message); }
   };
   const saveProduct = async (p, image) => {
-    await api({ action: 'product_save', product: p, image }); await load(); setEdit(null); flash(p.id ? 'Saqlandi ✓' : "Mahsulot qo'shildi ✓");
+    const r = await api({ action: 'product_save', product: p, image });
+    await load(); setEdit(null); setQ(''); setTab('products');
+    setFlashId(r.id); setTimeout(() => setFlashId(null), 4000);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    flash(p.id ? 'Saqlandi ✓' : "Mahsulot qo'shildi ✓ — ro'yxat tepasida");
   };
   const delProduct = async (id) => { await api({ action: 'product_delete', id }); await load(); setEdit(null); flash("O'chirildi"); };
   const saveSales = async () => { try { await api({ action: 'sales_save', sales }); await load(); flash('Skidkalar saqlandi ✓'); } catch (e) { flash(e.message); } };
@@ -175,7 +180,7 @@ export default function App() {
           <div className="searchbox"><ISearch size={19} /><input placeholder="Mahsulot qidirish..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="plist">
             {plist.map((p) => rows[p.id] && (
-              <div className={'prow' + (rows[p.id].hidden ? ' off' : '') + (JSON.stringify(rows[p.id]) !== JSON.stringify(base[p.id]) ? ' dirty' : '')} key={p.id}>
+              <div className={'prow' + (flashId === p.id ? ' flashrow' : '') + (rows[p.id].hidden ? ' off' : '') + (JSON.stringify(rows[p.id]) !== JSON.stringify(base[p.id]) ? ' dirty' : '')} key={p.id}>
                 <div className="ptop">
                   {p.img ? <img src={imgUrl(p.img)} alt="" loading="lazy" /> : <div className="ph">💡</div>}
                   <div className="pn"><b>{p.name}</b><span>{p.size}{p.id >= 1000 ? ' · yangi qo\'shilgan' : ''}</span></div>
@@ -278,7 +283,8 @@ function Editor({ p, onClose, onSave, onDelete }) {
   const isNew = !f.id;
   const pick = async (e) => {
     const file = e.target.files?.[0]; if (!file) return;
-    try { setImage(await shrink(file)); } catch { setErr("Rasmni o'qib bo'lmadi"); }
+    setErr('');
+    try { setImage(await shrink(file)); } catch { setErr("Rasmni o'qib bo'lmadi. Boshqa rasm (JPG yoki PNG) tanlang."); }
   };
   const save = async () => {
     setErr('');
@@ -295,9 +301,10 @@ function Editor({ p, onClose, onSave, onDelete }) {
         <div className="sbody">
           <label className="upl">
             {preview ? <img src={preview} alt="" /> : <div className="upl-ph"><ICamera size={34} /><span>Rasm yuklash</span></div>}
-            <input type="file" accept="image/*" onChange={pick} hidden />
+            <input type="file" accept="image/*" onChange={pick} className="fileovl" />
             {preview && <em>Almashtirish</em>}
           </label>
+          {err && <div className="err inl">{err}</div>}
           <label>Nomi<input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Masalan: Persil 3 kg" /></label>
           <div className="two">
             <label>Kategoriya<select value={f.cat} onChange={(e) => set('cat', e.target.value)}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></label>

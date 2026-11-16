@@ -41,7 +41,7 @@ const Qty = ({ q, onChange, big }) => (
 
 function Pic({ p }) {
   const [wide, setWide] = useState(false);
-  if (!p.img) return <div className="noimg"><span className="ni">💡</span><b>{p.size}</b></div>;
+  if (!p.img) return <div className="noimg"><span className="ni">{CATEGORIES.find((c) => c.id === p.cat)?.icon || '📦'}</span><b>{p.size}</b></div>;
   return <img className={wide ? 'contain' : ''} src={img(p.img)} alt={p.name} loading="lazy"
     onLoad={(e) => setWide(e.target.naturalWidth / e.target.naturalHeight > 1.15)} />;
 }
@@ -273,7 +273,7 @@ function CartPage({ items, total, change, clear, goHome, goOrders }) {
         <>
           {items.map((i) => (
             <div className="crow" key={i.id}>
-              {i.img ? <img src={img(i.img)} alt="" /> : <div className="noimg sm"><span className="ni">💡</span></div>}
+              {i.img ? <img src={img(i.img)} alt="" /> : <div className="noimg sm"><span className="ni">{CATEGORIES.find((c) => c.id === i.cat)?.icon || '📦'}</span></div>}
               <div className="cinfo">
                 <div className="name">{i.name}</div>
                 <div className="size">{i.size} · {fmt(i.price)}</div>

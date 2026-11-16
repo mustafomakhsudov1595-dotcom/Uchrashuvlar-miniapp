@@ -7,7 +7,8 @@ export function saleActive(s, now = Date.now()) {
 
 export function buildCatalog(base, overrides = {}, custom = [], sales = [], now = Date.now()) {
   const act = sales.filter((s) => saleActive(s, now));
-  return [...base, ...custom].map((p) => {
+  // yangi qo'shilgan mahsulotlar ro'yxat boshida (eng yangisi birinchi)
+  return [...custom.slice().reverse(), ...base].map((p) => {
     const m = { ...p };
     const o = p.id < 1000 ? overrides[p.id] : null;
     if (o) {
