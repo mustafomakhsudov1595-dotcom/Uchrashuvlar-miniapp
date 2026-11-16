@@ -303,8 +303,10 @@ function Editor({ p, onClose, onSave, onDelete }) {
             {preview ? <img src={preview} alt="" /> : <div className="upl-ph"><ICamera size={34} /><span>Rasm yuklash</span></div>}
             <input type="file" accept="image/*" onChange={pick} className="fileovl" />
             {preview && <em>Almashtirish</em>}
+            {image && <small className="picked">✓ Rasm tanlandi</small>}
           </label>
           {err && <div className="err inl">{err}</div>}
+          <div className="tip">💡 Rasm yuklanmasa: botga rasm yuboring va tagiga <b>Nomi | Narxi</b> yozing.</div>
           <label>Nomi<input value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Masalan: Persil 3 kg" /></label>
           <div className="two">
             <label>Kategoriya<select value={f.cat} onChange={(e) => set('cat', e.target.value)}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></label>

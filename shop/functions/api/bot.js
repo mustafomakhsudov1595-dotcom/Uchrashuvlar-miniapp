@@ -1,5 +1,5 @@
 // Telegram webhook: /start va boshqa xabarlarga chiroyli javob + do'kon tugmasi
-import { addProductFromPhoto, deleteCustom, HELP } from '../../src/lib/quickadd.js';
+import { addProductFromPhoto, addProductFromText, deleteCustom, HELP } from '../../src/lib/quickadd.js';
 const APP_URL = 'https://chilling-shop.pages.dev/';
 const ADMIN_URL = 'https://chilling-admin.pages.dev/';
 const adminKb = { inline_keyboard: [[{ text: '🛠️ Admin panelni ochish', web_app: { url: ADMIN_URL } }]] };
@@ -91,6 +91,18 @@ export async function onRequestPost({ request, env }) {
     await tg(env, 'sendMessage', { chat_id: m.chat.id, text: r.text, parse_mode: 'HTML',
       reply_markup: r.id ? { inline_keyboard: [[{ text: '🛠 Admin panel', web_app: { url: ADMIN_URL } }, { text: "🗑 O'chirish", callback_data: 'dp:' + r.id }]] } : undefined });
     return new Response('ok');
+  }
+  if (m?.chat?.type === 'private' && m.text && !m.text.startsWith('/')) {
+    const admins = JSON.parse((await env.KV.get('admins')) || '[]');
+    if (admins.includes(m.chat.id)) {
+      let r = null;
+      try { r = await addProductFromText(env, m); } catch { r = { text: "❗ Xatolik yuz berdi, qayta urinib ko'ring." }; }
+      if (r) {
+        await tg(env, 'sendMessage', { chat_id: m.chat.id, text: r.text, parse_mode: 'HTML',
+          reply_markup: r.id ? { inline_keyboard: [[{ text: '🛠 Admin panel', web_app: { url: ADMIN_URL } }, { text: "🗑 O'chirish", callback_data: 'dp:' + r.id }]] } : undefined });
+        return new Response('ok');
+      }
+    }
   }
   if (m?.chat?.type === 'private') {
     const isStart = (m.text || '').startsWith('/start');
