@@ -261,11 +261,11 @@ async function cameras(el) {
   function ipInfo(c, hint) {
     const link = `${location.origin}/monitor.html?c=${c.id}&k=${c.ingest_key}&src=ip`;
     const dl = `${location.origin}/ipcam_bridge.py`;
-    const cmd = hint?.url ? `python ipcam_bridge.py --source "${hint.url}"` : hint?.ip ? `python ipcam_bridge.py --ip ${hint.ip}${hint.port && hint.port !== 554 ? ' --port ' + hint.port : ''} --user ${hint.user || 'admin'} --password ${hint.pw || 'PAROL'}` : 'python ipcam_bridge.py --ip KAMERA_IP --user admin --password PAROL';
+    const cmd = !hint ? 'python ipcam_bridge.py' : hint?.url ? `python ipcam_bridge.py --source "${hint.url}"` : hint?.ip ? `python ipcam_bridge.py --ip ${hint.ip}${hint.port && hint.port !== 554 ? ' --port ' + hint.port : ''} --user ${hint.user || 'admin'} --password ${hint.pw || 'PAROL'}` : 'python ipcam_bridge.py --ip KAMERA_IP --user admin --password PAROL';
     const m = modal(`<h2>IP kamerani ulash: ${esc(c.name)}</h2>
       <div class="help"><b>Kamera bilan bir tarmoqdagi kompyuterda</b> (ofisdagi PC/noutbuk; u doim yoniq bo'lishi kerak) quyidagilarni bajaring:</div>
       <h3>1. Ko'prik dasturini yuklang</h3><div class="help"><a href="${esc(dl)}" download style="color:var(--brand);font-weight:600">ipcam_bridge.py ni yuklab olish</a><br>Python 3 kerak, so'ng: <code>pip install opencv-python-headless</code></div>
-      <h3>2. Ishga tushiring</h3><div class="help"><code style="display:block;word-break:break-all">${esc(cmd)}</code>Dastur kameraning RTSP yo'lini o'zi topadi. Topilmasa: <code>--source "rtsp://login:parol@IP:554/yo'l"</code></div>
+      <h3>2. Ishga tushiring</h3><div class="help"><code style="display:block;word-break:break-all">${esc(cmd)}</code>${hint ? '' : `Dastur kamerani <b>tarmoqdan o'zi topadi</b>, siz raqamini tanlab, login va parolni kiritasiz (RTSP yo'lini ham o'zi topadi).<br>IP manzilni bilsangiz: <code>python ipcam_bridge.py --ip KAMERA_IP --user admin --password PAROL</code>`}</div>
       <button class="btn ghost sm" id="c1">Buyruqni nusxalash</button>
       <h3>3. Monitor sahifasini oching</h3><div class="help">Shu kompyuterda <b>Chrome yoki Edge</b> da quyidagi havolani oching va "Boshlash"ni bosing (brauzer "mahalliy tarmoqqa ruxsat" so'rasa, ruxsat bering). AI tahlil shu sahifada ishlaydi, uni yopmang:<br><code style="word-break:break-all">${esc(link)}</code></div>
       <div id="qr" style="text-align:center"></div>
@@ -353,7 +353,7 @@ async function cameras(el) {
         src = 'ip';
         mb.querySelector('#qrscan').onclick = () => scanQR(text => {
           const r = parseCameraQR(text), out = mb.querySelector('#qrres');
-          if (r.kind === 'opaque') { qrHint = null; out.style.color = 'var(--warn)'; out.innerHTML = `⚠️ QR o'qildi${r.id ? ' (ID: ' + esc(r.id) + ')' : ''}, lekin bu kamera ishlab chiqaruvchisining <b>yopiq bulut ulashish kodi</b> (${r.len} belgi): uni faqat o'sha kamera ilovasi o'qiy oladi, boshqa sayt ulana olmaydi.<br><b>Nima qilish kerak:</b> kamera ilovasida <b>RTSP/ONVIF</b> ni yoqing, kameraning <b>IP manzili va parolini</b> oling. Ilovada \"RTSP QR\" bo'lsa, shuni skanerlang. Kamera nomini yozib, \"Saqlash\"ni bosing, ko'rsatmada IP/parol kiritiladi.`; return; }
+          if (r.kind === 'opaque') { qrHint = null; out.style.color = 'var(--warn)'; out.innerHTML = `⚠️ QR kod o'qildi${r.id ? ' (ID: ' + esc(r.id) + ')' : ''}. Bu kamera <b>ishlab chiqaruvchining bulut hisobiga bog'langan ruxsatnoma</b> (${r.len} belgi): ichida kameraning IP/RTSP manzili yo'q, uni faqat o'sha kamera ilovasi ochadi.<br><b>Saytga ulash uchun (2 qadam):</b><br>1) Kamera ilovasida <b>RTSP/ONVIF</b> ni yoqing va parol o'rnating.<br>2) Nom bering va "Saqlash"ni bosing: ko'rsatmadagi dastur kamerani tarmoqdan <b>o'zi topadi</b>, faqat parolni kiritasiz.<br><span class="muted">Ilovada "RTSP QR" yoki "IP manzil" bo'lsa, shuni skanerlang: avtomatik ulanadi.</span>`; return; }
           qrHint = r; out.style.color = 'var(--ok)'; out.innerHTML = `✅ QR o'qildi: kamera <b>${esc(r.ip)}</b>${r.user ? ', login <b>' + esc(r.user) + '</b>' : ''}${r.pw ? ', parol saqlangan (faqat shu oynada)' : ''}. Endi nom bering va \"Saqlash\"ni bosing.`;
         });
       }

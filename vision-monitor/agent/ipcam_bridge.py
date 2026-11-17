@@ -6,17 +6,24 @@ VisionMonitor monitor sahifasi (Chrome/Edge) shu kadrlarni o'qib, AI tahlilini b
 Hech qanday port internetga ochilmaydi: faqat shu kompyuterning o'zi ko'ra oladi.
 
 Kerak: Python 3.9+, `pip install opencv-python-headless`
+Eng oson usul (kamerani tarmoqdan o'zi topadi, faqat parol so'raydi):
+    python ipcam_bridge.py
 Ishga tushirish (kamera IP manzili bilan — yo'lni o'zi topadi):
     python ipcam_bridge.py --ip 192.168.1.64 --user admin --password PAROL
 Yoki aniq manzil bilan:
     python ipcam_bridge.py --source "rtsp://admin:PAROL@192.168.1.64:554/Streaming/Channels/101"
 """
 import argparse
+import getpass
+import ipaddress
 import json
 import os
+import re
+import socket
 import sys
 import threading
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import quote
@@ -64,6 +71,94 @@ def find_url(ip, port, user, pw):
                 print("Topildi:", url.replace(pw, "***") if pw else url)
                 return url
     return None
+
+
+# ------------------------------------------------------------------ tarmoqdan kamera qidirish
+def local_subnets():
+    nets = set()
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("10.255.255.255", 1))  # paket yuborilmaydi: faqat chiquvchi interfeys aniqlanadi
+        ip = s.getsockname()[0]; s.close()
+        if ipaddress.ip_address(ip).is_private:
+            nets.add(ipaddress.ip_network(ip + "/24", strict=False))
+    except OSError:
+        pass
+    return list(nets)
+
+
+def port_open(ip, port, timeout=0.35):
+    try:
+        with socket.create_connection((str(ip), port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def onvif_discover(timeout=2.5):
+    msg = ('<?xml version="1.0" encoding="UTF-8"?><e:Envelope xmlns:e="http://www.w3.org/2003/05/soap-envelope" '
+           'xmlns:w="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:d="http://schemas.xmlsoap.org/ws/2005/04/discovery" '
+           'xmlns:dn="http://www.onvif.org/ver10/network/wsdl"><e:Header><w:MessageID>uuid:%s</w:MessageID>'
+           '<w:To>urn:schemas-xmlsoap-org:ws:2005:04:discovery</w:To><w:Action>http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</w:Action></e:Header>'
+           '<e:Body><d:Probe><d:Types>dn:NetworkVideoTransmitter</d:Types></d:Probe></e:Body></e:Envelope>') % uuid.uuid4()
+    out = {}
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(0.5)
+        s.sendto(msg.encode(), ("239.255.255.250", 3702))
+        end = time.time() + timeout
+        while time.time() < end:
+            try:
+                data, addr = s.recvfrom(65535)
+            except socket.timeout:
+                continue
+            m = re.search(r"onvif://www\.onvif\.org/name/([^\s<]+)", data.decode("utf-8", "ignore"))
+            out[addr[0]] = (m.group(1) if m else "").replace("%20", " ")
+        s.close()
+    except OSError:
+        pass
+    return out
+
+
+def scan(subnet=None):
+    nets = [ipaddress.ip_network(subnet, strict=False)] if subnet else local_subnets()
+    if not nets:
+        print("Tarmoq aniqlanmadi. IP manzilni qo'lda kiriting: --ip ...")
+        return []
+    print("Qidirilmoqda:", ", ".join(map(str, nets)), "(10–20 soniya)...")
+    found = {}
+    lock = threading.Lock()
+    ports = [554, 8554, 8000, 37777, 34567]
+
+    def probe(ip):
+        op = [p for p in ports if port_open(ip, p)]
+        if op:
+            with lock:
+                found[str(ip)] = {"ports": op, "name": ""}
+
+    hosts = [h for n in nets for h in n.hosts()]
+    with ThreadPoolExecutor(96) as ex:
+        list(ex.map(probe, hosts))
+    for ip, name in onvif_discover().items():
+        found.setdefault(ip, {"ports": [], "name": ""})["name"] = name or "ONVIF"
+    rows = sorted(found.items(), key=lambda kv: ipaddress.ip_address(kv[0]))
+    return [(ip, v) for ip, v in rows]
+
+
+def wizard(subnet=None):
+    rows = scan(subnet)
+    if not rows:
+        print("Kamera topilmadi. Tekshiring: kamera yoqilgan, shu Wi-Fi/tarmoqda, kamera sozlamasida RTSP/ONVIF yoqilgan.")
+        return None
+    print("\nTopilgan qurilmalar:")
+    for i, (ip, v) in enumerate(rows, 1):
+        print(f"  {i}) {ip}   portlar: {','.join(map(str, v['ports'])) or '-'}   {v['name']}")
+    if not sys.stdin.isatty():
+        return None
+    k = input("Qaysi biri kamera? Raqamini kiriting: ").strip()
+    ip = rows[int(k) - 1][0] if k.isdigit() and 1 <= int(k) <= len(rows) else k
+    user = input("Login [admin]: ").strip() or "admin"
+    pw = getpass.getpass("Parol (kamera ilovasida RTSP/ONVIF uchun o'rnatilgan; kiritganingiz ko'rinmaydi): ")
+    return find_url(ip, 554, user, pw)
 
 
 class Grabber(threading.Thread):
@@ -136,16 +231,25 @@ def make_handler(g):
 def main():
     ap = argparse.ArgumentParser(description="IP kamera ko'prigi")
     ap.add_argument("--source", help="to'liq RTSP manzil yoki 0 (USB kamera)")
+    ap.add_argument("--scan", action="store_true", help="tarmoqdagi kameralarni qidirish va ro'yxatini chiqarish")
+    ap.add_argument("--subnet", help="qidiriladigan tarmoq, masalan 192.168.1.0/24")
     ap.add_argument("--ip"); ap.add_argument("--port", type=int, default=554)
     ap.add_argument("--user", default="admin"); ap.add_argument("--password", default="")
     ap.add_argument("--listen", type=int, default=8099, help="shu kompyuterdagi port")
     ap.add_argument("--width", type=int, default=1280)
     a = ap.parse_args()
     src = a.source
+    if a.scan:
+        for ip, v in scan(a.subnet):
+            print(f"{ip}\tportlar: {','.join(map(str, v['ports'])) or '-'}\t{v['name']}")
+        return
     if not src:
         if not a.ip:
-            sys.exit("--ip yoki --source kerak. Misol: python ipcam_bridge.py --ip 192.168.1.64 --user admin --password PAROL")
-        src = find_url(a.ip, a.port, a.user, a.password)
+            src = wizard(a.subnet)
+            if not src:
+                sys.exit("Ulanmadi. Yoki: python ipcam_bridge.py --ip 192.168.1.64 --user admin --password PAROL")
+        else:
+            src = find_url(a.ip, a.port, a.user, a.password)
         if not src:
             sys.exit("RTSP yo'li topilmadi. Tekshiring: 1) kamerada RTSP/ONVIF yoqilgan, 2) login/parol to'g'ri, 3) kompyuter va kamera bir tarmoqda. "
                      "Kamera modelining RTSP manzilini bilsangiz --source bilan bering.")
