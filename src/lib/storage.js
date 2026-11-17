@@ -498,6 +498,12 @@ export function clearLocalData() {
     for (const k of Object.keys(localStorage)) if (k.startsWith('uchrashuvlar:') && !keep.test(k)) localStorage.removeItem(k);
   } catch { /* ignore */ }
 }
+// Vazifalar (hodimlarga topshiriq): tasks | taskadd | taskdone | taskdel
+export async function taskApi(action, payload = {}) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action, ...payload }) });
+  if (!res.ok) throw new Error(`task ${res.status}`);
+  return res.json();
+}
 export async function fetchLeads() {
   const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'leads' }) });
   if (!res.ok) throw new Error(`leads ${res.status}`);

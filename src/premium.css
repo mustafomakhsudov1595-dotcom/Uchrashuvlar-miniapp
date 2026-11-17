@@ -481,3 +481,12 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .pv-split em { font-style: normal; font-weight: 600; } .pv-split b { font-weight: 800; }
 .pv-split .pv-rate { opacity: 0.7; font-size: 12px; }
 .date-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Vazifalar */
+.tk-form { display: grid; gap: 4px; margin-bottom: 14px; }
+.tk-group { margin-bottom: 14px; } .tk-group h3 { font-family: var(--display); font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.tk-list { list-style: none; display: grid; gap: 8px; }
+.tk-list li { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 18px; background: var(--glass); border: 1px solid var(--line); }
+.tk-list li.over { border-color: #d95050; } .tk-list li.done .tk-main b { text-decoration: line-through; opacity: 0.6; }
+.tk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; } .tk-main b { font-size: 14.5px; } .tk-main small { color: var(--muted); font-size: 12px; }
+.tk-ok { width: 38px; height: 38px; border-radius: 13px; flex: none; font-weight: 800; background: color-mix(in srgb, #2e9b6a 24%, transparent); color: #2e9b6a; }

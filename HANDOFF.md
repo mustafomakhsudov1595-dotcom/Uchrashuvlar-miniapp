@@ -55,3 +55,6 @@ Mini ilova login: `LoginGate` (login+parol) → API `action:"login"` (`ws.tryLog
 
 ## 2026-11-17: Eslatmalar 7/3/1 kun
 Toʻlash kerak (Chiqim): hammasi uchun 7/3/1 kun oldin + kun + kechikkan (`pay.remind`). Kutilayotgan daromad (`inc.js`): oylik toʻlov (obuna) kunidan 7/3/1 kun oldin; loyihada `pdue` (toʻlov kutilayotgan sana, ProjectForm) boʻlsa 7/3/1/0 kun oldin va kechikkan (har 2 kun, 14 kungacha). Hammasi umumiy hisobdagi har bir aʼzoga boradi.
+
+## 2026-11-17: Hodimga vazifa berish
+`tasks.js`: `u.tasks` (+`tdeleted`) umumiy hisobda (WS_DATA/WS_COLL). Bot: `/vazifa` (roʻyxat), `/vazifa Sardor: banner, ertaga 18:00` yoki tugmalar (kimga → muddat); hodimga xabar + «Bajardim»; bajarilsa bergan odamga xabar; eslatma (ertaga/bugun/kechikkan, faqat egasiga, `__fan` oʻchiriladi). Mini ilova: Loyihalar → Vazifalar (`TasksView`), API: `tasks|taskadd|taskdone|taskdel`. Oʻchirish — faqat yaratuvchi yoki admin.

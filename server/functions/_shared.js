@@ -61,7 +61,7 @@ const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
   quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
-  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, bal: null, balAt: 0, services: [], svdeleted: {}, payables: [], pvdeleted: {}, places: [], placesAt: 0, state: null,
+  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, bal: null, balAt: 0, services: [], svdeleted: {}, payables: [], pvdeleted: {}, tasks: [], tdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getPersonal(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
@@ -71,8 +71,8 @@ async function getPersonal(st, id) {
 }
 
 /* ---------- umumiy ish joyi (login/parol): bir hisobga kirgan hamma bir xil maʼlumotni koʻradi ---------- */
-const WS_DATA = ['meetings', 'deleted', 'projects', 'pdeleted', 'subs', 'sdeleted', 'expenses', 'edeleted', 'services', 'svdeleted', 'payables', 'pvdeleted', 'goal', 'goalAt', 'bal', 'balAt', 'places', 'placesAt', 'payInfo'];
-const WS_COLL = [['meetings', 'deleted'], ['projects', 'pdeleted'], ['subs', 'sdeleted'], ['expenses', 'edeleted'], ['services', 'svdeleted'], ['payables', 'pvdeleted']];
+const WS_DATA = ['meetings', 'deleted', 'projects', 'pdeleted', 'subs', 'sdeleted', 'expenses', 'edeleted', 'services', 'svdeleted', 'payables', 'pvdeleted', 'tasks', 'tdeleted', 'goal', 'goalAt', 'bal', 'balAt', 'places', 'placesAt', 'payInfo'];
+const WS_COLL = [['meetings', 'deleted'], ['projects', 'pdeleted'], ['subs', 'sdeleted'], ['expenses', 'edeleted'], ['services', 'svdeleted'], ['payables', 'pvdeleted'], ['tasks', 'tdeleted']];
 const wsKey = (id) => `ws/${id}`;
 // Foydalanuvchi obyektiga ish joyi maʼlumotlarini qoʻyadi (u.ws belgilangan boʻlishi kerak)
 async function applyWs(st, u) {

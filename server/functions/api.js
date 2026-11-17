@@ -78,6 +78,20 @@ exports.handler = async (event) => {
     return json(200, { ok: true, ai: Boolean(ai.text), text: ai.text || seo.requestPrompt(u.lang || 'uz', x, r.text) });
   }
 
+  if (b.action === 'tasks' || b.action === 'taskadd' || b.action === 'taskdone' || b.action === 'taskdel') {
+    const T = require('./tasks');
+    let err = '';
+    if (b.action === 'taskadd') {
+      const text = String(b.text || '').trim().slice(0, 300);
+      if (!text) return json(400, { ok: false, error: 'text' });
+      await T.addTask(st, u, { text, to: String(b.to || u.id), due: /^\d{4}-\d{2}-\d{2}$/.test(b.due) ? b.due : '', time: /^\d{2}:\d{2}$/.test(b.time) ? b.time : '' });
+    } else if (b.action === 'taskdone') { const r = await T.completeTask(st, u, String(b.id || '')); if (r === 'denied') err = 'denied'; }
+    else if (b.action === 'taskdel') { if (T.removeTask(u, String(b.id || '')) === 'denied') err = 'denied'; }
+    if (err) return json(403, { ok: false, error: err });
+    if (b.action !== 'tasks') await S.saveUser(st, u);
+    return json(200, { ok: true, me: String(u.id), members: await T.members(st, u), tasks: (u.tasks || []).slice(0, 200).map(({ r, ...x }) => x) });
+  }
+
   if (b.action === 'leads') {
     if (!S.isAdmin(user.id)) return json(403, { ok: false, error: 'admin' });
     const leads = await require('./ig').recentLeads(st, 60);

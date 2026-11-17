@@ -16,6 +16,7 @@ const ig = require('./ig');
 const health = require('./health');
 const acc = require('./acc');
 const wsm = require('./ws');
+const tasksm = require('./tasks');
 const { tg, esc } = S;
 
 const plain = (h) => h.replace(/<[^>]+>/g, '').trim();
@@ -375,7 +376,7 @@ async function onMessage(st, m) {
   if (cmd && cmd !== '/yangi') u.state = null;
   if (!cmd && u.state && u.state.kind === 'p' && !text) { await send(chat, T.pleaseText); return S.saveUser(st, u); }
 
-  if (await team.onMessage(chat, u, cmd, st) || await pay.onMessage(chat, u, cmd, args, text) || await ig.onMessage(chat, u, cmd, args, text) || await health.onMessage(chat, u, cmd) || await wsm.onMessage(chat, u, cmd, args, text) || await acc.onMessage(chat, u, cmd, args, text) || await insight.onMessage(chat, u, cmd) || await chatAi.onMessage(chat, u, cmd) || await msgs.onMessage(chat, u, cmd, args) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
+  if (await team.onMessage(chat, u, cmd, st) || await pay.onMessage(chat, u, cmd, args, text) || await ig.onMessage(chat, u, cmd, args, text) || await health.onMessage(chat, u, cmd) || await wsm.onMessage(chat, u, cmd, args, text) || await tasksm.onMessage(chat, u, cmd, args, text) || await acc.onMessage(chat, u, cmd, args, text) || await insight.onMessage(chat, u, cmd) || await chatAi.onMessage(chat, u, cmd) || await msgs.onMessage(chat, u, cmd, args) || await svc.onMessage(chat, u, cmd, args, text) || await ext.onMessage(chat, u, cmd, args, text) || await fin.onMessage(chat, u, cmd, args, text) || await proj.onMessage(chat, u, cmd, args, text)) { await S.saveUser(st, u); return null; }
 
   if (cmd === '/start') {
     if (args.startsWith('j_')) await joinInvite(chat, st, u, from, args.slice(2));
@@ -456,6 +457,7 @@ async function onCallback(st, q) {
   else if (health.ACTS.includes(act)) { toast = await health.onCallback(ctx, u, act); }
   else if (acc.ACTS.includes(act)) { toast = await acc.onCallback(ctx, u, act, a); }
   else if (wsm.ACTS.includes(act)) { toast = await wsm.onCallback(ctx, u, act, a, b); }
+  else if (tasksm.ACTS.includes(act)) { toast = await tasksm.onCallback(ctx, u, act, a); }
   else if (chatAi.ACTS.includes(act)) { toast = await chatAi.onCallback(ctx, u, act, a); }
   else if (msgs.ACTS.includes(act)) { toast = await msgs.onCallback(ctx, u, act, a, b, c); }
   else if (team.ACTS.includes(act)) { toast = await team.onCallback(ctx, st, u, act, a); }
