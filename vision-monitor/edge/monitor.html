@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="uz"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>Kamera monitori — VisionMonitor</title>
+<style>
+:root{--bg:#0b1220;--card:#131c2e;--line:#233049;--mute:#8a99b2;--ok:#4ade80;--bad:#f87171;--brand:#2563eb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#e6edf7;font:15px/1.45 system-ui,-apple-system,sans-serif;padding:14px 14px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;align-items:center}
+.wrap{width:100%;max-width:720px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:19px;margin:0}.mute{color:var(--mute);font-size:13px}
+.stage{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:4/3}
+.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+button,select{font:inherit;padding:12px 16px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:600;min-height:46px}
+button:disabled{opacity:.55}select{background:var(--card);border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+#st{font-weight:600}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.people{display:flex;flex-direction:column;gap:6px;font-size:14px}.people div{display:flex;justify-content:space-between;gap:8px}
+.bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--brand);width:0;transition:width .3s}
+</style></head><body><div class="wrap">
+<h1>📷 <span id="camname">Kamera monitori</span></h1>
+<div class="stage"><video id="v" playsinline muted autoplay></video><canvas id="ov"></canvas></div>
+<div class="card"><div id="st">Modellar yuklanmoqda...</div><div class="bar" style="margin-top:8px"><i id="pb"></i></div><div class="mute" id="sub" style="margin-top:6px"></div></div>
+<div class="row"><select id="facing"><option value="user">Old kamera</option><option value="environment">Orqa kamera</option></select><button id="go" disabled>Boshlash</button></div>
+<div class="card people" id="people"><span class="mute">Hozircha hech kim ko'rinmayapti</span></div>
+<div class="mute">🔒 Video qurilmangizdan chiqmaydi: tahlil shu yerning o'zida bajariladi, serverga faqat hodisalar (kim, qachon, nima qildi) va hodisa paytidagi bitta kadr yuboriladi. Ishlash vaqtida ekranni yoqiq va sahifani ochiq qoldiring.</div>
+</div>
+<script src="monitor.js"></script></body></html>

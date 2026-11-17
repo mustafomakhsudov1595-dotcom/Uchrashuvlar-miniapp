@@ -86,3 +86,10 @@ Dasturchi muhitida tekshirildi: ro'yxatdan o'tish/kirish, demo ma'lumot, kunlik/
 ## Telefonda ishlatish
 Interfeys telefon uchun moslangan: pastki menyu, jadvallar kartochkaga aylanadi, oynalar pastdan chiqadi, tugmalar barmoq uchun qulay.
 **Ilova sifatida o'rnatish:** Android (Chrome) — menyu → "Ilovani o'rnatish"; iPhone (Safari) — "Ulashish" → "Bosh ekranga qo'shish". Shunda to'liq ekranda, ilova kabi ochiladi. (HTTPS manzildan ochilganda ishlaydi.)
+
+## Cloudflare (edge) versiyasi — serversiz ishlaydi
+`edge/` papkasi: backend Cloudflare Worker + Durable Object (SQLite) da, AI esa **telefon/noutbuk brauzerida** ishlaydi (yuz tanish — face-api, telefon — MediaPipe, jins/yosh, og'iz harakati). Video qurilmadan chiqmaydi, serverga faqat hodisalar boradi.
+```bash
+python edge/build.py && python edge/deploy.py <CLOUDFLARE_ACCOUNT_ID> visionmonitor
+```
+Kamera = telefon yoki noutbuk (kabinet → Kameralar → havola → qurilmada ochish → "Boshlash"). IP kameralar (RTSP) uchun Python server + agent kerak (yuqoriga qarang). Cheklov: edge versiyada odam yuzi kadrda ko'rinishi shart; aniqlik face-api (128-o'lchamli) darajasida, ArcFace'dan past.

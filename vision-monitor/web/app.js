@@ -160,7 +160,7 @@ async function cameras(el) {
     el.innerHTML = `<div class="top"><div><h1>Kameralar</h1><div class="muted">Kamera qo'shing — sun'iy intellekt avtomatik tahlil qiladi</div></div><button class="btn right" id="add">+ Kamera qo'shish</button></div>
     ${!(sys.yolo && sys.insightface && sys.mediapipe) ? `<div class="card" style="border-color:var(--warn);margin-bottom:16px"><b>⚠️ AI kutubxonalari to'liq o'rnatilmagan.</b> Serverda <code>pip install -r requirements.txt</code> ni ishga tushiring. "demo" manba bunsiz ishlaydi.</div>` : ''}
     <div class="grid g2" style="grid-template-columns:repeat(auto-fill,minmax(360px,1fr))">${cams.map(c => `
-      <div class="card cam"><div class="view">${c.status === 'online' ? `<img src="/api/cameras/${c.id}/stream?token=${token}" alt="">` : `<div style="padding:20px;text-align:center">${c.status === 'disabled' ? "O'chirilgan" : esc(c.error || 'Ulanmoqda...')}</div>`}</div>
+      <div class="card cam"><div class="view">${window.VM_EDGE ? `<div style="padding:20px;text-align:center">${c.status === 'online' ? `📱 Onlayn · ${c.people} kishi ko'rinmoqda<div class="small" style="margin-top:6px">Video qurilmada qoladi (maxfiylik)</div>` : esc(c.error || 'Kutilmoqda')}</div>` : c.status === 'online' ? `<img src="/api/cameras/${c.id}/stream?token=${token}" alt="">` : `<div style="padding:20px;text-align:center">${c.status === 'disabled' ? "O'chirilgan" : esc(c.error || 'Ulanmoqda...')}</div>`}</div>
       <div class="body"><div class="row"><h3>${esc(c.name)}</h3>${badge(c.status)}<span class="right muted small">${c.role === 'entrance' ? '🚪 Kirish' : '🏢 Ofis'}</span></div>
       <div class="muted small" style="word-break:break-all">${esc(c.source)}${c.status === 'online' ? ` · ${c.fps} kadr/s · ${c.people} kishi` : ''}</div>
       <div class="row">${c.source === 'push' ? `<button class="btn ghost sm" data-push="${c.id}">Ulash ko'rsatmasi</button>` : ''}<button class="btn ghost sm" data-edit="${c.id}">Tahrirlash</button><button class="btn ghost sm" data-del="${c.id}">O'chirish</button></div></div></div>`).join('') ||
@@ -174,30 +174,31 @@ async function cameras(el) {
     });
   }
   function pushInfo(c) {
-    const link = `${location.origin}/camera.html?c=${c.id}&k=${c.ingest_key}`;
+    const link = `${location.origin}/${window.VM_EDGE ? 'monitor' : 'camera'}.html?c=${c.id}&k=${c.ingest_key}`;
     const secure = location.protocol === 'https:' || location.hostname === 'localhost';
     const cmd = `python camera_agent.py --server ${location.origin} --camera ${c.id} --key ${c.ingest_key} --source "rtsp://LOGIN:PAROL@KAMERA_IP:554/YO'L"`;
     const m = modal(`<h2>Ulash ko'rsatmasi: ${esc(c.name)}</h2>
       <h3>📱 Telefon yoki noutbuk kamerasi</h3>
-      <div class="help">Telefonda quyidagi havolani oching va "Boshlash"ni bosing:<br><code style="word-break:break-all">${esc(link)}</code>
+      <div class="help">Telefon/noutbukda quyidagi havolani oching, kameraga ruxsat bering va "Boshlash"ni bosing (shu qurilma kamera + AI vazifasini bajaradi):<br><code style="word-break:break-all">${esc(link)}</code>
       ${secure ? '' : '<br><b style="color:var(--bad)">Diqqat: telefon kamerasi faqat HTTPS saytda ishlaydi.</b>'}</div>
       <button class="btn ghost sm" id="cl">Havolani nusxalash</button>
-      <h3>🖥 Ofis agenti (IP kamera uchun, sayt internetda bo'lsa)</h3>
+      ${window.VM_EDGE ? '' : `      <h3>🖥 Ofis agenti (IP kamera uchun, sayt internetda bo'lsa)</h3>
       <div class="help">Ofisdagi kompyuterda (kamera bilan bir tarmoqda): <code>pip install opencv-python-headless</code>, so'ng <code>agent/camera_agent.py</code> faylini yuklab, ishga tushiring:<br><code style="word-break:break-all;display:block;margin-top:6px">${esc(cmd)}</code></div>
       <button class="btn ghost sm" id="cc">Buyruqni nusxalash</button>
+`}
       <button class="btn" onclick="this.closest('.modal-bg').remove()">Tushunarli</button>`);
     m.querySelector('#cl').onclick = () => { navigator.clipboard?.writeText(link); toast('Nusxalandi'); };
-    m.querySelector('#cc').onclick = () => { navigator.clipboard?.writeText(cmd); toast('Nusxalandi'); };
+    const cc = m.querySelector('#cc'); if (cc) cc.onclick = () => { navigator.clipboard?.writeText(cmd); toast('Nusxalandi'); };
   }
   function camForm(c) {
-    let method = c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
+    let method = window.VM_EDGE ? 'push' : c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
     const m = modal('<div id="cfbody"></div>');
     const box = m.querySelector('#cfbody');
     const METHODS = [['scan', '🔍 Tarmoqdan qidirish'], ['ip', '📷 IP kamera'], ['url', '✍️ Manzil (URL)'], ['push', '📱 Telefon / 🖥 Agent']];
     async function draw() {
       if (!brands.length) brands = await api('/cameras/brands');
       box.innerHTML = `<h2>${c ? 'Kamerani tahrirlash' : "Kamera qo'shish"}</h2>
-      ${c ? '' : `<div class="tabs" style="flex-wrap:wrap">${METHODS.map(([k, t]) => `<button data-m="${k}" class="${method === k ? 'on' : ''}">${t}</button>`).join('')}</div>`}
+      ${c || window.VM_EDGE ? '' : `<div class="tabs" style="flex-wrap:wrap">${METHODS.map(([k, t]) => `<button data-m="${k}" class="${method === k ? 'on' : ''}">${t}</button>`).join('')}</div>`}
       <div id="mbody" style="display:flex;flex-direction:column;gap:12px"></div>
       <form id="cf" style="display:flex;flex-direction:column;gap:12px">
         <label>Kamera nomi<input name="name" required value="${esc(c?.name || '')}" placeholder="Masalan: Ofis asosiy zal"></label>
@@ -241,7 +242,7 @@ async function cameras(el) {
       }
       if (method === 'url') mb.innerHTML = `<div class="help">• IP kamera: <code>rtsp://login:parol@IP:554/yo'l</code><br>• HTTP/MJPEG: <code>http://IP:8080/video</code><br>• Serverga ulangan USB kamera: <code>0</code> · Sinash uchun: <code>demo</code></div>`;
       if (method === 'push') {
-        mb.innerHTML = `<div class="help"><b>Sayt internetda (bulutda) bo'lganda</b> u ofis ichidagi IP kameraga ulana olmaydi. Bu usulda kadrlar sizning tomoningizdan yuboriladi:<br>• <b>Telefon/noutbuk kamerasi</b> — maxsus havolani brauzerda ochasiz<br>• <b>Ofis agenti</b> — ofisdagi kompyuterda kichik dastur kameradan olib saytga yuboradi (portlarni ochish shart emas)<br>Saqlagandan so'ng ko'rsatma chiqadi.</div>`;
+        mb.innerHTML = `${window.VM_EDGE ? `<div class="help"><b>Kamera = telefon yoki noutbuk.</b> Saqlagandan so'ng havola chiqadi: uni kamera sifatida ishlatmoqchi bo'lgan qurilmada oching. Yuz tanish, jins, telefon va gaplashuv shu qurilmaning o'zida aniqlanadi, video internetga chiqmaydi.</div>` : `<div class="help"><b>Sayt internetda (bulutda) bo'lganda</b> u ofis ichidagi IP kameraga ulana olmaydi. Bu usulda kadrlar sizning tomoningizdan yuboriladi:<br>• <b>Telefon/noutbuk kamerasi</b> — maxsus havolani brauzerda ochasiz<br>• <b>Ofis agenti</b> — ofisdagi kompyuterda kichik dastur kameradan olib saytga yuboradi (portlarni ochish shart emas)<br>Saqlagandan so'ng ko'rsatma chiqadi.</div>`}`;
         src = 'push';
       }
       const form = box.querySelector('#cf');
@@ -294,7 +295,7 @@ async function employees(el) {
       const fs = m.querySelector('#ff').files; if (!fs.length) return;
       ev.target.disabled = true; m.querySelector('#ferr').style.color = 'var(--mute)'; m.querySelector('#ferr').textContent = 'Yuklanmoqda (birinchi marta model yuklanishi mumkin)...';
       const fd = new FormData(); [...fs].forEach(f => fd.append('files', f));
-      try { const r = await api(`/employees/${e.id}/faces`, {method: 'POST', body: fd});
+      try { const r = window.VM_EDGE ? await window.edgeEnroll(e.id, fs) : await api(`/employees/${e.id}/faces`, {method: 'POST', body: fd});
         if (r.problems.length) { m.querySelector('#ferr').style.color = 'var(--bad)'; m.querySelector('#ferr').innerHTML = `${r.added} ta qabul qilindi. Rad etilganlar:<br>` + r.problems.map(esc).join('<br>'); ev.target.disabled = false; load(); return; }
         toast(`${r.added} ta rasm qo'shildi${r.gender ? ' · jins: ' + GEN[r.gender] : ''}`); m.close(); load(); }
       catch (er) { m.querySelector('#ferr').style.color = 'var(--bad)'; m.querySelector('#ferr').textContent = er.message; ev.target.disabled = false; }
