@@ -174,7 +174,7 @@ async function remind(u, now) {
   let dirty = false, sent = 0;
   if (!u.remind || S.inQuiet(u, hhmm) || hhmm < '09:00') return { dirty, sent };
   for (const x of S.payOpen(u)) {
-    const d = S.daysBetween(today, x.due), kind = d === 7 && x.cn ? 'd7' : d === 3 ? 'd3' : d === 1 ? 'd1' : d === 0 ? 'd0' : d < 0 && d >= -14 ? 'o' : '';
+    const d = S.daysBetween(today, x.due), kind = d === 7 ? 'd7' : d === 3 ? 'd3' : d === 1 ? 'd1' : d === 0 ? 'd0' : d < 0 && d >= -14 ? 'o' : '';
     if (!kind) continue;
     const r = x.r || (x.r = {}), key = kind === 'o' ? `${today}:o` : `${x.due}:${kind}`;
     if ((r.k || []).includes(key)) continue;

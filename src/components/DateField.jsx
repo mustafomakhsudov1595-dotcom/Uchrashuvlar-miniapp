@@ -4,7 +4,7 @@ import { addDays, formatWithWeekday, fromISODate, monthGrid, monthTitle, toISODa
 import { t } from '../lib/i18n.js';
 
 // Chiroyli sana tanlash: tizimning standart kalendari oʻrniga formaning ichida ochiladigan kalendar.
-export default function DateField({ id, value, onChange, invalid = false, quick = true }) {
+export default function DateField({ id, value, onChange, invalid = false, quick = true, clearable = false }) {
   const [open, setOpen] = useState(false);
   const today = toISODate(new Date());
   const base = value ? fromISODate(value) : new Date();
@@ -34,6 +34,7 @@ export default function DateField({ id, value, onChange, invalid = false, quick 
       </button>
       {open && (
         <div className="date-pop">
+          {clearable && value && <button type="button" className="cat-chip" style={{ marginBottom: 10 }} onClick={() => pick('')}>✕ {t('dfClear')}</button>}
           {quick && (
             <div className="date-chips">
               {chips.map(([l, v]) => <button type="button" key={l} className={`cat-chip${value === v ? ' on' : ''}`} onClick={() => pick(v)}>{l}</button>)}

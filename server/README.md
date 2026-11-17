@@ -64,3 +64,4 @@ Eslatma: cron har daqiqa barcha foydalanuvchilarni o'qiydi — Workers bepul rej
 - `acc.js` balans: `/balans`, `S.balanceInfo`, `S.setBalance`; toʻlovdan keyin xabarda balans koʻrsatiladi.
 - `acc.js` hamyonlar, dollar, kurs (`/kurs`), oʻtkazma (`/otkazma`); `_shared.getRate` — Markaziy bank kursi.
 - `ws.js` — umumiy hisob (login/parol), `/kirish`, `/chiqish`, `/hisobim`, admin panel `/admin`.
+- `inc.js` — kutilayotgan daromad eslatmalari (obuna kuni, loyiha `pdue`) 7/3/1 kun oldin.

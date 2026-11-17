@@ -20,6 +20,7 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
     notes: initial?.notes ?? '',
     url: initial?.url ?? '',
     domExp: initial?.domExp ?? '',
+    pdue: initial?.pdue ?? '',
   }));
   const [errors, setErrors] = useState({});
   const set = (k) => (e) => {
@@ -34,7 +35,7 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     const num = (v) => (v === '' || v === null || !Number.isFinite(Number(v)) ? null : Math.max(0, Number(v)));
-    onSave({ name: f.name.trim(), type: f.type, client: f.client.trim(), contact: f.contact.trim(), date: f.date, time: f.time || '18:00', price: num(f.price), paid: num(f.paid), notes: f.notes.trim(), url: f.url.trim(), domExp: f.domExp || '' });
+    onSave({ name: f.name.trim(), type: f.type, client: f.client.trim(), contact: f.contact.trim(), date: f.date, time: f.time || '18:00', price: num(f.price), paid: num(f.paid), notes: f.notes.trim(), url: f.url.trim(), domExp: f.domExp || '', pdue: f.pdue || '' });
   };
   const formId = `${uid}-form`;
 
@@ -101,6 +102,11 @@ export default function ProjectForm({ initial, presetType, onSave, onClose }) {
             <label htmlFor={`${uid}-pd`}>{t('pfPaid')}</label>
             <input id={`${uid}-pd`} className="input" type="number" inputMode="numeric" min="0" value={f.paid} onChange={set('paid')} placeholder="0" />
           </div>
+        </div>
+        <div className="field">
+          <label htmlFor={`${uid}-pdue`}>{t('pfPdue')}</label>
+          <DateField id={`${uid}-pdue`} value={f.pdue} onChange={(v) => setF((p) => ({ ...p, pdue: v }))} clearable />
+          <small className="hint">{t('pfPdueHint')}</small>
         </div>
 
         {f.type === 'site' && (

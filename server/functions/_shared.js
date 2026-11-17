@@ -257,7 +257,7 @@ function cleanProject(p) {
     type: PTYPES.includes(p.type) ? p.type : 'other', status: PSTATUS.includes(p.status) ? p.status : 'new', date: p.date, time: TIME_RE.test(p.time) ? p.time : '18:00',
     price: price !== null && price >= 0 ? price : null, paid: paid !== null && paid >= 0 ? paid : null, notes: typeof p.notes === 'string' ? p.notes.slice(0, 1500) : '',
     pays: Array.isArray(p.pays) ? p.pays.filter((x) => x && Number(x.a) > 0 && DATE_RE.test(x.d)).slice(-40).map((x) => ({ a: Math.round(Number(x.a)), d: x.d })) : [],
-    url: cleanUrl(p.url), domExp: DATE_RE.test(p.domExp) ? p.domExp : '', mon: p.mon && typeof p.mon === 'object' ? p.mon : undefined,
+    url: cleanUrl(p.url), domExp: DATE_RE.test(p.domExp) ? p.domExp : '', pdue: DATE_RE.test(p.pdue) ? p.pdue : '', mon: p.mon && typeof p.mon === 'object' ? p.mon : undefined,
     tasks: Array.isArray(p.tasks) ? p.tasks.filter((t) => t && typeof t.text === 'string' && t.text.trim()).slice(0, 80).map((t) => ({ id: String(t.id || newId()).slice(0, 64), text: t.text.trim().slice(0, 120), done: Boolean(t.done), due: DATE_RE.test(t.due) ? t.due : '' })) : [],
     createdAt: Number(p.createdAt) || Date.now(), updatedAt: Number(p.updatedAt) || 0, r: p.r,
   };

@@ -92,6 +92,7 @@ export function cleanProject(p) {
     notes: typeof p.notes === 'string' ? p.notes : '',
     url: typeof p.url === 'string' ? p.url.trim().slice(0, 200) : '',
     domExp: DATE_RE.test(p.domExp) ? p.domExp : '',
+    pdue: DATE_RE.test(p.pdue) ? p.pdue : '',
     mon: p.mon && typeof p.mon === 'object' ? { ok: Boolean(p.mon.ok), code: p.mon.code ?? '', at: Number(p.mon.at) || 0 } : undefined,
     pays: Array.isArray(p.pays) ? p.pays.filter((x) => x && Number(x.a) > 0 && DATE_RE.test(x.d)).slice(-40).map((x) => ({ a: Math.round(Number(x.a)), d: x.d })) : [],
     tasks: Array.isArray(p.tasks)
