@@ -82,3 +82,7 @@ Dasturchi muhitida tekshirildi: ro'yxatdan o'tish/kirish, demo ma'lumot, kunlik/
 
 ## Tuzilma
 `app/main.py` (API) · `app/discovery.py` (kamera qidirish/avto-ulash) · `agent/` (ofis agenti) · `app/engine.py` (kamera ishchilari) · `app/ai/` (YOLO, yuz, kuzatuvchi, holat aniqlash) · `app/activity.py` (intervallar yozuvi) · `app/reports.py` (hisobotlar) · `web/` (interfeys)
+
+## Telefonda ishlatish
+Interfeys telefon uchun moslangan: pastki menyu, jadvallar kartochkaga aylanadi, oynalar pastdan chiqadi, tugmalar barmoq uchun qulay.
+**Ilova sifatida o'rnatish:** Android (Chrome) — menyu → "Ilovani o'rnatish"; iPhone (Safari) — "Ulashish" → "Bosh ekranga qo'shish". Shunda to'liq ekranda, ilova kabi ochiladi. (HTTPS manzildan ochilganda ishlaydi.)

@@ -83,14 +83,14 @@ function authView(mode = 'login') {
 }
 
 /* ---------- Shell ---------- */
-const NAV = [['dashboard', '🏠', 'Bosh sahifa'], ['cameras', '📹', 'Kameralar'], ['employees', '👥', 'Xodimlar'], ['unknown', '🧑‍🤝‍🧑', 'Tanilmaganlar'], ['reports', '📊', 'Hisobotlar'], ['settings', '⚙️', 'Sozlamalar']];
+const NAV = [['dashboard', '🏠', 'Bosh sahifa', 'Bosh'], ['cameras', '📹', 'Kameralar', 'Kamera'], ['employees', '👥', 'Xodimlar', 'Xodim'], ['unknown', '🧑‍🤝‍🧑', 'Tanilmaganlar', 'Yuzlar'], ['reports', '📊', 'Hisobotlar', 'Hisobot'], ['settings', '⚙️', 'Sozlamalar', 'Sozlama']];
 async function render() {
   clearInterval(timer);
   if (!token) return authView();
   try { me = await api('/me'); settings = await api('/settings'); } catch { return authView(); }
   const page = (location.hash.replace('#/', '') || 'dashboard').split('?')[0];
   $('#app').innerHTML = `<div class="shell"><aside class="side"><div class="logo"><i></i>VisionMonitor</div>
-    <nav class="nav">${NAV.map(([k, ic, t]) => `<a href="#/${k}" class="${page === k ? 'on' : ''}"><span>${ic}</span>${t}</a>`).join('')}</nav>
+    <nav class="nav">${NAV.map(([k, ic, t, sh]) => `<a href="#/${k}" class="${page === k ? 'on' : ''}"><span>${ic}</span><i class="full">${t}</i><i class="short">${sh}</i></a>`).join('')}</nav>
     <div class="who"><b>${esc(me.name)}</b><div class="muted">${esc(me.company || me.email)}</div><button class="link" id="lo" style="margin-top:6px;color:#93c5fd">Chiqish</button></div></aside>
     <main class="main" id="main"></main></div>`;
   $('#lo').onclick = logout;
@@ -130,7 +130,7 @@ async function dashboard(el) {
       <div class="card kpi"><div class="l">Hozir gaplashmoqda</div><div class="v">${s.talking}</div><div class="s">Bugun jami: ${dur(s.talk_sec)}</div></div>
     </div>
     <div class="grid g2" style="margin-top:16px;grid-template-columns:minmax(0,1fr) 340px">
-      <div class="card"><h2 style="margin-bottom:10px">Xodimlar holati (jonli)</h2><div class="scroll"><table class="compact">
+      <div class="card"><h2 style="margin-bottom:10px">Xodimlar holati (jonli)</h2><div class="scroll"><table class="compact stack">
         <tr><th>Xodim</th><th>Holat</th><th>Kelgan</th><th>Tashqarida</th><th>📱 / 💬</th></tr>
         ${emps.map(p => `<tr class="click" data-e="${p.employee_id}"><td><b>${esc(p.name)}</b> <span class="muted">${p.gender === 'M' ? '♂' : p.gender === 'F' ? '♀' : ''}</span><div class="muted small">${esc(p.position)}</div></td><td>${badge(p.status)}</td>
           <td>${p.arrival ? esc(p.arrival.slice(0, 5)) + (p.late_min ? ` <span class="pill-late">(+${p.late_min} daq)</span>` : ' <span class="pill-ok">✓</span>') : '—'}</td>
@@ -265,7 +265,7 @@ async function employees(el) {
   async function load() {
     const list = await api('/employees');
     el.innerHTML = `<div class="top"><div><h1>Xodimlar</h1><div class="muted">Yuz rasmi qo'shilsa, kamera xodimni ismi bilan taniydi</div></div><button class="btn right" id="add">+ Xodim qo'shish</button></div>
-    <div class="card scroll"><table><tr><th>Xodim</th><th>Lavozim</th><th>Jins</th><th>Yuz namunalari</th><th></th></tr>
+    <div class="card scroll"><table class="stack"><tr><th>Xodim</th><th>Lavozim</th><th>Jins</th><th>Yuz namunalari</th><th></th></tr>
     ${list.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.position) || '—'}</td><td>${GEN[e.gender] || '—'}</td>
       <td>${e.faces ? `<span class="pill-ok">✓ ${e.faces} ta rasm</span>` : '<span class="pill-late">Rasm yo\'q — tanib bo\'lmaydi</span>'}</td>
       <td style="text-align:right"><button class="btn ghost sm" data-f="${e.id}">📷 Yuz rasmi</button> <button class="btn ghost sm" data-e="${e.id}">Tahrirlash</button> <button class="btn ghost sm" data-d="${e.id}">O'chirish</button></td></tr>`).join('') || '<tr><td colspan=5 class="empty">Hali xodim qo\'shilmagan</td></tr>'}</table></div>
@@ -375,7 +375,7 @@ async function reports(el) {
       ${timeline(p, d)}
       <div class="detail" hidden>
         <h3 style="margin:14px 0 6px">Tashqariga chiqishlar</h3>
-        ${p.away.length ? `<table><tr><th>Chiqdi</th><th>Qaytdi</th><th>Davomiyligi</th></tr>${p.away.map(a => `<tr><td>${esc(a.start_s.slice(0, 8))}</td><td>${a.ongoing ? '<span class="pill-late">hali qaytmadi</span>' : esc(a.end_s.slice(0, 8))}</td><td><b>${dur(a.dur)}</b></td></tr>`).join('')}</table>` : '<div class="muted small">Chiqmagan</div>'}
+        ${p.away.length ? `<table class="stack lf"><tr><th>Chiqdi</th><th>Qaytdi</th><th>Davomiyligi</th></tr>${p.away.map(a => `<tr><td>${esc(a.start_s.slice(0, 8))}</td><td>${a.ongoing ? '<span class="pill-late">hali qaytmadi</span>' : esc(a.end_s.slice(0, 8))}</td><td><b>${dur(a.dur)}</b></td></tr>`).join('')}</table>` : '<div class="muted small">Chiqmagan</div>'}
         <h3 style="margin:14px 0 6px">Telefon va gaplashuvlar (aniq vaqt bilan)</h3>
         ${p.events.length ? `<div class="feed" style="max-height:340px">${p.events.map(e => `<div class="ev">${e.snapshot ? `<img data-src="${esc(e.snapshot)}" src="/api/snap/${esc(e.snapshot)}?token=${token}" loading="lazy" alt="">` : '<div class="ph">—</div>'}
           <div><span class="dot" style="display:inline-block;background:${KCOL[e.kind]}"></span> <b>${KIND[e.kind]}</b><div class="muted small">${esc(e.start)} → ${esc(e.end)}</div></div><div class="right"><b>${dur(e.dur)}</b></div></div>`).join('')}</div>` : '<div class="muted small">Qayd etilmagan</div>'}
@@ -397,7 +397,7 @@ async function reports(el) {
     $('#rep').innerHTML = `<div class="card" style="margin-bottom:16px"><h2>Kunlar bo'yicha (telefon · gaplashuv · tashqarida)</h2>
       <div class="bars">${r.days.map(x => `<div class="col" title="${x.date}: telefon ${dur(x.phone_sec)}, gaplashuv ${dur(x.talk_sec)}, tashqarida ${dur(x.away_sec)}"><div class="stk" style="height:${Math.round((x.phone_sec + x.talk_sec + x.away_sec) / mx * 80)}px">
         <div class="s-phone_call" style="flex:${x.phone_sec}"></div><div class="s-talking" style="flex:${x.talk_sec}"></div><div class="s-away" style="flex:${x.away_sec}"></div></div>${x.date.slice(5)}</div>`).join('')}</div></div>
-      <div class="card scroll"><table><tr><th>Xodim</th><th>Kelgan kun</th><th>Kechikish</th><th>Ishxonada</th><th>Tashqarida</th><th>Telefonda</th><th>Telefon ishl.</th><th>Gaplashgan</th></tr>
+      <div class="card scroll"><table class="stack"><tr><th>Xodim</th><th>Kelgan kun</th><th>Kechikish</th><th>Ishxonada</th><th>Tashqarida</th><th>Telefonda</th><th>Telefon ishl.</th><th>Gaplashgan</th></tr>
       ${r.people.map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${p.days_came}</td><td>${p.late_days ? `<span class="pill-late">${p.late_days} kun · ${p.late_min} daq</span>` : '<span class="pill-ok">—</span>'}</td>
         <td>${dur(p.worked_sec)}</td><td>${dur(p.away_sec)} <span class="muted small">(${p.away_count}×)</span></td><td>${dur(p.phone_call_sec)} <span class="muted small">(${p.phone_call_count}×)</span></td>
         <td>${dur(p.phone_use_sec)} <span class="muted small">(${p.phone_use_count}×)</span></td><td>${dur(p.talking_sec)} <span class="muted small">(${p.talking_count}×)</span></td></tr>`).join('') || '<tr><td colspan=8 class="empty">Ma\'lumot yo\'q</td></tr>'}</table></div>`;
@@ -426,3 +426,14 @@ async function settingsPage(el) {
 }
 
 render();
+
+/* ---------- Telefon: jadval ustun nomlarini kataklarga yozish (kartochka ko'rinishi uchun) ---------- */
+function labelTables() {
+  document.querySelectorAll('table.stack').forEach(t => {
+    const hs = [...t.querySelectorAll('tr:first-child th')].map(h => h.textContent.trim());
+    if (!hs.length) return;
+    t.querySelectorAll('tr').forEach(tr => [...tr.children].forEach((td, i) => { if (td.tagName === 'TD' && !td.dataset.l && hs[i]) td.dataset.l = hs[i]; }));
+  });
+}
+new MutationObserver(() => labelTables()).observe(document.body, {childList: true, subtree: true});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
