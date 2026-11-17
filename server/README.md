@@ -66,3 +66,4 @@ Eslatma: cron har daqiqa barcha foydalanuvchilarni o'qiydi — Workers bepul rej
 - `ws.js` — umumiy hisob (login/parol), `/kirish`, `/chiqish`, `/hisobim`, admin panel `/admin`.
 - `inc.js` — kutilayotgan daromad eslatmalari (obuna kuni, loyiha `pdue`) 7/3/1 kun oldin.
 - `tasks.js` — hodimga vazifa berish (bot `/vazifa`, mini ilova Vazifalar).
+- `biz.js` — Telegram Business (Chat Automation): akkaunt nomidan AI javob, lidlar `ig.js` bilan umumiy.

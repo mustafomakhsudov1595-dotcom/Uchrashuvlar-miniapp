@@ -162,10 +162,11 @@ async function handleIncoming(st, c, senderId, text, opts = {}) {
   let lead = await getLead(st, senderId);
   const isNew = !lead;
   if (isNew) {
-    const pf = opts.test ? { name: 'Sinov', username: 'test' } : await igProfile(senderId);
-    lead = { id: senderId, name: pf.name || '', username: pf.username || '', first: now, last: now, intent: '', phone: '', hot: false, handoff: false, muted: 0, msgs: [], n: 0 };
+    const pf = opts.profile || (opts.test ? { name: 'Sinov', username: 'test' } : await igProfile(senderId));
+    lead = { id: senderId, name: pf.name || '', username: pf.username || '', ...(opts.src ? { src: opts.src } : {}), first: now, last: now, intent: '', phone: '', hot: false, handoff: false, muted: 0, msgs: [], n: 0 };
   }
   lead.last = now; lead.n += 1;
+  if (opts.conn) { lead.conn = opts.conn; lead.chatId = opts.chatId; }
   lead.msgs.push({ r: 'u', t: text.slice(0, 600), ts: now });
   const ph = text.match(PHONE_RE);
   const gotPhone = Boolean(ph && !lead.phone);
@@ -197,11 +198,11 @@ const INTENT = { site: '🌐 Sayt', bot: '🤖 Bot', video: '🎬 Video', '': '�
 const leadName = (l) => esc(l.name || (l.username ? `@${l.username}` : `ID ${l.id.slice(-5)}`));
 function leadCard(l) {
   const last = l.msgs.slice(-6).map((m) => `${m.r === 'u' ? '👤' : m.r === 'b' ? '🤖' : '🧑‍💼'} ${esc(m.t.slice(0, 200))}`).join('\n');
-  return `📩 <b>${leadName(l)}</b>${l.username ? ` · @${esc(l.username)}` : ''}\n${INTENT[l.intent] || INTENT['']}${l.phone ? ` · 📞 <b>${esc(l.phone)}</b>` : ''}${l.hot ? ' · 🔥' : ''}${l.handoff ? ' · 🙋 operator kerak' : ''}${l.muted && l.muted > Date.now() ? ' · 🔇 AI toʻxtatilgan' : ''}\n\n${last}`;
+  return `${l.src === 'tg' ? '✈️' : '📩'} <b>${leadName(l)}</b>${l.username ? ` · @${esc(l.username)}` : ''}\n${INTENT[l.intent] || INTENT['']}${l.phone ? ` · 📞 <b>${esc(l.phone)}</b>` : ''}${l.hot ? ' · 🔥' : ''}${l.handoff ? ' · 🙋 operator kerak' : ''}${l.muted && l.muted > Date.now() ? ' · 🔇 AI toʻxtatilgan' : ''}\n\n${last}`;
 }
 const leadKb = (l) => ({ inline_keyboard: [[{ text: '✍️ Javob yozish', callback_data: `igo:${l.id}` }, { text: l.muted && l.muted > Date.now() ? '🤖 AI yoqish' : '🔇 AI toʻxtatish', callback_data: `igm:${l.id}` }], [{ text: '👥 Lidlar', callback_data: 'igl:0' }]] });
 
-async function notifyOwner(c, r) {
+async function notifyOwner(c, r, extraChat) {
   if (c.notify === 'report') return; // faqat kunlik hisobot rejimi
   const l = r.lead;
   const title = r.isNew ? '🆕 Yangi lid' : r.gotPhone ? '📞 Telefon qoldirdi' : r.handoff ? '🙋 Operator kerak' : '🔥 Lid qiziqdi';
@@ -211,6 +212,7 @@ async function notifyOwner(c, r) {
     const u = await S.getUser(st, id).catch(() => null);
     if (u && u.chat) await send(u.chat, `${title}\n\n${leadCard(l)}`, leadKb(l));
   }
+  if (extraChat && !ids.includes(String(extraChat))) await send(extraChat, `${title}\n\n${leadCard(l)}`, leadKb(l)); // akkaunt egasi admin boʻlmasa ham
 }
 
 /* ---------- webhook ---------- */
@@ -292,8 +294,9 @@ function reportText(s, today) {
 async function showMain(ctx, u) {
   const st = store(), c = await cfg(st), today = S.todayISO(u.tz), s = await dayStats(st, today, u.tz);
   const tk = await tokState(st);
+  const bz = await require('./biz').connections(st);
   const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? `✅ ulangan${tk && tk.err ? ' · ⚠️ token yangilanmadi' : tk && tk.exp ? ` · token ${new Date(tk.exp).toISOString().slice(8, 10)}.${new Date(tk.exp).toISOString().slice(5, 7)} gacha` : ''}` : '⏳ ulanmagan (Meta kalitlari kerak)';
-  const text = `📸 <b>Instagram lidlar</b>\n\nMeta ulanishi: ${conn}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
+  const text = `📸 <b>Lidlar (Instagram + Telegram Business)</b>\n\nMeta ulanishi: ${conn}\nTelegram Business: ${bz.length ? `✅ ulangan (${bz.map((x) => esc(x.name)).join(', ')})` : '⏳ ulanmagan (Sozlamalar → Biznes → Chat avtomatlashtirish)'}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
   return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
 }
 async function showLeads(ctx, u) {
@@ -318,8 +321,8 @@ async function onMessage(chat, u, cmd, args, text) {
     if (!text) return true;
     const st = store(), l = await getLead(st, u.state.id); u.state = null;
     if (!l) { await send(chat, 'Lid topilmadi.'); return true; }
-    const r = await igSend(l.id, text);
-    if (r.ok) { l.msgs.push({ r: 'o', t: text.slice(0, 600), ts: Date.now() }); l.muted = Date.now() + 12 * 3600000; l.handoff = false; await saveLead(st, l); await send(chat, '✅ Instagramga yuborildi. AI 12 soat aralashmaydi.', leadKb(l)); }
+    const r = l.src === 'tg' ? await (async () => { const x = await require('./biz').sendAs(l.conn, l.chatId, text); return { ok: x.ok, error: x.description }; })() : await igSend(l.id, text);
+    if (r.ok) { l.msgs.push({ r: 'o', t: text.slice(0, 600), ts: Date.now() }); l.muted = Date.now() + 12 * 3600000; l.handoff = false; await saveLead(st, l); await send(chat, (l.src === 'tg' ? '✅ Telegramga yuborildi.' : '✅ Instagramga yuborildi.') + ' AI 12 soat aralashmaydi.', leadKb(l)); }
     else await send(chat, `❌ Yuborilmadi: ${esc(r.error)}\n\n<i>Instagram faqat mijoz yozgandan keyin 24 soat ichida javob berishga ruxsat beradi.</i>`);
     return true;
   }
@@ -369,4 +372,4 @@ async function remind(u, now) {
   return { dirty: false, sent: r.ok ? 1 : 0 };
 }
 
-module.exports = { handler: exports.handler, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign'] };
+module.exports = { handler: exports.handler, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign'] };

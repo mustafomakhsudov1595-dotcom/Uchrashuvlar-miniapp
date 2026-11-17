@@ -58,3 +58,6 @@ Toʻlash kerak (Chiqim): hammasi uchun 7/3/1 kun oldin + kun + kechikkan (`pay.r
 
 ## 2026-11-17: Hodimga vazifa berish
 `tasks.js`: `u.tasks` (+`tdeleted`) umumiy hisobda (WS_DATA/WS_COLL). Bot: `/vazifa` (roʻyxat), `/vazifa Sardor: banner, ertaga 18:00` yoki tugmalar (kimga → muddat); hodimga xabar + «Bajardim»; bajarilsa bergan odamga xabar; eslatma (ertaga/bugun/kechikkan, faqat egasiga, `__fan` oʻchiriladi). Mini ilova: Loyihalar → Vazifalar (`TasksView`), API: `tasks|taskadd|taskdone|taskdel`. Oʻchirish — faqat yaratuvchi yoki admin.
+
+## 2026-11-17: Telegram Business (Chat Automation)
+`biz.js`: `business_connection` (ulanish) va `business_message` (mijoz yozdi → AI sizning nomingizdan `business_connection_id` bilan javob; akkaunt egasi yozsa AI 12 soat jim). Lidlar Instagram bilan bir bazada (`iglead/tg<chatId>`, `src:"tg"`). BotFather → Bot Settings → Business Mode yoqilgan boʻlishi shart. Webhook `allowed_updates` ga business_* qoʻshilgan (`health.WANT`, avto-tiklash).

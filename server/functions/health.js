@@ -5,12 +5,13 @@ const { tg, esc } = S;
 
 const SITE = () => String(process.env.SITE_URL || '').replace(/\/$/, '');
 
+const WANT = ['message', 'callback_query', 'business_connection', 'business_message', 'edited_business_message', 'deleted_business_messages'];
 async function webhookInfo() {
   const r = await tg('getWebhookInfo', {});
   return r && r.ok ? r.result : null;
 }
 async function repairWebhook() {
-  const body = { url: `${SITE()}/api/tg`, allowed_updates: ['message', 'callback_query'], max_connections: 20 };
+  const body = { url: `${SITE()}/api/tg`, allowed_updates: WANT, max_connections: 20 };
   if (process.env.WEBHOOK_SECRET) body.secret_token = process.env.WEBHOOK_SECRET;
   return tg('setWebhook', body);
 }
@@ -29,6 +30,8 @@ async function tick(now = Date.now()) {
         if (!w.url || w.url !== want) {
           const r = await repairWebhook();
           await alert.notify('webhook', new Error(`Webhook manzili noto'g'ri edi (${w.url || 'yo\'q'}). Avtomatik tiklandi: ${r && r.ok ? 'ok' : 'XATO'}`));
+        } else if (Array.isArray(w.allowed_updates) && w.allowed_updates.length && !w.allowed_updates.includes('business_message')) {
+          await repairWebhook(); // Telegram Business yangilanishlari ham kelsin
         } else if (w.last_error_date && now / 1000 - w.last_error_date < 35 * 60) {
           await alert.notify('webhook', new Error(`Telegram yetkazib berishda xato: ${w.last_error_message}`));
         }
@@ -65,4 +68,4 @@ async function onCallback(ctx, u, act) {
   if (act === 'hfx' && S.isAdmin(u.id)) { const r = await repairWebhook(); await tg('sendMessage', { chat_id: ctx.chat, text: r && r.ok ? '✅ Telegram ulanishi tiklandi.' : '❌ Tiklab boʻlmadi.' }); return '🔧'; }
   return '';
 }
-module.exports = { tick, onMessage, onCallback, ACTS: ['hfx'] };
+module.exports = { tick, repairWebhook, webhookInfo, onMessage, onCallback, ACTS: ['hfx'] };
