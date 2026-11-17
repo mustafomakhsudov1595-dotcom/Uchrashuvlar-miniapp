@@ -4,6 +4,8 @@ import CalendarView from './components/CalendarView.jsx';
 import MoneyView from './components/MoneyView.jsx';
 import QuickMenu from './components/QuickMenu.jsx';
 import IncomeSheet from './components/IncomeSheet.jsx';
+import BalanceSheet from './components/BalanceSheet.jsx';
+import { ledgerOf, balanceNow } from './lib/ledger.js';
 import ProjectsView from './components/ProjectsView.jsx';
 import ProjectDetail from './components/ProjectDetail.jsx';
 import ProjectForm from './components/ProjectForm.jsx';
@@ -24,7 +26,7 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, runSeo, requestPrompt, buildMessage, checkClaudeLink, getCalendarToken, signature,
-  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature, loadPayables, savePayables, fetchLeads, loadPvDeleted, savePvDeleted, payablesSignature,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature, loadPayables, savePayables, loadBal, saveBal, fetchLeads, loadPvDeleted, savePvDeleted, payablesSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
@@ -60,6 +62,7 @@ export default function App() {
   const [confirmPay, setConfirmPay] = useState(null);
   const [confirmSv, setConfirmSv] = useState(null);
   const [goalState, setGoalState] = useState(loadGoal);
+  const [balState, setBalState] = useState(loadBal);
   const [confirmSid, setConfirmSid] = useState(null);
   const [confirmPid, setConfirmPid] = useState(null);
   const [tab, setTab] = useState('home');
@@ -100,6 +103,8 @@ export default function App() {
   expensesRef.current = expenses;
   const edeletedRef = useRef(loadEDeleted());
   const eFromServer = useRef(false);
+  const balRef = useRef(balState);
+  balRef.current = balState;
   const goalRef = useRef(goalState);
   goalRef.current = goalState;
   const sdeletedRef = useRef(loadSDeleted());
@@ -142,6 +147,8 @@ export default function App() {
         pvdeleted: sentPvDeleted,
         goal: goalRef.current.goal,
         goalAt: goalRef.current.at,
+        bal: balRef.current.bal,
+        balAt: balRef.current.at,
       });
       if (remote) {
         deletedRef.current = deletedRef.current.filter((id) => !sentDeleted.includes(id));
@@ -167,6 +174,10 @@ export default function App() {
         if (expensesSignature(remote.expenses) !== expensesSignature(expensesRef.current)) {
           eFromServer.current = true;
           setExpenses(remote.expenses);
+        }
+        if (remote.balAt > balRef.current.at) {
+          saveBal(remote.bal, remote.balAt);
+          setBalState({ bal: remote.bal, at: remote.balAt });
         }
         if (remote.goalAt > goalRef.current.at) {
           saveGoal(remote.goal, remote.goalAt);
@@ -705,6 +716,18 @@ export default function App() {
     setExpenses((list) => list.filter((x) => x.id !== id));
     haptic.select();
   };
+  // Hozirgi balans = x: bugungi yozuvlar ikki marta hisoblanmasligi uchun boshlangʻich summa moslanadi
+  const setBalance = (x) => {
+    const today = todayISO();
+    const net = ledgerOf(projects, subs, expensesRef.current).filter((e) => e.d === today).reduce((n, e) => n + (e.dir === 'in' ? e.a : -e.a), 0);
+    const next = { bal: { a0: Math.round(x) - net, d: today }, at: Date.now() };
+    saveBal(next.bal, next.at);
+    setBalState(next);
+    setSheet(null);
+    scheduleSync();
+    haptic.success();
+    showToast(t('toastSaved'));
+  };
   const setGoal = (n) => {
     const next = { goal: n, at: Date.now() };
     saveGoal(next.goal, next.at);
@@ -782,7 +805,7 @@ export default function App() {
       {tab === 'projects' && (
         <ProjectsView leads={leads} projects={projects} subs={subs} services={services} payables={payables} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
-      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onAddIncome={() => { haptic.tap(); setSheet({ type: 'income' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} view={moneyTab} onView={setMoneyTab} />}
+      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onAddIncome={() => { haptic.tap(); setSheet({ type: 'income' }); }} bal={balState.bal} onSetBalance={() => { haptic.tap(); setSheet({ type: 'balance' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} view={moneyTab} onView={setMoneyTab} />}
 
       <TabBar tab={tab} onTab={changeTab} onAdd={() => { haptic.tap(); setSheet({ type: 'quick' }); }} />
 
@@ -885,6 +908,7 @@ export default function App() {
       )}
 
       {sheet?.type === 'quick' && <QuickMenu onClose={closeTop} onPick={quickPick} />}
+      {sheet?.type === 'balance' && <BalanceSheet current={balState.bal ? balanceNow(balState.bal, ledgerOf(projects, subs, expenses), todayISO()) : null} onSave={setBalance} onClose={closeTop} />}
       {sheet?.type === 'income' && <IncomeSheet onSave={addExpense} onClose={closeTop} />}
       {sheet?.type === 'expense' && <ExpenseSheet projects={projects} onSave={addExpense} onClose={closeTop} />}
 

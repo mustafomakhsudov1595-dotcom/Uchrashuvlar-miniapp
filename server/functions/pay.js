@@ -128,6 +128,8 @@ async function doPay(chat, u, x, amount) {
   let t = P.pvPaidMsg(got, S.payLeft(x));
   const nx = x.nextId && find(u, x.nextId);
   if (nx) t += `\n${P.pvNext(fmtD(nx.due))}`;
+  const bl = require('./acc').balLines(u, S.todayISO(u.tz)); // toʻlov balansdan avtomatik ayriladi
+  if (bl) t += `\n\n${bl.split('\n')[0]}`;
   await send(chat, t, { inline_keyboard: [[{ text: P.bPvOpen, callback_data: `zj:${x.id}` }, { text: P.bPvList, callback_data: 'zl:0' }]] });
 }
 async function onCallback(ctx, u, act, a) {

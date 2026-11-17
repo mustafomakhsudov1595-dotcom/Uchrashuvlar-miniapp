@@ -13,6 +13,13 @@ export function ledgerOf(projects, subs, expenses) {
   for (const x of expenses) out.push(x.k === 'in' ? { id: x.id, d: x.d, a: x.a, dir: 'in', label: x.note, kind: x.ik || 'other' } : { id: x.id, d: x.d, a: x.a, dir: 'out', label: x.note, kind: x.cat });
   return out.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : b.a - a.a));
 }
+// Balans = boshlangʻich summa + shu sanadan bugungacha kirim − chiqim
+export function balanceNow(bal, all, today) {
+  if (!bal) return null;
+  const l = all.filter((x) => x.d >= bal.d && x.d <= today);
+  const inc = l.filter((x) => x.dir === 'in').reduce((n, x) => n + x.a, 0), out = l.filter((x) => x.dir === 'out').reduce((n, x) => n + x.a, 0);
+  return { balance: bal.a0 + inc - out, inc, out, since: bal.d };
+}
 export function rangeOf(p, today) {
   if (p === 'today') return [today, today];
   if (p === 'week') return [toISODate(addDays(fromISODate(today), -6)), today];

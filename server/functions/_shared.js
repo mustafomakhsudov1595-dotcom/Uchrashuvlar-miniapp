@@ -57,7 +57,7 @@ const userKey = (id) => `user/${id}`;
 const blankUser = (id) => ({
   id: String(id), lang: null, tz: DEFAULT_TZ, tzManual: false, remind: true, lead: 60,
   quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
-  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, services: [], svdeleted: {}, payables: [], pvdeleted: {}, places: [], placesAt: 0, state: null,
+  payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, bal: null, balAt: 0, services: [], svdeleted: {}, payables: [], pvdeleted: {}, places: [], placesAt: 0, state: null,
 });
 async function getUser(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
@@ -353,6 +353,23 @@ function mergeExpenses(u, clientList, clientDeleted) {
   return u;
 }
 const expensesIn = (u, from, to) => u.expenses.filter((x) => x.k !== 'in' && x.d >= from && x.d <= to);
+// Balans: foydalanuvchi bergan boshlangʻich summa (a0, sana d) + shu sanadan bugungacha kirim − chiqim
+function cleanBal(x) {
+  if (!x || typeof x !== 'object') return null;
+  const a0 = Math.round(Number(x.a0));
+  return Number.isFinite(a0) && Math.abs(a0) < 1e13 && DATE_RE.test(x.d) ? { a0, d: x.d } : null;
+}
+const netOf = (l) => l.reduce((n, x) => n + (x.dir === 'in' ? x.a : -x.a), 0);
+function balanceInfo(u, today) {
+  if (!u.bal) return null;
+  const l = ledger(u, u.bal.d, today), inc = l.filter((x) => x.dir === 'in').reduce((n, x) => n + x.a, 0), out = l.filter((x) => x.dir === 'out').reduce((n, x) => n + x.a, 0);
+  return { balance: u.bal.a0 + inc - out, inc, out, since: u.bal.d, a0: u.bal.a0 };
+}
+// Hozirgi balans = x boʻlishi uchun boshlangʻich summani moslaydi (bugungi yozuvlar ikki marta hisoblanmasin)
+function setBalance(u, x, today) {
+  u.bal = { a0: Math.round(x) - netOf(ledger(u, today, today)), d: today };
+  u.balAt = Date.now();
+}
 // Hisob daftari: barcha kirim (loyiha, oylik, qoʻlda) va chiqimlar, sana boʻyicha kamayish tartibida
 function ledger(u, from = '0000-01-01', to = '9999-12-31') {
   const out = [];
@@ -644,5 +661,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, bg, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, cleanBal, balanceInfo, setBalance, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

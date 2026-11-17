@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ledgerOf, monthly, summarize } from '../lib/ledger.js';
+import { balanceNow, ledgerOf, monthly, summarize } from '../lib/ledger.js';
 import { money, owed } from '../lib/projects.js';
 import { summary as paySummary } from '../lib/payables.js';
 import { getLang, t } from '../lib/i18n.js';
@@ -30,7 +30,7 @@ function Breakdown({ title, rows, total, color, labelOf }) {
 }
 
 // Hisob-kitob: kirim, chiqim, foyda, kassa, oylar dinamikasi va amallar daftari
-export default function LedgerView({ projects, subs, expenses, payables, today, onAddIncome, onAddExpense, onDelete }) {
+export default function LedgerView({ projects, subs, expenses, payables, today, onAddIncome, onAddExpense, onDelete, bal, onSetBalance }) {
   const [per, setPer] = useState('month');
   const [flt, setFlt] = useState('all');
   const [limit, setLimit] = useState(25);
@@ -38,7 +38,8 @@ export default function LedgerView({ projects, subs, expenses, payables, today, 
   const s = useMemo(() => summarize(all, per, today), [all, per, today]);
   const series = useMemo(() => monthly(all, 6, today), [all, today]);
   const debt = projects.reduce((n, p) => n + owed(p), 0);
-  const toPay = paySummary(payables, projects, subs, today).total;
+  const ps = paySummary(payables, projects, subs, today), toPay = ps.total;
+  const bn = useMemo(() => balanceNow(bal, all, today), [bal, all, today]);
   const names = t('months'), kinds = t('stKinds'), cats = t('exCats');
   const max = Math.max(1, ...series.map((x) => Math.max(x.inc, x.exp)));
   const list = s.list.filter((x) => flt === 'all' || x.dir === flt);
@@ -47,6 +48,23 @@ export default function LedgerView({ projects, subs, expenses, payables, today, 
 
   return (
     <>
+      <section className={`ld-balance${bn ? '' : ' empty'}`}>
+        {bn ? (
+          <>
+            <div className="ld-bal-head"><small>💵 {t('blCard')}</small><button type="button" className="link-btn" onClick={onSetBalance}>✎ {t('blEdit')}</button></div>
+            <b className={bn.balance < 0 ? 'neg' : ''}>{fm(bn.balance)}</b>
+            <span className="ld-bal-sub">{bn.since.slice(8)}.{bn.since.slice(5, 7)}.{bn.since.slice(0, 4)} {t('blSince')}: <em className="pos">+{money(bn.inc)}</em> · <em className="neg">−{money(bn.out)}</em></span>
+            {ps.out30 > 0 && <span className="ld-bal-due">{t('blDue')}: −{money(ps.out30)} → <strong className={bn.balance - ps.out30 < 0 ? 'neg' : ''}>{t('blAfter')}: {fm(bn.balance - ps.out30)}</strong></span>}
+          </>
+        ) : (
+          <>
+            <small>💵 {t('blCard')}</small>
+            <p>{t('blNo')}</p>
+            <button type="button" className="btn btn-primary" onClick={onSetBalance}>{t('blSet')}</button>
+          </>
+        )}
+      </section>
+
       <div className="ld-chips">
         {PER.map((p) => <button type="button" key={p} className={`cat-chip${per === p ? ' on' : ''}`} onClick={() => { setPer(p); setLimit(25); }}>{t('hsPer')[p]}</button>)}
       </div>
@@ -59,7 +77,6 @@ export default function LedgerView({ projects, subs, expenses, payables, today, 
           <div><span className="dot out" />{t('hsOut')}<strong>{fm(s.expense)}</strong></div>
         </div>
         <i className="ld-ratio"><em style={{ width: `${ratio}%` }} /></i>
-        <div className="ld-cash"><span>🏦 {t('hsCash')} <small>· {t('hsCashNote')}</small></span><strong className={s.cash < 0 ? 'neg' : ''}>{fm(s.cash)}</strong></div>
       </section>
 
       <div className="ld-actions">

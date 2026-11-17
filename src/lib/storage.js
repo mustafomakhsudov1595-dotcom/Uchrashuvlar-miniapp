@@ -246,6 +246,27 @@ export const saveEDeleted = (ids) => {
   }
 };
 export const expensesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.a, x.d, x.cat, x.note, x.pid, x.k, x.ik]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+const BAL_KEY = 'uchrashuvlar:bal:v1';
+export function cleanBal(x) {
+  if (!x || typeof x !== 'object') return null;
+  const a0 = Math.round(Number(x.a0));
+  return Number.isFinite(a0) && Math.abs(a0) < 1e13 && DATE_RE.test(x.d) ? { a0, d: x.d } : null;
+}
+export function loadBal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(BAL_KEY) || '{}');
+    return { bal: cleanBal(d.bal), at: Number(d.at) || 0 };
+  } catch {
+    return { bal: null, at: 0 };
+  }
+}
+export function saveBal(bal, at) {
+  try {
+    localStorage.setItem(BAL_KEY, JSON.stringify({ bal, at }));
+  } catch {
+    /* ignore */
+  }
+}
 export function loadGoal() {
   try {
     const d = JSON.parse(localStorage.getItem(GOAL_KEY) || '{}');
@@ -394,12 +415,12 @@ export function savePlaces(list, at) {
 const headers = () => ({ 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData });
 
 // Serverga yuboradi, birlashtirilgan natijani qaytaradi: { meetings, lang, places, placesAt }
-export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt }) {
+export async function syncRemote({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt, bal, balAt }) {
   if (!isTelegram) return null;
   const res = await fetch('/api/meetings', {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt, tz: -new Date().getTimezoneOffset() }),
+    body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt, bal, balAt, tz: -new Date().getTimezoneOffset() }),
   });
   if (!res.ok) throw new Error(`sync ${res.status}`);
   const data = await res.json();
@@ -412,6 +433,8 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     payables: Array.isArray(data.payables) ? data.payables.map(cleanPayable).filter(Boolean) : [],
     goal: Number(data.goal) || 0,
     goalAt: Number(data.goalAt) || 0,
+    bal: cleanBal(data.bal),
+    balAt: Number(data.balAt) || 0,
     lang: data.lang,
     places: Array.isArray(data.places) ? data.places : [],
     placesAt: Number(data.placesAt) || 0,

@@ -29,11 +29,17 @@ function stats(u, p, today) {
   const by = (l, key) => { const m = {}; for (const x of l) m[x[key]] = (m[x[key]] || 0) + x.a; return Object.entries(m).sort((a, b) => b[1] - a[1]); };
   return { list, income: sum(ins), expense: sum(outs), profit: sum(ins) - sum(outs), cash: sum(all.filter((x) => x.dir === 'in')) - sum(all.filter((x) => x.dir === 'out')), kinds: by(ins, 'kind'), cats: by(outs, 'kind') };
 }
+function balLines(u, today) {
+  const b = S.balanceInfo(u, today);
+  if (!b) return '';
+  const out30 = S.paySummary(u, today).out30, after = b.balance - out30;
+  return `💵 ${tr(u, { uz: 'Balans', ru: 'Баланс', en: 'Balance' })}: <b>${fm(b.balance)}</b>${out30 ? `\n   ${tr(u, { uz: '30 kunda toʻlash kerak', ru: 'К оплате за 30 дней', en: 'Due in 30 days' })}: −${S.money(out30)} → <b>${fm(after)}</b>` : ''}`;
+}
 function summaryText(u, p, today) {
   const s = stats(u, p, today), P = S.Tof(u).p, debt = S.activeDebt(u), pay = S.paySummary(u, today).total;
   const L = tr(u, { uz: ['Kirim', 'Chiqim', 'Foyda', 'Kassa (barcha vaqt)', 'Mijozlar qarzi', 'Toʻlash kerak', 'Kirim manbalari', 'Chiqim turlari', 'Amal yoʻq'], ru: ['Приход', 'Расход', 'Прибыль', 'Касса (всё время)', 'Долги клиентов', 'К оплате', 'Источники прихода', 'Виды расходов', 'Нет операций'], en: ['Income', 'Expenses', 'Profit', 'Cash (all time)', 'Client debts', 'To pay', 'Income sources', 'Expense types', 'No transactions'] });
   const ec = P.exCats || {};
-  let t = `📒 <b>${tr(u, { uz: 'Hisob-kitob', ru: 'Учёт', en: 'Accounts' })}</b> · ${tr(u, PNAME[p])}\n\n💰 ${L[0]}: <b>${fm(s.income)}</b>\n💸 ${L[1]}: <b>${fm(s.expense)}</b>\n${s.profit >= 0 ? '📈' : '📉'} ${L[2]}: <b>${fm(s.profit)}</b>\n\n🏦 ${L[3]}: <b>${fm(s.cash)}</b>`;
+  let t = `📒 <b>${tr(u, { uz: 'Hisob-kitob', ru: 'Учёт', en: 'Accounts' })}</b> · ${tr(u, PNAME[p])}\n\n💰 ${L[0]}: <b>${fm(s.income)}</b>\n💸 ${L[1]}: <b>${fm(s.expense)}</b>\n${s.profit >= 0 ? '📈' : '📉'} ${L[2]}: <b>${fm(s.profit)}</b>\n\n${balLines(u, today) || `🏦 ${L[3]}: <b>${fm(s.cash)}</b>`}`;
   if (debt) t += `\n🧾 ${L[4]}: ${fm(debt)}`;
   if (pay) t += `\n💸 ${L[5]}: ${fm(pay)}`;
   if (s.kinds.length) t += `\n\n<b>${L[6]}:</b>\n${s.kinds.slice(0, 5).map(([k, v]) => `• ${tr(u, KIND[k] || KIND.other)} — ${fm(v)}`).join('\n')}`;
@@ -45,7 +51,7 @@ function mainKb(u, p) {
   return { inline_keyboard: [
     PER.map((x) => ({ text: `${x === p ? '● ' : ''}${tr(u, PNAME[x])}`, callback_data: `ahp:${x}` })),
     [{ text: tr(u, { uz: '📜 Amallar', ru: '📜 Операции', en: '📜 Transactions' }), callback_data: `ahl:${p}` }, { text: tr(u, { uz: '➕ Kirim', ru: '➕ Приход', en: '➕ Income' }), callback_data: 'ahi:0' }, { text: tr(u, { uz: '➖ Chiqim', ru: '➖ Расход', en: '➖ Expense' }), callback_data: 'xa:0' }],
-    [{ text: '📄 PDF', callback_data: 'rp:1' }, S.appBtn(tr(u, { uz: '📱 Ilovada', ru: '📱 В приложении', en: '📱 In app' }), '?tab=money&view=ledger')],
+    [{ text: tr(u, { uz: '💵 Balans', ru: '💵 Баланс', en: '💵 Balance' }), callback_data: 'abs:0' }, { text: '📄 PDF', callback_data: 'rp:1' }, S.appBtn(tr(u, { uz: '📱 Ilovada', ru: '📱 В приложении', en: '📱 In app' }), '?tab=money&view=ledger')],
   ] };
 }
 async function showMain(ctx, u, p = 'month') { return show(ctx, summaryText(u, p, S.todayISO(u.tz)), mainKb(u, p)); }
@@ -70,7 +76,27 @@ function addIncome(u, x, today) {
   if (e) u.expenses.unshift(e);
   return e;
 }
+const BAL_ASK = { uz: '💵 <b>Hozir qancha pulingiz bor?</b>\n\nSummani yozing (naqd + karta hammasi).\nMasalan: <code>5 000 000</code>\n\nShundan keyin har bir kirim qoʻshiladi, har bir chiqim va toʻlov avtomatik ayiriladi.', ru: '💵 <b>Сколько у вас денег сейчас?</b>\n\nНапишите сумму (наличные + карты).\nНапример: <code>5 000 000</code>\n\nДальше каждый приход прибавляется, а каждый расход и платёж вычитается автоматически.', en: '💵 <b>How much money do you have now?</b>\n\nWrite the amount (cash + cards).\nExample: <code>5 000 000</code>\n\nFrom then on every income is added and every expense and payment is subtracted automatically.' };
+async function showBalance(chat, u) {
+  const today = S.todayISO(u.tz), b = S.balanceInfo(u, today);
+  if (!b) { u.state = { kind: 'balset' }; await send(chat, tr(u, BAL_ASK), { inline_keyboard: [[{ text: '❌', callback_data: 'pno' }]] }); return; }
+  const d = b.since;
+  await send(chat, `${balLines(u, today)}\n\n<i>${d.slice(8)}.${d.slice(5, 7)}.${d.slice(0, 4)} ${tr(u, { uz: 'dan beri', ru: 'с этой даты', en: 'since' })}: +${S.money(b.inc)} / −${S.money(b.out)}</i>`, { inline_keyboard: [[{ text: tr(u, { uz: '✏️ Balansni tuzatish', ru: '✏️ Исправить баланс', en: '✏️ Adjust balance' }), callback_data: 'abs:0' }, { text: '📒', callback_data: 'ahp:month' }]] });
+}
 async function onMessage(chat, u, cmd, args, text) {
+  if (cmd === '/balans' || cmd === '/balance') {
+    const amt = args ? proj.payAmount(args.replace(/^[-−]/, '')) : null;
+    if (args && (amt || /^0+$/.test(args.trim()))) S.setBalance(u, /^[-−]/.test(args.trim()) ? -(amt || 0) : (amt || 0), S.todayISO(u.tz));
+    await showBalance(chat, u);
+    return true;
+  }
+  if (!cmd && u.state && u.state.kind === 'balset') {
+    const amt = text ? proj.payAmount(text.replace(/^[-−]/, '')) : null;
+    if (!amt && !(text && /^0+$/.test(text.trim()))) { await send(chat, tr(u, { uz: 'Summani tushunmadim. Masalan: <code>5 000 000</code>', ru: 'Не понял сумму. Например: <code>5 000 000</code>', en: 'Could not read the amount. Example: <code>5 000 000</code>' }), { inline_keyboard: [[{ text: '❌', callback_data: 'pno' }]] }); return true; }
+    u.state = null; S.setBalance(u, /^[-−]/.test(text.trim()) ? -(amt || 0) : (amt || 0), S.todayISO(u.tz));
+    await showBalance(chat, u);
+    return true;
+  }
   if (cmd === '/hisob' || cmd === '/accounts') { await showMain({ chat }, u, 'month'); return true; }
   if (cmd === '/kirim' || cmd === '/income_add') {
     const x = args ? parseIncome(args) : null;
@@ -91,7 +117,8 @@ async function onMessage(chat, u, cmd, args, text) {
 async function onCallback(ctx, u, act, a) {
   if (act === 'ahp') await showMain(ctx, u, PER.includes(a) ? a : 'month');
   else if (act === 'ahl') await showLedger(ctx, u, PER.includes(a) ? a : 'month');
+  else if (act === 'abs') { u.state = { kind: 'balset' }; await send(ctx.chat, tr(u, BAL_ASK), { inline_keyboard: [[{ text: '❌', callback_data: 'pno' }]] }); }
   else if (act === 'ahi') { u.state = { kind: 'inadd' }; await onMessage(ctx.chat, u, '/kirim', '', ''); }
   return '';
 }
-module.exports = { onMessage, onCallback, summaryText, parseIncome, ACTS: ['ahp', 'ahl', 'ahi'] };
+module.exports = { onMessage, onCallback, summaryText, parseIncome, balLines, ACTS: ['ahp', 'ahl', 'ahi', 'abs'] };

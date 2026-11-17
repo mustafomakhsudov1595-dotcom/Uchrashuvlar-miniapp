@@ -38,3 +38,6 @@ Egasi talabi bilan `/video`, `/sayt`, `/botyasa`, `/mening` (agent.js, ubot.js, 
 
 ## 2026-11-17: Hisob-kitob
 Pul → **Hisob** (kirim, chiqim, foyda, kassa, 6 oylik dinamika, amallar daftari) va bot `/hisob`, `/kirim`. Qoʻlda kirim `expenses` ichida `k:"in"`; barcha chiqim hisoblari (`expensesIn`, `incomeByMonth`, PDF, CSV) buni hisobga oladi.
+
+## 2026-11-17: Balans
+`bal:{a0,d}` + `balAt` (foydalanuvchi sinxronlanadi). Balans = a0 + (d dan bugungacha kirim − chiqim). `setBalance` bugungi yozuvlar ikki marta hisoblanmasligi uchun a0 ni moslaydi. Bot: `/balans [summa]`, mini ilova: Pul → Hisob → Balans kartasi. Toʻlovlar (Chiqim) avtomatik xarajat boʻlgani uchun balansdan ayriladi.

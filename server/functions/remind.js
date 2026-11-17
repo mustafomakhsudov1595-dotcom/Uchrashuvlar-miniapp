@@ -81,6 +81,7 @@ exports.handler = async (event) => {
           S.mergePayables(full, fr.payables, Object.keys(fr.pvdeleted));
           S.mergeMeetings(full, fr.meetings, Object.keys(fr.deleted));
           if ((fr.goalAt || 0) > (full.goalAt || 0)) { full.goal = fr.goal; full.goalAt = fr.goalAt; }
+          if ((fr.balAt || 0) > (full.balAt || 0)) { full.bal = fr.bal; full.balAt = fr.balAt; }
           full.places = fr.places; full.placesAt = fr.placesAt;
         }
         await S.saveUser(st, full);
