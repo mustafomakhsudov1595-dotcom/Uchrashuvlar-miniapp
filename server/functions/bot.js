@@ -550,7 +550,7 @@ exports.handler = async (event) => {
     const st = S.openStore(event);
     if (up.message) await onMessage(st, up.message);
     else if (up.callback_query) await onCallback(st, up.callback_query);
-    else if (up.business_connection) await require('./biz').onConnection(st, up.business_connection);
+    else if (up.business_connection) { await S.loadAdmins(st); await require('./biz').onConnection(st, up.business_connection); }
     else if (up.business_message) await require('./biz').onMessage(st, up.business_message);
   } catch (e) {
     console.error(e);

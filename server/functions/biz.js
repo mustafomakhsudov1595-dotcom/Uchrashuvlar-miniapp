@@ -8,6 +8,13 @@ const store = () => S.openStore({});
 const send = (chat, text) => tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true });
 
 async function onConnection(st, bc) {
+  // Faqat adminlar va hisobga kirgan jamoa aʼzolari botni oʻz akkauntiga ulay oladi (aks holda boshqa odamlar ham ulab oladi)
+  const uid = String(bc.user && bc.user.id), raw = await st.get(`user/${uid}`, { type: 'json' }).catch(() => null);
+  if (!S.isAdmin(uid) && !(raw && raw.ws)) {
+    await st.setJSON(`bc/${bc.id}`, { id: String(bc.id), user: uid, name: (bc.user && bc.user.first_name) || '', chat: String(bc.user_chat_id || uid), can: false, on: false, at: Date.now(), denied: true });
+    await send(String(bc.user_chat_id || uid), '🔒 Bu bot faqat jamoa aʼzolari uchun. Avval <code>/kirish</code> orqali hisobga kiring, keyin qayta ulang.');
+    return;
+  }
   const id = String(bc.id), rights = bc.rights || {}, can = bc.can_reply !== undefined ? Boolean(bc.can_reply) : Boolean(rights.can_reply);
   const rec = { id, user: String(bc.user && bc.user.id), name: (bc.user && (bc.user.first_name || bc.user.username)) || '', chat: String(bc.user_chat_id || (bc.user && bc.user.id)), can, on: bc.is_enabled !== false, at: Date.now() };
   await st.setJSON(`bc/${id}`, rec);
@@ -28,9 +35,14 @@ async function onMessage(st, m) {
   const conn = m.business_connection_id ? await st.get(`bc/${m.business_connection_id}`, { type: 'json' }) : null;
   if (!conn || !conn.on || !m.chat || m.chat.type !== 'private' || !m.from) return;
   const ig = require('./ig'), leadId = `tg${m.chat.id}`;
-  if (String(m.from.id) === conn.user) { // akkaunt egasi oʻzi yozdi: AI 12 soat aralashmaydi
-    const l = await ig.getLead(st, leadId);
-    if (l && (m.text || m.caption)) { l.msgs.push({ r: 'o', t: String(m.text || m.caption).slice(0, 600), ts: Date.now() }); l.muted = Date.now() + 12 * 3600000; l.handoff = false; await ig.saveLead(st, l); }
+  if (String(m.from.id) === conn.user) { // akkaunt egasi oʻzi yozdi: AI sozlangan vaqt (standart 1 soat) aralashmaydi
+    const c0 = await ig.cfg(st);
+    let l = await ig.getLead(st, leadId);
+    if (!l && (m.text || m.caption)) { // egasi birinchi yozgan suhbat: mijoz javob bersa AI ham yangi lid deb aralashmasin
+      const now = Date.now();
+      l = { id: leadId, name: [m.chat.first_name, m.chat.last_name].filter(Boolean).join(' '), username: m.chat.username || '', src: 'tg', conn: conn.id, chatId: String(m.chat.id), first: now, last: now, intent: '', phone: '', hot: false, handoff: false, muted: 0, msgs: [], n: 0, spam: false };
+    }
+    if (l && (m.text || m.caption)) { l.msgs.push({ r: 'o', t: String(m.text || m.caption).slice(0, 600), ts: Date.now() }); l.muted = c0.muteMin > 0 ? Date.now() + c0.muteMin * 60000 : 0; l.handoff = false; await ig.saveLead(st, l); }
     return;
   }
   if (m.from.is_bot) return;

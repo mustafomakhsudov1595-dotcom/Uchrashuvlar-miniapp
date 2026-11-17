@@ -22,9 +22,11 @@ Narx loyiha murakkabligiga bogʻliq; aniq narxni menejer suhbatdan keyin aytadi.
 /* ---------- sozlama va lidlar bazasi ---------- */
 async function cfg(st) {
   const c = (await st.get('ig/cfg', { type: 'json' })) || {};
-  return { on: c.on !== false, mode: c.mode === 'work' ? 'work' : 'any', about: c.about || '', hour: c.hour || '20:00', lastReport: c.lastReport || '', owner: c.owner || S.adminIds()[0], ...c };
+  return { on: c.on !== false, muteMin: [0, 15, 60, 240, 720].includes(Number(c.muteMin)) ? Number(c.muteMin) : 60, mode: c.mode === 'work' ? 'work' : 'any', about: c.about || '', hour: c.hour || '20:00', lastReport: c.lastReport || '', owner: c.owner || S.adminIds()[0], ...c };
 }
 const saveCfg = (st, c) => st.setJSON('ig/cfg', c);
+const muteUntil = (c) => (c.muteMin > 0 ? Date.now() + c.muteMin * 60000 : 0); // egasi yozgach AI shuncha jim
+const muteText = (m) => (m === 0 ? 'jim boʻlmaydi' : m < 60 ? `${m} daqiqa` : `${m / 60} soat`);
 async function getLead(st, id) { return (await st.get(`iglead/${id}`, { type: 'json' })) || null; }
 async function saveLead(st, l) {
   await st.setJSON(`iglead/${l.id}`, l);
@@ -259,7 +261,7 @@ exports.handler = async (event) => {
         if (m.is_echo) { // jamoa Instagramdan oʻzi javob yozdi: AI 12 soat aralashmaydi
           const lead = await getLead(st, rcpt);
           if (lead && m.text && !lead.msgs.slice(-3).some((x) => x.r === 'b' && x.t.slice(0, 40) === m.text.slice(0, 40))) {
-            lead.msgs.push({ r: 'o', t: m.text.slice(0, 600), ts: Date.now() }); lead.muted = Date.now() + 12 * 3600000; await saveLead(st, lead);
+            lead.msgs.push({ r: 'o', t: m.text.slice(0, 600), ts: Date.now() }); lead.muted = muteUntil(c); await saveLead(st, lead);
           }
           continue;
         }
@@ -310,8 +312,8 @@ async function showMain(ctx, u) {
   const tk = await tokState(st);
   const bz = await require('./biz').connections(st);
   const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? `✅ ulangan${tk && tk.err ? ' · ⚠️ token yangilanmadi' : tk && tk.exp ? ` · token ${new Date(tk.exp).toISOString().slice(8, 10)}.${new Date(tk.exp).toISOString().slice(5, 7)} gacha` : ''}` : '⏳ ulanmagan (Meta kalitlari kerak)';
-  const text = `📸 <b>Lidlar (Instagram + Telegram Business)</b>\n\nMeta ulanishi: ${conn}\nTelegram Business: ${bz.length ? `✅ ulangan (${bz.map((x) => esc(x.name)).join(', ')})` : '⏳ ulanmagan (Sozlamalar → Biznes → Chat avtomatlashtirish)'}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nJavob doirasi: ${c.mode === 'work' ? '🎯 faqat ish' : '🌐 hamma mavzu (kim nima soʻrasa)'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
-  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.mode === 'work' ? '🌐 Hamma mavzuda javob ber' : '🎯 Faqat ish boʻyicha', callback_data: 'igd:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
+  const text = `📸 <b>Lidlar (Instagram + Telegram Business)</b>\n\nMeta ulanishi: ${conn}\nTelegram Business: ${bz.length ? `✅ ulangan (${bz.map((x) => esc(x.name)).join(', ')})` : '⏳ ulanmagan (Sozlamalar → Biznes → Chat avtomatlashtirish)'}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nJavob doirasi: ${c.mode === 'work' ? '🎯 faqat ish' : '🌐 hamma mavzu (kim nima soʻrasa)'}\nEgam yozsa AI jim: ${muteText(c.muteMin)}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
+  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.mode === 'work' ? '🌐 Hamma mavzuda javob ber' : '🎯 Faqat ish boʻyicha', callback_data: 'igd:0' }], [{ text: `🔇 Egam yozsa AI jim: ${muteText(c.muteMin)} (almashtirish)`, callback_data: 'igu:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
 }
 async function showLeads(ctx, u) {
   const st = store(), leads = (await recentLeads(st, 20)).filter((l) => !l.spam);
@@ -336,7 +338,7 @@ async function onMessage(chat, u, cmd, args, text) {
     const st = store(), l = await getLead(st, u.state.id); u.state = null;
     if (!l) { await send(chat, 'Lid topilmadi.'); return true; }
     const r = l.src === 'tg' ? await (async () => { const x = await require('./biz').sendAs(l.conn, l.chatId, text); return { ok: x.ok, error: x.description }; })() : await igSend(l.id, text);
-    if (r.ok) { l.msgs.push({ r: 'o', t: text.slice(0, 600), ts: Date.now() }); l.muted = Date.now() + 12 * 3600000; l.handoff = false; await saveLead(st, l); await send(chat, (l.src === 'tg' ? '✅ Telegramga yuborildi.' : '✅ Instagramga yuborildi.') + ' AI 12 soat aralashmaydi.', leadKb(l)); }
+    if (r.ok) { l.msgs.push({ r: 'o', t: text.slice(0, 600), ts: Date.now() }); l.muted = muteUntil(await cfg(st)); l.handoff = false; await saveLead(st, l); await send(chat, (l.src === 'tg' ? '✅ Telegramga yuborildi.' : '✅ Instagramga yuborildi.') + ' AI 12 soat aralashmaydi.', leadKb(l)); }
     else await send(chat, `❌ Yuborilmadi: ${esc(r.error)}\n\n<i>Instagram faqat mijoz yozgandan keyin 24 soat ichida javob berishga ruxsat beradi.</i>`);
     return true;
   }
@@ -357,6 +359,7 @@ async function onCallback(ctx, u, act, a) {
   const st = store();
   if (act === 'igs') await showMain(ctx, u);
   else if (act === 'igt') { const c = await cfg(st); c.on = !c.on; await saveCfg(st, c); await showMain(ctx, u); return c.on ? '🟢' : '⏸'; }
+  else if (act === 'igu') { const c = await cfg(st), order = [15, 60, 240, 720, 0]; c.muteMin = order[(order.indexOf(c.muteMin) + 1) % order.length]; await saveCfg(st, c); await showMain(ctx, u); return muteText(c.muteMin); }
   else if (act === 'igd') { const c = await cfg(st); c.mode = c.mode === 'work' ? 'any' : 'work'; await saveCfg(st, c); await showMain(ctx, u); return c.mode === 'work' ? '🎯' : '🌐'; }
   else if (act === 'ign') { const c = await cfg(st); c.notify = c.notify === 'report' ? 'hot' : 'report'; await saveCfg(st, c); await showMain(ctx, u); return c.notify === 'report' ? '🔕' : '🔔'; }
   else if (act === 'iga') { u.state = { kind: 'igabout' }; await send(ctx.chat, '✍️ <b>Biznesingiz haqida</b> yozing: xizmatlar, narxlar (agar aytsa boʻladigan boʻlsa), muddatlar, ish vaqti, qanday gaplashish kerak.\n\nAI faqat shu maʼlumotdan foydalanadi, oʻzidan narx oʻylab topmaydi.\n\nHozirgi matn:\n' + esc((await cfg(st)).about || DEFAULT_ABOUT), { inline_keyboard: [[{ text: '❌ Bekor', callback_data: 'pno' }]] }); }
@@ -387,4 +390,4 @@ async function remind(u, now) {
   return { dirty: false, sent: r.ok ? 1 : 0 };
 }
 
-module.exports = { handler: exports.handler, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign', 'igd'] };
+module.exports = { handler: exports.handler, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign', 'igd', 'igu'] };

@@ -64,3 +64,6 @@ Toʻlash kerak (Chiqim): hammasi uchun 7/3/1 kun oldin + kun + kechikkan (`pay.r
 
 ## 2026-11-17: Javob doirasi
 `ig.js` AI (Instagram va Telegram Business): standart `mode:"any"` — kim nima soʻrasa oʻsha mavzuda va oʻsha odamning tilida/uslubida javob; `/ig` → «Faqat ish boʻyicha» tugmasi (`mode:"work"`). Jonli maʼlumot (ob-havo, kurs, yangilik, namoz, sport) `web.gather` orqali. Kirill javob lotinga oʻgirilmaydi (`ext.cleanAi`). AI egasi nomidan hech narsa va’da qilmaydi ([[OPERATOR]]).
+
+## 2026-11-17: Telegram Business jim vaqti va ruxsat
+Egasi chatda oʻzi yozsa AI shu chatda jim: `ig/cfg.muteMin` (15/60/240/720/0 daq; standart 60, `/ig` → «Egam yozsa AI jim» tugmasi). Egasi birinchi yozgan suhbatda ham lid yaratilib jim qilinadi. Telegram Business ulanishi faqat adminlar va hisobga kirgan aʼzolar uchun (`biz.onConnection`), begona akkauntlar rad etiladi.
