@@ -34,7 +34,7 @@ function Breakdown({ title, rows, total, color, labelOf }) {
 }
 
 // Hisob-kitob: hamyonlar (naqd, karta, dollar), kunlik kurs, kirim, chiqim, foyda, oylar dinamikasi, amallar daftari
-export default function LedgerView({ projects, subs, expenses, payables, today, onAddIncome, onAddExpense, onDelete, bal, onSetBalance, onTransfer, onDefWallet, fx }) {
+export default function LedgerView({ projects, subs, expenses, payables, today, onAddIncome, onAddExpense, onDelete, bal, onSetBalance, onTransfer, onDefWallet, onWalletOp, fx }) {
   const [per, setPer] = useState('month');
   const [flt, setFlt] = useState('all');
   const [limit, setLimit] = useState(25);
@@ -64,17 +64,25 @@ export default function LedgerView({ projects, subs, expenses, payables, today, 
           {WAL.map((w) => {
             const y = bn && bn.wallets[w];
             return (
-              <button type="button" key={w} className={`ld-wallet${y ? '' : ' none'}`} onClick={() => onSetBalance(w)}>
-                <span className="ld-w-ico">{W_ICON[w]}</span>
-                <span className="ld-w-main">
-                  <b>{wn[w]}</b>
-                  {y ? <small>{y.inc || y.out ? `+${fmtW(w, y.inc)} / −${fmtW(w, y.out)}` : t('blEdit')}</small> : <small>{t('blSet')}</small>}
-                </span>
-                <span className="ld-w-sum">
-                  {y ? <strong className={y.balance < 0 ? 'neg' : ''}>{fmtW(w, y.balance)}</strong> : <strong>＋</strong>}
-                  {y && w === 'usd' && rate > 0 && <small>≈ {fmtUzs(y.balance * rate)}</small>}
-                </span>
-              </button>
+              <div key={w} className={`ld-wallet${y ? '' : ' none'}`}>
+                <button type="button" className="ld-w-body" onClick={() => onSetBalance(w)} aria-label={`${wn[w]}: ${t('blEdit')}`}>
+                  <span className="ld-w-ico">{W_ICON[w]}</span>
+                  <span className="ld-w-main">
+                    <b>{wn[w]}</b>
+                    {y ? <small>{y.inc || y.out ? `+${fmtW(w, y.inc)} / −${fmtW(w, y.out)}` : t('blEdit')}</small> : <small>{t('blSet')}</small>}
+                  </span>
+                  <span className="ld-w-sum">
+                    {y ? <strong className={y.balance < 0 ? 'neg' : ''}>{fmtW(w, y.balance)}</strong> : <strong>＋</strong>}
+                    {y && w === 'usd' && rate > 0 && <small>≈ {fmtUzs(y.balance * rate)}</small>}
+                  </span>
+                </button>
+                {y && (
+                  <span className="ld-w-ops">
+                    <button type="button" className="ld-op plus" onClick={() => onWalletOp('in', w)} aria-label={`${wn[w]} +`}>＋</button>
+                    <button type="button" className="ld-op minus" onClick={() => onWalletOp('out', w)} aria-label={`${wn[w]} −`}>－</button>
+                  </span>
+                )}
+              </div>
             );
           })}
         </div>

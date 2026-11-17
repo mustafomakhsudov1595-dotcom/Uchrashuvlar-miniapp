@@ -6,6 +6,7 @@ import QuickMenu from './components/QuickMenu.jsx';
 import IncomeSheet from './components/IncomeSheet.jsx';
 import BalanceSheet from './components/BalanceSheet.jsx';
 import TransferSheet from './components/TransferSheet.jsx';
+import WalletSheet from './components/WalletSheet.jsx';
 import LoginGate from './components/LoginGate.jsx';
 import { ledgerOf, balances, withWallet } from './lib/ledger.js';
 import { loadFx, saveFx, setRate } from './lib/currency.js';
@@ -831,7 +832,7 @@ export default function App() {
       {tab === 'projects' && (
         <ProjectsView leads={leads} projects={projects} subs={subs} services={services} payables={payables} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
-      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onAddIncome={() => { haptic.tap(); setSheet({ type: 'income' }); }} bal={balState.bal} onSetBalance={(w) => { haptic.tap(); setSheet({ type: 'balance', w: typeof w === 'string' ? w : 'cash' }); }} onTransfer={() => { haptic.tap(); setSheet({ type: 'transfer' }); }} onDefWallet={setDefWallet} fx={fxState} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} view={moneyTab} onView={setMoneyTab} />}
+      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onAddIncome={() => { haptic.tap(); setSheet({ type: 'income' }); }} bal={balState.bal} onSetBalance={(w) => { haptic.tap(); setSheet({ type: 'balance', w: typeof w === 'string' ? w : 'cash' }); }} onTransfer={() => { haptic.tap(); setSheet({ type: 'transfer' }); }} onDefWallet={setDefWallet} onWalletOp={(mode, w) => { haptic.tap(); setSheet({ type: 'walletop', mode, w }); }} fx={fxState} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} view={moneyTab} onView={setMoneyTab} />}
 
       <TabBar tab={tab} onTab={changeTab} onAdd={() => { haptic.tap(); setSheet({ type: 'quick' }); }} />
 
@@ -935,6 +936,7 @@ export default function App() {
 
       {sheet?.type === 'quick' && <QuickMenu onClose={closeTop} onPick={quickPick} />}
       {sheet?.type === 'balance' && <BalanceSheet wallet={sheet.w || 'cash'} current={(() => { const b = balState.bal && balances(balState.bal, ledgerOf(projects, subs, expenses, balState.bal.def || 'cash'), todayISO()); return b && b.wallets[sheet.w || 'cash'] ? b.wallets[sheet.w || 'cash'].balance : null; })()} onSave={(x) => setWalletBal(sheet.w || 'cash', x)} onClose={closeTop} />}
+      {sheet?.type === 'walletop' && <WalletSheet mode={sheet.mode} wallet={sheet.w} onSave={addExpense} onClose={closeTop} />}
       {sheet?.type === 'transfer' && <TransferSheet onSave={addExpense} onClose={closeTop} />}
       {sheet?.type === 'income' && <IncomeSheet defWallet={(balState.bal && balState.bal.def) || 'cash'} onSave={addExpense} onClose={closeTop} />}
       {sheet?.type === 'expense' && <ExpenseSheet projects={projects} defWallet="cash" onSave={addExpense} onClose={closeTop} />}

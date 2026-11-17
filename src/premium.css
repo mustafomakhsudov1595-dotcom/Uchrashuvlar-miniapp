@@ -463,3 +463,15 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .lg-form .btn { margin-top: 4px; }
 .acc-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; margin-bottom: 14px; border-radius: 18px; background: var(--a-soft); font-size: 14px; }
 .lg-form .err-text { color: #e5484d; font-weight: 600; font-size: 13px; }
+
+/* Hamyon qatori: asosiy qism + tez ＋ / － */
+.ld-wallet { padding: 0; align-items: stretch; gap: 0; overflow: hidden; }
+.ld-w-body { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 6px 10px 12px; text-align: left; }
+.ld-w-ops { display: flex; align-items: center; gap: 8px; padding: 0 12px 0 4px; }
+.ld-op { width: 38px; height: 38px; border-radius: 13px; font-size: 20px; font-weight: 800; line-height: 1; display: grid; place-items: center; }
+.ld-op.plus { background: color-mix(in srgb, #2e9b6a 24%, transparent); color: #2e9b6a; }
+.ld-op.minus { background: color-mix(in srgb, #d95050 22%, transparent); color: #d95050; }
+.ld-op:active { transform: scale(0.92); }
+.ld-w-main small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ld-w-main { flex: 1 1 0; }
+.ld-w-sum { flex: none; }
