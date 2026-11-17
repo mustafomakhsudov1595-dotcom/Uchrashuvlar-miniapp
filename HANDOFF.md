@@ -61,3 +61,6 @@ Toʻlash kerak (Chiqim): hammasi uchun 7/3/1 kun oldin + kun + kechikkan (`pay.r
 
 ## 2026-11-17: Telegram Business (Chat Automation)
 `biz.js`: `business_connection` (ulanish) va `business_message` (mijoz yozdi → AI sizning nomingizdan `business_connection_id` bilan javob; akkaunt egasi yozsa AI 12 soat jim). Lidlar Instagram bilan bir bazada (`iglead/tg<chatId>`, `src:"tg"`). BotFather → Bot Settings → Business Mode yoqilgan boʻlishi shart. Webhook `allowed_updates` ga business_* qoʻshilgan (`health.WANT`, avto-tiklash).
+
+## 2026-11-17: Javob doirasi
+`ig.js` AI (Instagram va Telegram Business): standart `mode:"any"` — kim nima soʻrasa oʻsha mavzuda va oʻsha odamning tilida/uslubida javob; `/ig` → «Faqat ish boʻyicha» tugmasi (`mode:"work"`). Jonli maʼlumot (ob-havo, kurs, yangilik, namoz, sport) `web.gather` orqali. Kirill javob lotinga oʻgirilmaydi (`ext.cleanAi`). AI egasi nomidan hech narsa va’da qilmaydi ([[OPERATOR]]).

@@ -224,7 +224,7 @@ const RULES = 'Never invent facts that were not given (phone numbers, addresses,
 const pickText = (out) => String((out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content) || out.result)) || '').trim();
 // Oʻzbekcha: lotin yozuvi va toʻgʻri apostroflar (oʻ, gʻ — U+02BB; maʼlumot — U+02BC)
 const normalizeUz = (t) => voice.toLatin(t).replace(/([oOgG])['’‘`´ʻʼ]/g, '$1ʻ').replace(/([A-Za-z])['’‘`´ʼ]([A-Za-z])/g, '$1ʼ$2');
-const cleanAi = (t, lang) => { let x = t.replace(/\*\*|__|^#{1,6}\s+/gm, '').replace(/^["“«]|["”»]$/g, '').trim(); if (lang === 'uz' || !lang) x = normalizeUz(x); return x; };
+const cleanAi = (t, lang) => { let x = t.replace(/\*\*|__|^#{1,6}\s+/gm, '').replace(/^["“«]|["”»]$/g, '').trim(); if ((lang === 'uz' || !lang) && !/[а-яёА-ЯЁ]/.test(x)) x = normalizeUz(x); return x; }; // kirill (rus) javobni lotinga oʻgirmaymiz
 const AI_LIMIT = 80;
 // Rasm tahlili: Mistral Small 3.1 (tez, arzon), zaxira — Llama 4 Scout
 const VISION_MODELS = [

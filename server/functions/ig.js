@@ -22,7 +22,7 @@ Narx loyiha murakkabligiga bogʻliq; aniq narxni menejer suhbatdan keyin aytadi.
 /* ---------- sozlama va lidlar bazasi ---------- */
 async function cfg(st) {
   const c = (await st.get('ig/cfg', { type: 'json' })) || {};
-  return { on: c.on !== false, about: c.about || '', hour: c.hour || '20:00', lastReport: c.lastReport || '', owner: c.owner || S.adminIds()[0], ...c };
+  return { on: c.on !== false, mode: c.mode === 'work' ? 'work' : 'any', about: c.about || '', hour: c.hour || '20:00', lastReport: c.lastReport || '', owner: c.owner || S.adminIds()[0], ...c };
 }
 const saveCfg = (st, c) => st.setJSON('ig/cfg', c);
 async function getLead(st, id) { return (await st.get(`iglead/${id}`, { type: 'json' })) || null; }
@@ -78,27 +78,41 @@ function normPhone(raw) {
 }
 
 /* ---------- AI javob ---------- */
-function systemPrompt(about) {
-  return `You are the Instagram Direct assistant of "Impro It", a small team in Uzbekistan that builds websites visible on Google, Telegram bots and Instagram promo videos. You chat with potential customers on behalf of the team.
+function systemPrompt(about, mode = 'any', channel = 'dm', live = '') {
+  const who = channel === 'tg'
+    ? 'the virtual assistant of a busy person (a freelancer from Uzbekistan who builds websites visible on Google, Telegram bots and Instagram promo videos, brand "Impro It"). You answer private Telegram messages on their behalf while they are busy'
+    : 'the virtual Instagram Direct assistant of "Impro It", a small team in Uzbekistan that builds websites visible on Google, Telegram bots and Instagram promo videos';
+  const topics = mode === 'work'
+    ? '- Talk only about the business below. For unrelated topics politely say you can help with the services and steer back.'
+    : '- Answer ANY topic the person asks about (daily questions, advice, facts, technology, study, weather, news, small talk, ideas, translations...). Match the person: their language, tone and level (formal with formal people, friendly and relaxed with friendly ones, simple with simple questions, detailed when they ask for details). Be genuinely helpful, like a smart friend.';
+  return `You are ${who}.
 
-Business facts (the ONLY facts you may state):
+Business facts (the ONLY facts you may state about the business, prices and contacts):
 ${about || DEFAULT_ABOUT}
 
 Rules:
-- Reply in the customer's language (Uzbek in Latin script by default; Russian or English if they write that way). Warm, polite, natural, like a friendly manager. 1-3 short sentences. At most one emoji.
-- Understand what they need (website, Telegram bot, video, or something else). Ask ONE helpful question at a time: what is their business, what they want the site/bot to do.
-- When the need is clear, politely ask for their name and phone number so a manager can contact them.
-- Never invent prices, deadlines, discounts, addresses or phone numbers. If asked about price or deadline and the facts above do not state it, say the manager will give an exact quote after a short chat, and ask for their phone number.
-- If asked whether you are a bot/AI, answer honestly that you are the team's virtual assistant and a manager will join if needed.
-- If the customer wants a person, complains, or asks something you cannot answer from the facts, reply politely that a manager will contact them soon and add the token [[OPERATOR]] at the very end.
-- Do not discuss unrelated topics at length; steer back to how you can help. No markdown, no lists.`;
+${topics}
+- Reply in the person's language (Uzbek in Latin script by default; Russian or English if they write that way).
+- Length: as short as the question allows (usually 1-4 sentences); give more only when asked. Keep under 900 characters. At most one or two emoji. No markdown symbols, no lists with asterisks.
+- If the person is interested in a website, Telegram bot or video, understand the need, ask ONE helpful question at a time and, when it is clear, politely ask for their name and phone number so the team can contact them. Do not push business on people who just chat.
+- Never invent prices, deadlines, discounts, addresses, phone numbers, or personal facts about the owner. If asked about price or deadline and the facts above do not state it, say an exact quote comes after a short chat with the team and ask for a phone number.
+- Never promise, agree, schedule, pay or decide anything on behalf of the owner (meetings, money, favors). Say you will pass it on and add the token [[OPERATOR]] at the very end.
+- If asked whether you are a bot/AI, answer honestly that you are a virtual assistant and the owner will see the conversation.
+- For medical, legal or financial questions give only general, careful information and suggest a specialist. Politely decline harmful, illegal or abusive requests.
+- If the person wants the owner personally, complains, or asks something you cannot answer reliably, say the owner will reply soon and add the token [[OPERATOR]] at the very end.
+- Today is ${new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 16).replace('T', ' ')} (Uzbekistan time).${live ? `\n\nLIVE INTERNET DATA (use it when relevant, cite naturally, never invent beyond it):\n${live}` : ''}`;
 }
-async function aiReply(c, lead, text) {
+const LIVE_RE = /ob-?havo|havo harorat|kurs|dollar|valyuta|bitcoin|btc|yangilik|namoz|futbol|match|natija|bugun nima|погод|курс|новост|намаз|футбол|weather|exchange rate|rates?\b|news|score|prayer/i;
+async function aiReply(c, lead, text, channel = 'dm') {
   const owner = { tz: 300, lang: 'uz', ai: c.ai };
   const history = lead.msgs.slice(-10).map((m) => ({ role: m.r === 'u' ? 'user' : 'assistant', content: m.t.slice(0, 500) }));
   // oxirgi (hozirgi) xabar historyda takrorlanmasin
   if (history.length && history[history.length - 1].role === 'user') history.pop();
-  const r = await ext.aiCall(owner, systemPrompt(c.about), text.slice(0, 800), { auto: true, history, limit: IG_LIMIT });
+  let live = '';
+  if (c.mode !== 'work' && LIVE_RE.test(text)) { // jonli maʼlumot: ob-havo, kurs, yangilik, namoz, sport
+    try { const w = await require('./web').gather(owner, text, history.map((h) => ({ r: h.role === 'user' ? 'u' : 'a', t: h.content })), Date.now()); live = (w && w.block) || ''; } catch { /* ignore */ }
+  }
+  const r = await ext.aiCall(owner, systemPrompt(c.about, c.mode, channel, live), text.slice(0, 1500), { auto: true, history, limit: IG_LIMIT });
   c.ai = owner.ai;
   if (!r.text) return { error: r.error || 'fail' };
   const handoff = /\[\[OPERATOR\]\]/i.test(r.text);
@@ -182,7 +196,7 @@ async function handleIncoming(st, c, senderId, text, opts = {}) {
   let reply = null, ai = null;
   const muted = lead.muted && lead.muted > now;
   if (c.on && !muted && !lead.spam) {
-    ai = await aiReply(c, lead, text);
+    ai = await aiReply(c, lead, text, lead.src === 'tg' ? 'tg' : 'dm');
     if (ai.text) {
       reply = ai.text;
       if (ai.handoff) { lead.handoff = true; lead.hot = true; }
@@ -296,8 +310,8 @@ async function showMain(ctx, u) {
   const tk = await tokState(st);
   const bz = await require('./biz').connections(st);
   const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? `✅ ulangan${tk && tk.err ? ' · ⚠️ token yangilanmadi' : tk && tk.exp ? ` · token ${new Date(tk.exp).toISOString().slice(8, 10)}.${new Date(tk.exp).toISOString().slice(5, 7)} gacha` : ''}` : '⏳ ulanmagan (Meta kalitlari kerak)';
-  const text = `📸 <b>Lidlar (Instagram + Telegram Business)</b>\n\nMeta ulanishi: ${conn}\nTelegram Business: ${bz.length ? `✅ ulangan (${bz.map((x) => esc(x.name)).join(', ')})` : '⏳ ulanmagan (Sozlamalar → Biznes → Chat avtomatlashtirish)'}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
-  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
+  const text = `📸 <b>Lidlar (Instagram + Telegram Business)</b>\n\nMeta ulanishi: ${conn}\nTelegram Business: ${bz.length ? `✅ ulangan (${bz.map((x) => esc(x.name)).join(', ')})` : '⏳ ulanmagan (Sozlamalar → Biznes → Chat avtomatlashtirish)'}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nJavob doirasi: ${c.mode === 'work' ? '🎯 faqat ish' : '🌐 hamma mavzu (kim nima soʻrasa)'}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
+  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.mode === 'work' ? '🌐 Hamma mavzuda javob ber' : '🎯 Faqat ish boʻyicha', callback_data: 'igd:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
 }
 async function showLeads(ctx, u) {
   const st = store(), leads = (await recentLeads(st, 20)).filter((l) => !l.spam);
@@ -343,6 +357,7 @@ async function onCallback(ctx, u, act, a) {
   const st = store();
   if (act === 'igs') await showMain(ctx, u);
   else if (act === 'igt') { const c = await cfg(st); c.on = !c.on; await saveCfg(st, c); await showMain(ctx, u); return c.on ? '🟢' : '⏸'; }
+  else if (act === 'igd') { const c = await cfg(st); c.mode = c.mode === 'work' ? 'any' : 'work'; await saveCfg(st, c); await showMain(ctx, u); return c.mode === 'work' ? '🎯' : '🌐'; }
   else if (act === 'ign') { const c = await cfg(st); c.notify = c.notify === 'report' ? 'hot' : 'report'; await saveCfg(st, c); await showMain(ctx, u); return c.notify === 'report' ? '🔕' : '🔔'; }
   else if (act === 'iga') { u.state = { kind: 'igabout' }; await send(ctx.chat, '✍️ <b>Biznesingiz haqida</b> yozing: xizmatlar, narxlar (agar aytsa boʻladigan boʻlsa), muddatlar, ish vaqti, qanday gaplashish kerak.\n\nAI faqat shu maʼlumotdan foydalanadi, oʻzidan narx oʻylab topmaydi.\n\nHozirgi matn:\n' + esc((await cfg(st)).about || DEFAULT_ABOUT), { inline_keyboard: [[{ text: '❌ Bekor', callback_data: 'pno' }]] }); }
   else if (act === 'igx') { u.state = { kind: 'igtest' }; await send(ctx.chat, '🧪 Sinov rejimi. Mijoz kabi yozing (masalan: <i>Assalomu alaykum, sayt kerak edi</i>). Chiqish: /bekor'); }
@@ -372,4 +387,4 @@ async function remind(u, now) {
   return { dirty: false, sent: r.ok ? 1 : 0 };
 }
 
-module.exports = { handler: exports.handler, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign'] };
+module.exports = { handler: exports.handler, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign', 'igd'] };
