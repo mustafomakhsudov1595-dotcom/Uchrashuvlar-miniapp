@@ -60,6 +60,7 @@ exports.handler = async (event) => {
   const st = S.openStore(event);
   const now = Date.now();
   await require('./health').tick(now);
+  await S.getRate();
   let sent = 0;
   const { blobs } = await st.list({ prefix: 'user/' });
   for (const { key } of blobs) {

@@ -25,6 +25,13 @@ const CATRE = [
 ];
 const catGuess = (note) => (CATRE.find(([, re]) => re.test(note)) || ['other'])[0];
 function parseExpense(text, u, presetPid) {
+  const wm = require('./acc').parseMoney(text);
+  if (wm && (wm.w === 'usd' || wm.w === 'card')) { // dollar yoki karta: acc.parseMoney tahlil qiladi
+    const note = wm.rest;
+    let pid = presetPid || '';
+    if (!pid && note) { const low = note.toLowerCase(), hit = [...u.projects].sort((x, y) => y.name.length - x.name.length).find((p) => low.includes(p.name.toLowerCase())); if (hit) pid = hit.id; }
+    return S.cleanExpense({ id: S.newId(), a: wm.a, w: wm.w, d: S.todayISO(u.tz), cat: catGuess(note), note, pid, createdAt: Date.now(), updatedAt: Date.now() });
+  }
   const m = text.trim().match(/^(\d{1,3}(?:[\s.,]\d{3})+|\d+(?:[.,]\d+)?)(\s*(?:mln|млн|million|ming|тыс|k|m))?(?=\s|$)\s*(.*)$/is);
   if (!m) return null;
   const a = !m[2] && /^\d{1,3}(?:[\s.,]\d{3})+$/.test(m[1]) ? Number(m[1].replace(/[\s.,]/g, '')) : proj.payAmount(`${m[1]}${m[2] || ''}`.trim());
@@ -44,9 +51,9 @@ async function showExpenses(ctx, u) {
   if (!list.length) text += `\n\n${P.exNone}`;
   else {
     const byCat = {};
-    for (const x of list) byCat[x.cat] = (byCat[x.cat] || 0) + x.a;
+    for (const x of list) byCat[x.cat] = (byCat[x.cat] || 0) + S.toUzs(x.a, x.w);
     text += '\n\n' + Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${P.exCats[k]}: ${S.money(v)}`).join('\n');
-    text += '\n\n' + list.slice(0, 8).map((x) => `• ${x.d.slice(5).replace('-', '.')} · ${S.money(x.a)}${x.note ? ' · ' + esc(x.note) : ''}`).join('\n');
+    text += '\n\n' + list.slice(0, 8).map((x) => `• ${x.d.slice(5).replace('-', '.')} · ${x.w === 'usd' ? S.fmtUsd(x.a) : S.money(x.a)}${x.note ? ' · ' + esc(x.note) : ''}`).join('\n');
   }
   const rows = list.slice(0, 6).map((x) => [{ text: `🗑 ${x.d.slice(5).replace('-', '.')} · ${S.money(x.a)}${x.note ? ' · ' + x.note : ''}`.slice(0, 60), callback_data: `xd:${x.id}` }]);
   rows.push([{ text: P.exAdd, callback_data: 'xa' }, { text: P.bIncome, callback_data: 'in:0' }]);
@@ -55,7 +62,7 @@ async function showExpenses(ctx, u) {
 async function saveExpense(chat, u, e) {
   const P = S.Tof(u).p, p = e.pid ? find(u, e.pid) : null;
   u.expenses.unshift(e);
-  await send(chat, P.exSaved(S.money(e.a), P.exCats[e.cat], esc(e.note), p ? esc(p.name) : ''), { inline_keyboard: [[{ text: P.bExpenses, callback_data: 'xl:0' }]] });
+  await send(chat, P.exSaved(e.w === 'usd' ? S.fmtUsd(e.a) : S.money(e.a), P.exCats[e.cat], esc(e.note), p ? esc(p.name) : ''), { inline_keyboard: [[{ text: P.bExpenses, callback_data: 'xl:0' }]] });
 }
 
 /* ================= maqsad ================= */

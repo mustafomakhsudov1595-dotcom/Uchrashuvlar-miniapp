@@ -320,6 +320,7 @@ async function onMessage(st, m) {
   if (inv && (await team.acceptInvite(st, chat, from, inv[1]))) return;
   if (!(await S.isAllowed(st, from.id))) return team.closedMessage(chat, from);
   const u = await S.getUser(st, from.id);
+  await S.getRate();
   u.chat = String(chat);
   u.lastMsgId = m.message_id;
   u.name = [from.first_name, from.last_name].filter(Boolean).join(' ');
@@ -421,6 +422,7 @@ async function onCallback(st, q) {
   if (!chat) return;
   if (!(await S.isAllowed(st, q.from.id))) { await tg('answerCallbackQuery', { callback_query_id: q.id, text: '🔒', show_alert: false }); return; }
   const u = await S.getUser(st, q.from.id);
+  await S.getRate();
   u.chat = String(chat);
   u.name = [q.from.first_name, q.from.last_name].filter(Boolean).join(' ');
   const parts = (q.data || '').split(':'), act = parts[0], a = parts[1], b = parts[2], c = parts[3];

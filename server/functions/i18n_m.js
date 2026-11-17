@@ -1,6 +1,6 @@
 'use strict';
 // Toʻlash kerak (majburiyatlar): kimga, qachon, qancha (uz / ru / en)
-const fm = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const fm = (n) => (n && n.txt ? n.txt : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '));
 const uz = {
   bPay2: '💸 Toʻlash kerak', bPvAdd: '➕ Qoʻshish', bPvSum: '📊 Hisob-kitob', bPvList: '⬅️ Roʻyxat',
   pvTitle: (n, t) => `💸 <b>Toʻlash kerak</b> (${n}) — jami <b>${fm(t)}</b>`, pvNone: 'Toʻlash kerak boʻlgan narsa yoʻq 🎉\nQoʻshish uchun “➕ Qoʻshish” ni bosing.',

@@ -62,10 +62,10 @@ function report(u, ym, now = Date.now()) {
   const cur = (n) => `${S.money(n)}`;
   const pays = S.paymentsOf(u).filter((x) => x.d.slice(0, 7) === ym);
   const income = pays.reduce((n, x) => n + x.a, 0);
-  const exps = (u.expenses || []).filter((x) => x.k !== 'in' && x.d.slice(0, 7) === ym);
-  const expense = exps.reduce((n, x) => n + x.a, 0);
+  const exps = (u.expenses || []).filter((x) => x.k !== 'in' && x.k !== 'tr' && x.d.slice(0, 7) === ym);
+  const expense = exps.reduce((n, x) => n + S.toUzs(x.a, x.w), 0);
   const byKind = {}; for (const x of pays) byKind[x.k in P.types ? x.k : 'other'] = (byKind[x.k in P.types ? x.k : 'other'] || 0) + x.a;
-  const byCat = {}; for (const x of exps) byCat[x.cat] = (byCat[x.cat] || 0) + x.a;
+  const byCat = {}; for (const x of exps) byCat[x.cat] = (byCat[x.cat] || 0) + S.toUzs(x.a, x.w);
   const byClient = new Map();
   for (const p of u.projects) { let n = 0; for (const x of p.pays || []) if (x.d.slice(0, 7) === ym) n += x.a; if (n) byClient.set(p.client || p.name, (byClient.get(p.client || p.name) || 0) + n); }
   for (const s of u.subs) { let n = 0; for (const x of s.pays || []) if (x.d.slice(0, 7) === ym) n += x.a; if (n) byClient.set(s.client || s.name, (byClient.get(s.client || s.name) || 0) + n); }

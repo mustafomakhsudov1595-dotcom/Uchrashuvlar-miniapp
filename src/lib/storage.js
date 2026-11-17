@@ -1,3 +1,4 @@
+import { WALLETS, rnd } from './currency.js';
 import { newId } from './meetings.js';
 import { isTelegram, initData } from './telegram.js';
 
@@ -105,14 +106,15 @@ export function cleanPayable(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || typeof x.who !== 'string' || !x.who.trim() || !DATE_RE.test(x.due)) return null;
   const amount = Number(x.amount);
   if (!Number.isFinite(amount) || amount <= 0) return null;
-  const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id ?? newId()), a: Math.round(Number(y.a)), d: y.d })) : [];
+  const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id ?? newId()), a: rnd(Number(y.a), x.cu === 'USD'), d: y.d })) : [];
   return {
     id: x.id,
     who: x.who.trim(),
     note: typeof x.note === 'string' ? x.note.trim() : '',
-    amount: Math.round(amount),
+    amount: rnd(amount, x.cu === 'USD'),
     due: x.due,
-    paid: Math.min(Math.round(amount), pays.reduce((n, y) => n + y.a, 0)),
+    ...(x.cu === 'USD' ? { cu: 'USD' } : {}),
+    paid: Math.min(rnd(amount, x.cu === 'USD'), rnd(pays.reduce((n, y) => n + y.a, 0), x.cu === 'USD')),
     pays,
     cat: EXCATS.includes(x.cat) ? x.cat : 'other',
     repeat: x.repeat === 'month' ? 'month' : '',
@@ -213,7 +215,15 @@ export function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !DATE_RE.test(x.d)) return null;
   const a = Number(x.a);
   if (!Number.isFinite(a) || a <= 0) return null;
-  return { id: x.id, a: Math.round(a), d: x.d, ...(x.k === 'in' ? { k: 'in', ik: ['site', 'bot', 'video', 'other', 'sub'].includes(x.ik) ? x.ik : 'other' } : {}), cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', src: typeof x.src === 'string' ? x.src : '', ref: typeof x.ref === 'string' ? x.ref : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+  const w = WALLETS.includes(x.w) ? x.w : '';
+  let extra = {};
+  if (x.k === 'in') extra = { k: 'in', ik: ['site', 'bot', 'video', 'other', 'sub'].includes(x.ik) ? x.ik : 'other' };
+  if (x.k === 'tr') {
+    const w2 = WALLETS.includes(x.w2) ? x.w2 : '', a2 = Number(x.a2);
+    if (!w || !w2 || w === w2 || !(a2 > 0)) return null;
+    extra = { k: 'tr', w2, a2: rnd(a2, w2 === 'usd') };
+  }
+  return { id: x.id, a: rnd(a, w === 'usd'), d: x.d, ...extra, ...(w ? { w } : {}), cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', src: typeof x.src === 'string' ? x.src : '', ref: typeof x.ref === 'string' ? x.ref : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
 }
 export function loadExpenses() {
   try {
@@ -245,12 +255,19 @@ export const saveEDeleted = (ids) => {
     /* ignore */
   }
 };
-export const expensesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.a, x.d, x.cat, x.note, x.pid, x.k, x.ik]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+export const expensesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.a, x.d, x.cat, x.note, x.pid, x.k, x.ik, x.w, x.w2, x.a2]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 const BAL_KEY = 'uchrashuvlar:bal:v1';
 export function cleanBal(x) {
   if (!x || typeof x !== 'object') return null;
-  const a0 = Math.round(Number(x.a0));
-  return Number.isFinite(a0) && Math.abs(a0) < 1e13 && DATE_RE.test(x.d) ? { a0, d: x.d } : null;
+  if (x.a0 !== undefined) { // eski format: bitta balans → naqd
+    const a0 = Math.round(Number(x.a0));
+    return Number.isFinite(a0) && Math.abs(a0) < 1e13 && DATE_RE.test(x.d) ? { cash: { a0, d: x.d }, def: 'cash' } : null;
+  }
+  const out = {};
+  for (const w of WALLETS) { const y = x[w]; if (y && Number.isFinite(Number(y.a0)) && Math.abs(Number(y.a0)) < 1e13 && DATE_RE.test(y.d)) out[w] = { a0: rnd(Number(y.a0), w === 'usd'), d: y.d }; }
+  if (!Object.keys(out).length) return null;
+  out.def = x.def === 'card' ? 'card' : 'cash';
+  return out;
 }
 export function loadBal() {
   try {
@@ -435,6 +452,7 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     goalAt: Number(data.goalAt) || 0,
     bal: cleanBal(data.bal),
     balAt: Number(data.balAt) || 0,
+    fx: data.fx && Number(data.fx.usd) > 1000 ? { usd: Number(data.fx.usd), d: String(data.fx.d || '') } : null,
     lang: data.lang,
     places: Array.isArray(data.places) ? data.places : [],
     placesAt: Number(data.placesAt) || 0,

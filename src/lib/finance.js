@@ -1,3 +1,4 @@
+import { toUzs } from './currency.js';
 import { toISODate } from './dates.js';
 import { owed } from './projects.js';
 
@@ -56,6 +57,6 @@ export function incomeByMonth(projects, subs, months, today, manual = []) {
     if (rest > 0) add(toISODate(new Date(p.updatedAt || p.createdAt || Date.now())), rest, p.type);
   }
   for (const x of subs) for (const y of x.pays || []) add(y.d, y.a, 'sub');
-  for (const x of manual) if (x.k === 'in') add(x.d, x.a, x.ik || 'other');
+  for (const x of manual) if (x.k === 'in') add(x.d, toUzs(x.a, x.w), x.ik || 'other');
   return list;
 }

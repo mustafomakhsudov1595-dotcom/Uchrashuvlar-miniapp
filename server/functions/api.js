@@ -18,7 +18,8 @@ exports.handler = async (event) => {
   const st = S.openStore(event);
   if (!(await S.isAllowed(st, user.id))) return json(403, { ok: false, error: 'closed' });
   const u = await S.getUser(st, user.id);
-  if (event.httpMethod === 'GET') return json(200, view(u));
+  const fx = await S.getRate();
+  if (event.httpMethod === 'GET') return json(200, { ...view(u), fx });
   if (event.httpMethod !== 'PUT' && event.httpMethod !== 'POST') return json(405, { ok: false });
   let b;
   try { b = JSON.parse(event.body || '{}'); } catch { return json(400, { ok: false }); }
@@ -102,5 +103,5 @@ exports.handler = async (event) => {
   S.mergePayables(u, Array.isArray(b.payables) ? b.payables.slice(0, 500) : [], Array.isArray(b.pvdeleted) ? b.pvdeleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
   S.mergeMeetings(u, Array.isArray(b.meetings) ? b.meetings.slice(0, 500) : [], Array.isArray(b.deleted) ? b.deleted.filter((x) => typeof x === 'string').slice(0, 500) : []);
   await S.saveUser(st, u);
-  return json(200, view(u));
+  return json(200, { ...view(u), fx });
 };

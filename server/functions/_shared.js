@@ -223,6 +223,31 @@ async function reportLink(st, u, pid, revoke = false) {
   return `${SITE()}/r/${u.reports[pid]}`;
 }
 const money = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+// Valyuta: hamyonlar (naqd, karta — soʻm; usd — dollar), kunlik kurs (Markaziy bank)
+const WALLETS = ['cash', 'card', 'usd'];
+const rnd = (n, usd) => (usd ? Math.round(n * 100) / 100 : Math.round(n));
+const fmtUsd = (n) => { const [i, d] = rnd(Math.abs(n), true).toFixed(2).split('.'); return `${n < 0 ? '−' : ''}$${i.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}${d === '00' ? '' : `.${d}`}`; };
+let FX = { usd: 0, d: '' };
+const fxNow = () => FX;
+const toUzs = (a, w) => (w === 'usd' ? a * (FX.usd || 0) : a);
+const cm = (x, n) => (x && x.cu === 'USD' && n > 0 ? Object.assign(new Number(n), { txt: fmtUsd(n) }) : n); // xabar shablonlari uchun: raqamdek ishlaydi, fm() esa '$..' koʻrsatadi
+const curOf = (x, n) => (x && x.cu === 'USD' ? fmtUsd(n) : money(n)); // toʻlov (qarz) summasi valyutasi bilan
+async function getRate() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (process.env.FX_USD) { FX = { usd: Number(process.env.FX_USD), d: today }; return FX; } // sinov/ishlab chiqish uchun qotirilgan kurs
+  if (FX.d === today && FX.usd) return FX;
+  let st = null;
+  try { st = openStore({}); } catch { /* KV yoʻq */ }
+  if (!st) return FX;
+  try { const c = Number(await st.get(`fx/${today}`)); if (c > 1000) { FX = { usd: c, d: today }; return FX; } } catch { /* keyingisi */ }
+  try {
+    const r = await fetch('https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/', { headers: { 'user-agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) });
+    const j = await r.json(), rate = parseFloat(String(j[0].Rate).replace(',', '.'));
+    if (rate > 1000) { FX = { usd: rate, d: today }; await st.set(`fx/${today}`, rate); await st.set('fx/last', rate); return FX; }
+  } catch { /* oxirgi maʼlum kurs */ }
+  try { const l = Number(await st.get('fx/last')); if (l > 1000) FX = { usd: l, d: FX.d || '' }; } catch { /* ignore */ }
+  return FX;
+}
 function projectText(p, u, now = Date.now()) {
   const T = Tof(u), today = todayISO(u.tz, now), { done, total } = projProgress(p), pc = total ? Math.round((done / total) * 100) : 0;
   let t = `${PICON[p.type]} <b>${esc(p.name)}</b>\n${SICON[p.status]} ${T.p.status[p.status]} · ${T.p.types[p.type]}`;
@@ -301,7 +326,7 @@ function paymentsOf(u) {
     if (rest > 0) out.push({ d: isoOfLocal(localNow(u.tz, p.updatedAt || p.createdAt || Date.now())), a: rest, k: p.type });
   }
   for (const x of u.subs) for (const y of x.pays || []) out.push({ d: y.d, a: y.a, k: 'sub' });
-  for (const x of u.expenses || []) if (x.k === 'in') out.push({ d: x.d, a: x.a, k: x.ik || 'other' }); // qoʻlda kiritilgan kirim
+  for (const x of u.expenses || []) if (x.k === 'in') out.push({ d: x.d, a: toUzs(x.a, x.w), k: x.ik || 'other' }); // qoʻlda kiritilgan kirim (dollar soʻmga)
   return out;
 }
 const prevYM = (ym, n) => { let [y, m] = ym.split('-').map(Number); m -= n; while (m < 1) { m += 12; y -= 1; } return `${y}-${pad(m)}`; };
@@ -310,7 +335,7 @@ function incomeByMonth(u, months, today) {
   for (let i = months - 1; i >= 0; i--) list.push({ m: prevYM(cur, i), total: 0, exp: 0, k: { site: 0, bot: 0, video: 0, other: 0, sub: 0 } });
   const idx = new Map(list.map((x) => [x.m, x]));
   for (const x of paymentsOf(u)) { const e = idx.get(x.d.slice(0, 7)); if (e) { e.total += x.a; e.k[x.k in e.k ? x.k : 'other'] += x.a; } }
-  for (const x of u.expenses || []) { if (x.k === 'in') continue; const e = idx.get(x.d.slice(0, 7)); if (e) e.exp += x.a; }
+  for (const x of u.expenses || []) { if (x.k === 'in' || x.k === 'tr') continue; const e = idx.get(x.d.slice(0, 7)); if (e) e.exp += toUzs(x.a, x.w); }
   return list;
 }
 function clientsOf(u) {
@@ -335,8 +360,15 @@ function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || !DATE_RE.test(x.d)) return null;
   const a = num(x.a);
   if (a === null || a <= 0) return null;
-  const isIn = x.k === 'in';
-  return { id: x.id, a: Math.round(a), d: x.d, ...(isIn ? { k: 'in', ik: ['site', 'bot', 'video', 'other', 'sub'].includes(x.ik) ? x.ik : 'other' } : {}), cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', src: typeof x.src === 'string' ? x.src.slice(0, 64) : '', ref: typeof x.ref === 'string' ? x.ref.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+  const k = x.k === 'in' ? 'in' : x.k === 'tr' ? 'tr' : '', w = WALLETS.includes(x.w) ? x.w : '';
+  let extra = {};
+  if (k === 'in') extra = { k: 'in', ik: ['site', 'bot', 'video', 'other', 'sub'].includes(x.ik) ? x.ik : 'other' };
+  if (k === 'tr') {
+    const w2 = WALLETS.includes(x.w2) ? x.w2 : '', a2 = num(x.a2);
+    if (!w || !w2 || w === w2 || a2 === null || a2 <= 0) return null;
+    extra = { k: 'tr', w2, a2: rnd(a2, w2 === 'usd') };
+  }
+  return { id: x.id, a: rnd(a, w === 'usd'), d: x.d, ...extra, ...(w ? { w } : {}), cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', src: typeof x.src === 'string' ? x.src.slice(0, 64) : '', ref: typeof x.ref === 'string' ? x.ref.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
 }
 function mergeExpenses(u, clientList, clientDeleted) {
   const tomb = u.edeleted || {}, now = Date.now();
@@ -352,39 +384,60 @@ function mergeExpenses(u, clientList, clientDeleted) {
   u.edeleted = tomb; u.expenses = [...byId.values()].sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 1500);
   return u;
 }
-const expensesIn = (u, from, to) => u.expenses.filter((x) => x.k !== 'in' && x.d >= from && x.d <= to);
-// Balans: foydalanuvchi bergan boshlangʻich summa (a0, sana d) + shu sanadan bugungacha kirim − chiqim
+const expensesIn = (u, from, to) => u.expenses.filter((x) => x.k !== 'in' && x.k !== 'tr' && x.d >= from && x.d <= to);
+// Balans: har bir hamyon uchun foydalanuvchi bergan boshlangʻich summa (a0, sana d) + shu sanadan bugungacha harakatlar
 function cleanBal(x) {
   if (!x || typeof x !== 'object') return null;
-  const a0 = Math.round(Number(x.a0));
-  return Number.isFinite(a0) && Math.abs(a0) < 1e13 && DATE_RE.test(x.d) ? { a0, d: x.d } : null;
+  if (x.a0 !== undefined) { // eski format: bitta balans → naqd
+    const a0 = Math.round(Number(x.a0));
+    return Number.isFinite(a0) && Math.abs(a0) < 1e13 && DATE_RE.test(x.d) ? { cash: { a0, d: x.d }, def: 'cash' } : null;
+  }
+  const out = {};
+  for (const w of WALLETS) { const y = x[w]; if (y && Number.isFinite(Number(y.a0)) && Math.abs(Number(y.a0)) < 1e13 && DATE_RE.test(y.d)) out[w] = { a0: rnd(Number(y.a0), w === 'usd'), d: y.d }; }
+  if (!Object.keys(out).length) return null;
+  out.def = x.def === 'card' ? 'card' : 'cash';
+  return out;
 }
-const netOf = (l) => l.reduce((n, x) => n + (x.dir === 'in' ? x.a : -x.a), 0);
+const effects = (e) => (e.dir === 'tr' ? [[e.w, -e.a], [e.w2, e.a2]] : [[e.w, e.dir === 'in' ? e.a : -e.a]]);
+const netFor = (l, w) => l.reduce((n, e) => n + effects(e).filter(([x]) => x === w).reduce((m, [, v]) => m + v, 0), 0);
 function balanceInfo(u, today) {
   if (!u.bal) return null;
-  const l = ledger(u, u.bal.d, today), inc = l.filter((x) => x.dir === 'in').reduce((n, x) => n + x.a, 0), out = l.filter((x) => x.dir === 'out').reduce((n, x) => n + x.a, 0);
-  return { balance: u.bal.a0 + inc - out, inc, out, since: u.bal.d, a0: u.bal.a0 };
+  const all = ledger(u, '0000-01-01', today), wallets = {};
+  let total = 0;
+  for (const w of WALLETS) {
+    const y = u.bal[w];
+    if (!y) continue;
+    const bal = rnd(y.a0 + netFor(all.filter((e) => e.d >= y.d), w), w === 'usd');
+    wallets[w] = { balance: bal, since: y.d, a0: y.a0 };
+    total += toUzs(bal, w);
+  }
+  return { wallets, total, def: u.bal.def || 'cash' };
 }
-// Hozirgi balans = x boʻlishi uchun boshlangʻich summani moslaydi (bugungi yozuvlar ikki marta hisoblanmasin)
-function setBalance(u, x, today) {
-  u.bal = { a0: Math.round(x) - netOf(ledger(u, today, today)), d: today };
+// Hamyondagi hozirgi summa = x boʻlishi uchun boshlangʻich summani moslaydi (bugungi yozuvlar ikki marta hisoblanmasin)
+function setWallet(u, w, x, today) {
+  if (!WALLETS.includes(w)) return;
+  if (!u.bal) u.bal = { def: 'cash' };
+  u.bal[w] = { a0: rnd(x, w === 'usd') - netFor(ledger(u, today, today), w), d: today };
   u.balAt = Date.now();
 }
-// Hisob daftari: barcha kirim (loyiha, oylik, qoʻlda) va chiqimlar, sana boʻyicha kamayish tartibida
+// Hisob daftari: barcha kirim (loyiha, oylik, qoʻlda), chiqim va oʻtkazmalar; sana boʻyicha kamayish tartibida
 function ledger(u, from = '0000-01-01', to = '9999-12-31') {
-  const out = [];
+  const out = [], def = (u.bal && u.bal.def) || 'cash';
   const push = (e) => { if (e.d >= from && e.d <= to) out.push(e); };
   for (const p of u.projects) {
     let sum = 0;
-    for (const x of p.pays || []) { push({ d: x.d, a: x.a, dir: 'in', label: p.client || p.name, kind: p.type }); sum += x.a; }
+    for (const x of p.pays || []) { push({ d: x.d, a: x.a, dir: 'in', label: p.client || p.name, kind: p.type, w: def }); sum += x.a; }
     const rest = (p.paid || 0) - sum;
-    if (rest > 0) push({ d: isoOfLocal(localNow(u.tz, p.updatedAt || p.createdAt || Date.now())), a: rest, dir: 'in', label: p.client || p.name, kind: p.type });
+    if (rest > 0) push({ d: isoOfLocal(localNow(u.tz, p.updatedAt || p.createdAt || Date.now())), a: rest, dir: 'in', label: p.client || p.name, kind: p.type, w: def });
   }
-  for (const x of u.subs) for (const y of x.pays || []) push({ d: y.d, a: y.a, dir: 'in', label: x.client || x.name, kind: 'sub' });
-  for (const x of u.expenses || []) push(x.k === 'in' ? { d: x.d, a: x.a, dir: 'in', label: x.note, kind: x.ik || 'other', id: x.id } : { d: x.d, a: x.a, dir: 'out', label: x.note, kind: x.cat, id: x.id });
+  for (const x of u.subs) for (const y of x.pays || []) push({ d: y.d, a: y.a, dir: 'in', label: x.client || x.name, kind: 'sub', w: def });
+  for (const x of u.expenses || []) {
+    if (x.k === 'tr') push({ d: x.d, a: x.a, dir: 'tr', label: x.note, kind: 'tr', id: x.id, w: x.w, w2: x.w2, a2: x.a2 });
+    else push(x.k === 'in' ? { d: x.d, a: x.a, dir: 'in', label: x.note, kind: x.ik || 'other', id: x.id, w: x.w || def } : { d: x.d, a: x.a, dir: 'out', label: x.note, kind: x.cat, id: x.id, w: x.w || def });
+  }
   return out.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : b.a - a.a));
 }
-const expenseSum = (list) => list.reduce((n, x) => n + x.a, 0);
+const expenseSum = (list) => list.reduce((n, x) => n + toUzs(x.a, x.w), 0);
 const monthRange = (ym) => [`${ym}-01`, `${ym}-31`];
 const incomeIn = (u, from, to) => paymentsOf(u).filter((x) => x.d >= from && x.d <= to).reduce((n, x) => n + x.a, 0);
 const projectExpense = (u, pid) => expenseSum(u.expenses.filter((x) => x.pid === pid));
@@ -476,10 +529,10 @@ function cleanPayable(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || typeof x.who !== 'string' || !x.who.trim() || !DATE_RE.test(x.due)) return null;
   const amount = num(x.amount);
   if (amount === null || amount <= 0) return null;
-  const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id || newId()).slice(0, 64), a: Math.round(Number(y.a)), d: y.d })) : [];
+  const pays = Array.isArray(x.pays) ? x.pays.filter((y) => y && Number(y.a) > 0 && DATE_RE.test(y.d)).slice(-60).map((y) => ({ id: String(y.id || newId()).slice(0, 64), a: rnd(Number(y.a), x.cu === 'USD'), d: y.d })) : [];
   return {
-    id: x.id, who: x.who.trim().slice(0, 80), note: typeof x.note === 'string' ? x.note.trim().slice(0, 120) : '', amount: Math.round(amount), due: x.due,
-    paid: Math.min(Math.round(amount), pays.reduce((n, y) => n + y.a, 0)), pays, cat: EXCATS.includes(x.cat) ? x.cat : 'other', repeat: x.repeat === 'month' ? 'month' : '', ...creditOf(x),
+    id: x.id, who: x.who.trim().slice(0, 80), note: typeof x.note === 'string' ? x.note.trim().slice(0, 120) : '', amount: rnd(amount, x.cu === 'USD'), due: x.due, ...(x.cu === 'USD' ? { cu: 'USD' } : {}),
+    paid: Math.min(rnd(amount, x.cu === 'USD'), rnd(pays.reduce((n, y) => n + y.a, 0), x.cu === 'USD')), pays, cat: EXCATS.includes(x.cat) ? x.cat : 'other', repeat: x.repeat === 'month' ? 'month' : '', ...creditOf(x),
     nextId: typeof x.nextId === 'string' ? x.nextId.slice(0, 64) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '',
     createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0, r: x.r,
   };
@@ -499,14 +552,15 @@ function mergePayables(u, clientList, clientDeleted) {
   u.pvdeleted = tomb; u.payables = [...byId.values()];
   return u;
 }
-const payLeft = (x) => Math.max(0, x.amount - x.paid);
+const payLeft = (x) => Math.max(0, rnd(x.amount - x.paid, x.cu === 'USD'));
+const payLeftUzs = (x) => (x.cu === 'USD' ? payLeft(x) * (FX.usd || 0) : payLeft(x));
 const payOpen = (u) => u.payables.filter((x) => payLeft(x) > 0).sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.who < b.who ? -1 : 1));
 // Hisob: umumiy, muddati oʻtgan, 7 kun, oy, 30 kun; kutilayotgan tushum bilan solishtirish
 function paySummary(u, today) {
   const open = payOpen(u), ym = today.slice(0, 7), d7 = addDaysISO(today, 7), d30 = addDaysISO(today, 30);
-  const sum = (arr) => arr.reduce((n, x) => n + payLeft(x), 0);
+  const sum = (arr) => arr.reduce((n, x) => n + payLeftUzs(x), 0);
   const byWho = new Map();
-  for (const x of open) byWho.set(x.who, (byWho.get(x.who) || 0) + payLeft(x));
+  for (const x of open) byWho.set(x.who, (byWho.get(x.who) || 0) + payLeftUzs(x));
   const subsIn = u.subs.filter((x) => x.active).reduce((n, x) => n + x.amount, 0);
   const inflow = activeDebt(u) + subsIn;
   const out30 = sum(open.filter((x) => x.due <= d30));
@@ -517,11 +571,11 @@ function paySummary(u, today) {
 }
 // Toʻlov qilish: toʻlovni yozadi, xarajatga avtomatik qoʻshadi, oylik boʻlsa keyingi oyni yaratadi
 function applyPayment(u, x, amount, today, now = Date.now()) {
-  const a = Math.min(Math.round(amount), payLeft(x));
+  const a = Math.min(rnd(amount, x.cu === 'USD'), payLeft(x));
   if (a <= 0) return 0;
   const payId = newId();
-  x.pays = [...x.pays, { id: payId, a, d: today }].slice(-60); x.paid += a; x.updatedAt = now; x.r = undefined;
-  u.expenses.unshift(cleanExpense({ id: newId(), a, d: today, cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now }));
+  x.pays = [...x.pays, { id: payId, a, d: today }].slice(-60); x.paid = rnd(x.paid + a, x.cu === 'USD'); x.updatedAt = now; x.r = undefined;
+  u.expenses.unshift(cleanExpense({ id: newId(), a, d: today, ...(x.cu === 'USD' ? { w: 'usd' } : {}), cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now }));
   if (payLeft(x) === 0 && (x.repeat === 'month' || (x.cn && x.ci < x.cn)) && !x.nextId) {
     const nx = cleanPayable({ ...x, ci: x.cn ? x.ci + 1 : 0, id: newId(), due: addMonthsISO(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now, r: undefined });
     if (nx) { x.nextId = nx.id; u.payables.push(nx); }
@@ -661,5 +715,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, bg, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, cleanBal, balanceInfo, setBalance, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, cleanBal, balanceInfo, setWallet, WALLETS, rnd, fmtUsd, fxNow, toUzs, curOf, cm, getRate, payLeftUzs, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

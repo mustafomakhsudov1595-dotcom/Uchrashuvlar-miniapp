@@ -1,9 +1,11 @@
+import { getRate, rnd } from './currency.js';
 import { newId } from './meetings.js';
 import { addMonths } from './services.js';
 import { daysBetween, owed } from './projects.js';
 import { subsMonthly } from './finance.js';
 
-export const left = (x) => Math.max(0, x.amount - x.paid);
+export const left = (x) => Math.max(0, rnd(x.amount - x.paid, x.cu === 'USD'));
+export const leftUzs = (x) => (x.cu === 'USD' ? left(x) * getRate() : left(x));
 export const byDue = (a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.who < b.who ? -1 : 1);
 export const openList = (list) => list.filter((x) => left(x) > 0).sort(byDue);
 // over | today | soon (<=3 kun) | ok
@@ -19,11 +21,11 @@ export const shiftDays = (iso, n) => {
 
 export function summary(payables, projects, subs, today) {
   const open = openList(payables), ym = today.slice(0, 7), d7 = shiftDays(today, 7), d30 = shiftDays(today, 30);
-  const sum = (arr) => arr.reduce((n, x) => n + left(x), 0);
+  const sum = (arr) => arr.reduce((n, x) => n + leftUzs(x), 0);
   const inflow = projects.reduce((n, p) => n + owed(p), 0) + subsMonthly(subs);
   const out30 = sum(open.filter((x) => x.due <= d30));
   const byWho = new Map();
-  for (const x of open) byWho.set(x.who, (byWho.get(x.who) || 0) + left(x));
+  for (const x of open) byWho.set(x.who, (byWho.get(x.who) || 0) + leftUzs(x));
   return {
     open, total: sum(open), overdue: sum(open.filter((x) => x.due < today)), week: sum(open.filter((x) => x.due >= today && x.due <= d7)), month: sum(open.filter((x) => x.due.slice(0, 7) === ym)),
     out30, inflow, balance: inflow - out30, byWho: [...byWho.entries()].sort((a, b) => b[1] - a[1]),
@@ -34,24 +36,24 @@ export function summary(payables, projects, subs, today) {
 export function payNow(payables, expenses, id, amount, today, now = Date.now()) {
   const x = payables.find((p) => p.id === id);
   if (!x) return { payables, expenses };
-  const a = Math.min(Math.round(amount), left(x));
+  const a = Math.min(rnd(amount, x.cu === 'USD'), left(x));
   if (a <= 0) return { payables, expenses };
   const payId = newId();
-  const paid = x.paid + a;
+  const paid = rnd(x.paid + a, x.cu === 'USD');
   let next = null;
   const upd = { ...x, paid, pays: [...x.pays, { id: payId, a, d: today }].slice(-60), updatedAt: now };
   if (paid >= x.amount && (x.repeat === 'month' || (x.cn && x.ci < x.cn)) && !x.nextId) {
     next = { ...x, ci: x.cn ? x.ci + 1 : 0, id: newId(), due: addMonths(x.due, 1), paid: 0, pays: [], nextId: '', createdAt: now, updatedAt: now };
     upd.nextId = next.id;
   }
-  const exp = { id: newId(), a, d: today, cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now };
+  const exp = { id: newId(), a, d: today, ...(x.cu === 'USD' ? { w: 'usd' } : {}), cat: x.cat, note: [x.who, x.note].filter(Boolean).join(' · '), pid: x.pid, src: x.id, ref: payId, createdAt: now, updatedAt: now };
   return { payables: [...payables.map((p) => (p.id === id ? upd : p)), ...(next ? [next] : [])], expenses: [exp, ...expenses] };
 }
 export function undoLast(payables, expenses, id, now = Date.now()) {
   const x = payables.find((p) => p.id === id);
   const last = x && x.pays[x.pays.length - 1];
   if (!last) return { payables, expenses, removed: [] };
-  let list = payables.map((p) => (p.id === id ? { ...p, pays: p.pays.slice(0, -1), paid: Math.max(0, p.paid - last.a), nextId: '', updatedAt: now } : p));
+  let list = payables.map((p) => (p.id === id ? { ...p, pays: p.pays.slice(0, -1), paid: Math.max(0, rnd(p.paid - last.a, x.cu === 'USD')), nextId: '', updatedAt: now } : p));
   const removed = [];
   if (x.nextId) {
     const nx = list.find((p) => p.id === x.nextId);

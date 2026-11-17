@@ -41,3 +41,6 @@ Pul → **Hisob** (kirim, chiqim, foyda, kassa, 6 oylik dinamika, amallar daftar
 
 ## 2026-11-17: Balans
 `bal:{a0,d}` + `balAt` (foydalanuvchi sinxronlanadi). Balans = a0 + (d dan bugungacha kirim − chiqim). `setBalance` bugungi yozuvlar ikki marta hisoblanmasligi uchun a0 ni moslaydi. Bot: `/balans [summa]`, mini ilova: Pul → Hisob → Balans kartasi. Toʻlovlar (Chiqim) avtomatik xarajat boʻlgani uchun balansdan ayriladi.
+
+## 2026-11-17: Hamyonlar va dollar
+`bal` = { cash, card, usd: {a0,d}, def } (def — loyiha/oylik kirimlari tushadigan hamyon). Yozuvlarda `w` (hamyon), oʻtkazma `k:"tr"` (`w`→`w2`, `a`→`a2`). Dollar hamyonida summa USD (2 xona). Toʻlovda `cu:"USD"`. Kurs: `S.getRate()` (cbu.uz, KV `fx/<kun>`), mijozga API javobida `fx`. Bot: `/balans [naqd|karta|dollar] summa`, `/otkazma`, `/kurs`, `$` bilan `/kirim`, `/xarajat`, `/tolash`. Sinov uchun `FX_USD=12000` env.

@@ -62,3 +62,4 @@ Eslatma: cron har daqiqa barcha foydalanuvchilarni o'qiydi — Workers bepul rej
 - `health.js` — salomatlik nazorati: cron heartbeat, webhook har 30 daqiqada tekshiriladi va buzilsa avtomatik tiklanadi (+🚨 xabar); `/holat` (admin).
 - `acc.js` — hisob-kitob: `/hisob` (bugun/7 kun/oy/yil/hammasi: kirim, chiqim, foyda, kassa), `/kirim summa kim/nima`. Qoʻlda kirim `expenses` kolleksiyasida `k:'in'` (`ik` — tur) sifatida saqlanadi; mini ilovada Pul → Hisob.
 - `acc.js` balans: `/balans`, `S.balanceInfo`, `S.setBalance`; toʻlovdan keyin xabarda balans koʻrsatiladi.
+- `acc.js` hamyonlar, dollar, kurs (`/kurs`), oʻtkazma (`/otkazma`); `_shared.getRate` — Markaziy bank kursi.

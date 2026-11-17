@@ -3,17 +3,18 @@ import Sheet from './Sheet.jsx';
 import Choice from './Choice.jsx';
 import DateField from './DateField.jsx';
 import { todayISO } from '../lib/dates.js';
+import { rnd } from '../lib/currency.js';
 import { t } from '../lib/i18n.js';
 
 // Qoʻlda kirim qoʻshish (loyihadan tashqari: maslahat, naqd, boshqa)
-export default function IncomeSheet({ onSave, onClose }) {
+export default function IncomeSheet({ onSave, onClose, defWallet = 'cash' }) {
   const uid = useId();
-  const [f, setF] = useState({ a: '', ik: 'site', note: '', d: todayISO() });
+  const [f, setF] = useState({ a: '', ik: 'site', note: '', d: todayISO(), w: defWallet });
   const [err, setErr] = useState('');
   const submit = (e) => {
     e.preventDefault();
     if (!(Number(f.a) > 0)) return setErr(t('eAmount'));
-    onSave({ a: Math.round(Number(f.a)), k: 'in', ik: f.ik, note: f.note.trim(), d: f.d || todayISO(), cat: 'other', pid: '' });
+    onSave({ a: rnd(Number(f.a), f.w === 'usd'), w: f.w, k: 'in', ik: f.ik, note: f.note.trim(), d: f.d || todayISO(), cat: 'other', pid: '' });
   };
   const formId = `${uid}-form`;
   const kinds = t('stKinds');
@@ -23,8 +24,12 @@ export default function IncomeSheet({ onSave, onClose }) {
       <form id={formId} onSubmit={submit} noValidate>
         <div className="field">
           <label htmlFor={`${uid}-a`}>{t('exAmount')}</label>
-          <input id={`${uid}-a`} className={`input${err ? ' err' : ''}`} type="number" inputMode="numeric" min="0" value={f.a} onChange={(e) => { setF((p) => ({ ...p, a: e.target.value })); setErr(''); }} placeholder="500000" autoFocus />
+          <input id={`${uid}-a`} className={`input${err ? ' err' : ''}`} type="number" inputMode="decimal" step={f.w === 'usd' ? '0.01' : '1'} min="0" value={f.a} onChange={(e) => { setF((p) => ({ ...p, a: e.target.value })); setErr(''); }} placeholder="500000" autoFocus />
           {err && <p className="err-text">{err}</p>}
+        </div>
+        <div className="field">
+          <span className="label-like">{t('wlLabel')}</span>
+          <Choice value={f.w} onChange={(v) => setF((p) => ({ ...p, w: v }))} options={['cash', 'card', 'usd'].map((k) => ({ v: k, label: t('wlNames')[k] }))} />
         </div>
         <div className="field">
           <span className="label-like">{t('exCat')}</span>

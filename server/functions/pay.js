@@ -26,10 +26,10 @@ async function showList(ctx, u) {
     const groups = [['over', sm.open.filter((x) => x.due < today)], ['today', sm.open.filter((x) => x.due === today)], ['week', sm.open.filter((x) => x.due > today && x.due <= d7)], ['later', sm.open.filter((x) => x.due > d7)]];
     for (const [k, list] of groups) {
       if (!list.length) continue;
-      text += `\n\n${P.pvGroups[k]}\n${list.slice(0, 8).map((x) => P.pvLine(esc(x.who), esc(x.note), S.payLeft(x), tag(x, today, P))).join('\n')}`;
+      text += `\n\n${P.pvGroups[k]}\n${list.slice(0, 8).map((x) => P.pvLine(esc(x.who), esc(x.note), S.cm(x, S.payLeft(x)), tag(x, today, P))).join('\n')}`;
     }
   }
-  const rows = sm.open.slice(0, 8).map((x) => [{ text: `${x.due < today ? '⚠️' : x.due === today ? '📌' : '💸'} ${x.who} · ${S.money(S.payLeft(x))} · ${tag(x, today, P)}`.slice(0, 60), callback_data: `zj:${x.id}` }]);
+  const rows = sm.open.slice(0, 8).map((x) => [{ text: `${x.due < today ? '⚠️' : x.due === today ? '📌' : '💸'} ${x.who} · ${S.curOf(x, S.payLeft(x))} · ${tag(x, today, P)}`.slice(0, 60), callback_data: `zj:${x.id}` }]);
   rows.push([{ text: P.bPvAdd, callback_data: 'za:0' }, { text: P.bPvSum, callback_data: 'zh:0' }]);
   rows.push([{ text: P.backList, callback_data: 'pl:0' }]);
   return show(ctx, text.slice(0, 3900), { inline_keyboard: rows });
@@ -47,12 +47,12 @@ async function showSummary(ctx, u) {
 /* ---------- karta ---------- */
 function cardText(x, u) {
   const P = S.Tof(u).p, today = S.todayISO(u.tz);
-  let t = P.pvCard({ ...x, who: esc(x.who), note: esc(x.note) }, S.payLeft(x), S.payLeft(x) ? tag(x, today, P) : '✅');
-  if (x.pays.length) t += `\n\n${P.pvHist}\n${x.pays.slice(-5).map((y) => `• ${fmtD(y.d)} — ${S.money(y.a)}`).join('\n')}`;
+  let t = P.pvCard({ ...x, who: esc(x.who), note: esc(x.note), amount: S.cm(x, x.amount), paid: S.cm(x, x.paid) }, S.cm(x, S.payLeft(x)), S.payLeft(x) ? tag(x, today, P) : '✅');
+  if (x.pays.length) t += `\n\n${P.pvHist}\n${x.pays.slice(-5).map((y) => `• ${fmtD(y.d)} — ${S.curOf(x, y.a)}`).join('\n')}`;
   return t;
 }
 function cardMarkup(x, u) {
-  const P = S.Tof(u).p, left = S.payLeft(x), rows = [];
+  const P = S.Tof(u).p, left = S.cm(x, S.payLeft(x)), rows = [];
   if (left > 0) rows.push([{ text: P.bPvPaid(left), callback_data: `zp:${x.id}` }, { text: P.bPvPart, callback_data: `zq:${x.id}` }]);
   if (left > 0) rows.push([{ text: P.bPvSnooze, callback_data: `zs:${x.id}` }]);
   rows.push([{ text: x.repeat ? P.bPvRepOff : P.bPvRepOn, callback_data: `zm:${x.id}` }]);
@@ -67,12 +67,15 @@ async function showCard(ctx, u, id) {
 }
 
 /* ---------- yozuvdan ajratish ---------- */
+const USD_RE = /^(?:\$\s*([\d\s]+(?:[.,]\d{1,2})?)|([\d\s]+(?:[.,]\d{1,2})?)\s*(?:\$|usd|dollar\w*|доллар\w*|у\.?е\.?))$/i;
 const CREDIT_RE = /^(kredit|rassrochka|рассрочка|кредит|credit|installments?)\s*(\d{1,3})(?:\s*(?:oy|мес\w*|months?))?$/i;
 const REPEAT_RE = /^(oylik|har\s*oy|har oyning|monthly|every month|ежемесячно|каждый месяц)/i;
 function parsePayable(text, u) {
   const today = S.todayISO(u.tz), parts = text.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
-  let amount = null, due = '', repeat = '', cn = 0, free = [];
+  let amount = null, due = '', repeat = '', cn = 0, cu = '', free = [];
   for (const p of parts) {
+    const um = p.match(USD_RE);
+    if (um && amount === null) { const n = parseFloat((um[1] || um[2]).replace(/\s/g, '').replace(',', '.')); if (n > 0) { amount = n; cu = 'USD'; continue; } }
     const cm = p.match(CREDIT_RE);
     if (cm) { cn = Math.min(120, +cm[2]); continue; }
     if (REPEAT_RE.test(p)) { repeat = 'month'; continue; }
@@ -96,7 +99,7 @@ function parsePayable(text, u) {
   }
   if (!free.length || !amount) return null;
   const now = Date.now();
-  return S.cleanPayable({ id: S.newId(), who: free[0], note: free.slice(1).join(', '), amount, due: due || today, repeat: cn ? '' : repeat, cn, ci: cn ? 1 : 0, createdAt: now, updatedAt: now });
+  return S.cleanPayable({ id: S.newId(), who: free[0], note: free.slice(1).join(', '), amount, due: due || today, repeat: cn ? '' : repeat, cn, cu, ci: cn ? 1 : 0, createdAt: now, updatedAt: now });
 }
 
 /* ---------- yoʻnaltirgichlar ---------- */
@@ -125,7 +128,7 @@ async function onMessage(chat, u, cmd, args, text) {
 }
 async function doPay(chat, u, x, amount) {
   const P = S.Tof(u).p, got = S.applyPayment(u, x, amount, S.todayISO(u.tz));
-  let t = P.pvPaidMsg(got, S.payLeft(x));
+  let t = P.pvPaidMsg(S.cm(x, got), S.cm(x, S.payLeft(x)));
   const nx = x.nextId && find(u, x.nextId);
   if (nx) t += `\n${P.pvNext(fmtD(nx.due))}`;
   const bl = require('./acc').balLines(u, S.todayISO(u.tz)); // toʻlov balansdan avtomatik ayriladi
@@ -139,11 +142,11 @@ async function onCallback(ctx, u, act, a) {
   else if (act === 'zj') await showCard(ctx, u, a);
   else if (act === 'za') { u.state = { kind: 'padd' }; await send(chat, P.pvAsk, { inline_keyboard: [cancelRow(P)] }); }
   else if (act === 'zp') { if (x && S.payLeft(x) > 0) { await doPay(chat, u, x, S.payLeft(x)); return '✅'; } }
-  else if (act === 'zq') { if (x) { u.state = { kind: 'ppart', id: a }; await send(chat, P.pvPartAsk(esc(x.who), S.payLeft(x)), { inline_keyboard: [cancelRow(P)] }); } }
+  else if (act === 'zq') { if (x) { u.state = { kind: 'ppart', id: a }; await send(chat, P.pvPartAsk(esc(x.who), S.cm(x, S.payLeft(x))), { inline_keyboard: [cancelRow(P)] }); } }
   else if (act === 'zs') { if (x) { x.due = S.addDaysISO(x.due < S.todayISO(u.tz) ? S.todayISO(u.tz) : x.due, 3); x.updatedAt = Date.now(); x.r = undefined; await showCard(ctx, u, a); return P.pvSnoozed(fmtD(x.due)); } }
   else if (act === 'zu') { if (x && S.undoPayment(u, x)) { await showCard(ctx, u, a); return P.pvUndone; } }
   else if (act === 'zm') { if (x) { x.repeat = x.repeat ? '' : 'month'; x.updatedAt = Date.now(); await showCard(ctx, u, a); } }
-  else if (act === 'zx') { if (x) await show(ctx, `${P.pvDelAsk}\n\n<b>${esc(x.who)}</b> — ${S.money(S.payLeft(x))}`, { inline_keyboard: [[{ text: P.delYes, callback_data: `zxy:${a}` }, { text: P.no, callback_data: `zj:${a}` }]] }); }
+  else if (act === 'zx') { if (x) await show(ctx, `${P.pvDelAsk}\n\n<b>${esc(x.who)}</b> — ${S.curOf(x, S.payLeft(x))}`, { inline_keyboard: [[{ text: P.delYes, callback_data: `zxy:${a}` }, { text: P.no, callback_data: `zj:${a}` }]] }); }
   else if (act === 'zxy') { u.payables = u.payables.filter((p) => p.id !== a); u.pvdeleted[a] = Date.now(); await show(ctx, P.pvDeleted, { inline_keyboard: [[{ text: P.bPvList, callback_data: 'zl:0' }]] }); }
   return '';
 }
@@ -153,7 +156,7 @@ function briefBlock(u, today) {
   const P = S.Tof(u).p, tomorrow = S.addDaysISO(today, 1);
   const list = S.payOpen(u).filter((x) => x.due <= tomorrow).slice(0, 6);
   if (!list.length) return '';
-  return `${P.brPay}\n${list.map((x) => `• <b>${esc(x.who)}</b> — ${S.money(S.payLeft(x))} · ${tag(x, today, P)}`).join('\n')}`;
+  return `${P.brPay}\n${list.map((x) => `• <b>${esc(x.who)}</b> — ${S.curOf(x, S.payLeft(x))} · ${tag(x, today, P)}`).join('\n')}`;
 }
 function moneyBlock(u, today) {
   const P = S.Tof(u).p, s = S.paySummary(u, today), need = s.overdue + s.today;
@@ -162,7 +165,7 @@ function moneyBlock(u, today) {
 }
 function weekBlock(u, today) {
   const P = S.Tof(u).p, d7 = S.addDaysISO(today, 7), list = S.payOpen(u).filter((x) => x.due <= d7);
-  return list.length ? P.wkPay(list.reduce((n, x) => n + S.payLeft(x), 0), list.length) : '';
+  return list.length ? P.wkPay(list.reduce((n, x) => n + S.payLeftUzs(x), 0), list.length) : '';
 }
 
 /* ---------- eslatma: 3 kun oldin, 1 kun oldin, kuni, keyin har kuni (cron) ---------- */
@@ -176,7 +179,7 @@ async function remind(u, now) {
     const r = x.r || (x.r = {}), key = kind === 'o' ? `${today}:o` : `${x.due}:${kind}`;
     if ((r.k || []).includes(key)) continue;
     r.k = [...(r.k || []).filter((k) => k.startsWith(x.due) || k.endsWith(':o')).slice(-6), key]; dirty = true;
-    const left = S.payLeft(x);
+    const left = S.cm(x, S.payLeft(x));
     const res = await send(u.chat, P.pvRem(kind, esc(x.who), esc(x.note), left, -d) + (x.cn ? `\n💳 ${x.ci}/${x.cn}` : ''), { inline_keyboard: [[{ text: P.bPvPaid(left), callback_data: `zp:${x.id}` }, { text: P.bPvPart, callback_data: `zq:${x.id}` }], [{ text: P.bPvSnooze, callback_data: `zs:${x.id}` }, { text: P.bPvOpen, callback_data: `zj:${x.id}` }]] });
     if (res.ok) sent += 1;
   }

@@ -438,3 +438,18 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .ld-bal-sub { font-size: 12.5px; color: var(--muted); font-weight: 600; } .ld-bal-sub em { font-style: normal; font-weight: 800; }
 .ld-bal-due { font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 14px; background: var(--a-soft); }
 .ld-balance.empty p { color: var(--muted); font-size: 14px; margin: 2px 0 8px; }
+
+/* Hamyonlar va dollar */
+.ld-fx { font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: var(--a-soft); color: var(--a1); }
+.ld-wallets { display: grid; gap: 8px; margin-top: 4px; }
+.ld-wallet { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 18px; text-align: left; background: color-mix(in srgb, var(--surface) 60%, transparent); border: 1px solid var(--line); }
+.ld-wallet.none { opacity: 0.72; border-style: dashed; }
+.ld-w-ico { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; background: var(--a-soft); font-size: 18px; flex: none; }
+.ld-w-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ld-w-main b { font-size: 14px; } .ld-w-main small, .ld-w-sum small { color: var(--muted); font-size: 11.5px; text-transform: none; letter-spacing: 0; font-weight: 600; }
+.ld-w-sum { display: flex; flex-direction: column; align-items: flex-end; } .ld-w-sum strong { font-size: 16px; font-family: var(--display); }
+.ld-usd { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 12px; border-radius: 16px; background: var(--a-soft); font-size: 13px; }
+.ld-def { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; } .ld-def small { text-transform: none; letter-spacing: 0; }
+.ld-actions.three { grid-template-columns: repeat(3, 1fr); }
+.pv-usd { display: block; font-weight: 700; }
+.ld-actions.three .btn { padding: 12px 6px; font-size: 14px; white-space: nowrap; }

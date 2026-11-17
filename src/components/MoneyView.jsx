@@ -5,7 +5,7 @@ import { IconSettings } from './Icons.jsx';
 import { t } from '../lib/i18n.js';
 
 // "Pul" boʻlimi: Chiqim | Daromad | Statistika
-export default function MoneyView({ payables, projects, subs, expenses, goal, meetings, today, now, onOpenPayable, onAddPayable, onPayNow, onAddExpense, onAddIncome, bal, onSetBalance, onDeleteExpense, onSetGoal, onSettings, view = 'ledger', onView }) {
+export default function MoneyView({ payables, projects, subs, expenses, goal, meetings, today, now, onOpenPayable, onAddPayable, onPayNow, onAddExpense, onAddIncome, bal, onSetBalance, onTransfer, onDefWallet, fx, onDeleteExpense, onSetGoal, onSettings, view = 'ledger', onView }) {
   const setView = onView;
   const tabs = [['ledger', 'mnLedger'], ['pay', 'fvPay'], ['income', 'mnIncome'], ['stats', 'tabStats']];
   const seg = (
@@ -30,7 +30,7 @@ export default function MoneyView({ payables, projects, subs, expenses, goal, me
         </div>
       </header>
       {seg}
-      {view === 'ledger' && <LedgerView projects={projects} subs={subs} expenses={expenses} payables={payables} today={today} onAddIncome={onAddIncome} onAddExpense={onAddExpense} onDelete={onDeleteExpense} bal={bal} onSetBalance={onSetBalance} />}
+      {view === 'ledger' && <LedgerView projects={projects} subs={subs} expenses={expenses} payables={payables} today={today} onAddIncome={onAddIncome} onAddExpense={onAddExpense} onDelete={onDeleteExpense} bal={bal} onSetBalance={onSetBalance} onTransfer={onTransfer} onDefWallet={onDefWallet} fx={fx} />}
       {view === 'pay' && <PayablesView payables={payables} projects={projects} subs={subs} today={today} onOpen={onOpenPayable} onAdd={onAddPayable} onPay={onPayNow} />}
       {view === 'income' && <IncomeCard projects={projects} subs={subs} expenses={expenses} goal={goal} onAddExpense={onAddExpense} onDeleteExpense={onDeleteExpense} onSetGoal={onSetGoal} />}
     </>

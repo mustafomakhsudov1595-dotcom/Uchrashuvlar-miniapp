@@ -7,6 +7,7 @@ import { CATS } from '../lib/meetings.js';
 import { incomeByMonth } from '../lib/finance.js';
 import { money, owed } from '../lib/projects.js';
 import { todayISO } from '../lib/dates.js';
+import { fmtW, toUzs } from '../lib/currency.js';
 
 function Bars({ values, labels, hi, fmt }) {
   const max = Math.max(1, ...values);
@@ -178,8 +179,8 @@ export function IncomeCard({ projects, subs, expenses = [], goal = 0, onAddExpen
   const names = t('months');
   const kinds = Object.entries(cur.k).filter(([, v]) => v > 0);
   const ym = today.slice(0, 7);
-  const monthExp = useMemo(() => expenses.filter((x) => x.k !== 'in' && x.d.startsWith(ym)).sort((a, b) => (a.d < b.d ? 1 : -1)), [expenses, ym]);
-  const expSum = monthExp.reduce((n, x) => n + x.a, 0);
+  const monthExp = useMemo(() => expenses.filter((x) => x.k !== 'in' && x.k !== 'tr' && x.d.startsWith(ym)).sort((a, b) => (a.d < b.d ? 1 : -1)), [expenses, ym]);
+  const expSum = monthExp.reduce((n, x) => n + toUzs(x.a, x.w), 0);
   const net = cur.total - expSum;
   const pct = goal > 0 ? Math.min(100, Math.round((cur.total / goal) * 100)) : 0;
   const saveGoal = () => {
@@ -246,7 +247,7 @@ export function IncomeCard({ projects, subs, expenses = [], goal = 0, onAddExpen
           {monthExp.slice(0, 8).map((x) => (
             <li key={x.id}>
               <span>{x.d.slice(5).replace('-', '.')} · {t('exCats')[x.cat]}{x.note ? ` · ${x.note}` : ''}</span>
-              <b className="neg">−{money(x.a)}</b>
+              <b className="neg">−{fmtW(x.w || 'cash', x.a)}</b>
               <button type="button" className="icon-btn" onClick={() => onDeleteExpense(x.id)} aria-label={t('dDelete')}>✕</button>
             </li>
           ))}
