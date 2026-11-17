@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import Illustration from './Illustration.jsx';
 import { dueKind, left, summary } from '../lib/payables.js';
 import { money } from '../lib/projects.js';
-import { fmtPay, fmtUsd } from '../lib/currency.js';
+import { fmtPay, fmtUsd, getRate } from '../lib/currency.js';
 import { formatShort } from '../lib/dates.js';
 import { t } from '../lib/i18n.js';
 
@@ -11,6 +11,8 @@ const tagText = (k) => (k.kind === 'over' ? t('pvOverdue', -k.n) : k.kind === 't
 export default function PayablesView({ payables, projects, subs, today, onOpen, onAdd, onPay }) {
   const s = useMemo(() => summary(payables, projects, subs, today), [payables, projects, subs, today]);
   const usdDebt = payables.reduce((n, x) => n + (x.cu === 'USD' ? left(x) : 0), 0);
+  const uzsDebt = payables.reduce((n, x) => n + (x.cu === 'USD' ? 0 : left(x)), 0);
+  const rate = getRate();
   const groups = useMemo(() => {
     const g = { over: [], today: [], week: [], later: [] };
     for (const x of s.open) {
@@ -24,7 +26,13 @@ export default function PayablesView({ payables, projects, subs, today, onOpen, 
       <div className="debt-card pay-sum">
         <small>{t('pvTotal')}</small>
         <b>{money(s.total)}</b>
-        <span className="pv-usd">{usdDebt > 0 ? `💲 ${t('ldUsdDebt')}: ${fmtUsd(usdDebt)}` : ''}</span>
+        {usdDebt > 0 && (
+          <span className="pv-split">
+            <em>{t('pvSomPart')}: <b>{money(uzsDebt)}</b></em>
+            <em>💲 {t('pvUsdPart')}: <b>{fmtUsd(usdDebt)}</b>{rate > 0 ? ` ≈ ${money(usdDebt * rate)}` : ''}</em>
+            {rate > 0 && <em className="pv-rate">$1 = {money(rate)}</em>}
+          </span>
+        )}
         <span>{s.overdue > 0 ? `⚠️ ${t('pvOverSum')}: ${money(s.overdue)} · ` : ''}{t('pvWeekSum')}: {money(s.week)}</span>
       </div>
 

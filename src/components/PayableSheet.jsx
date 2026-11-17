@@ -4,7 +4,7 @@ import Sheet from './Sheet.jsx';
 import Choice from './Choice.jsx';
 import { EXCATS } from '../lib/storage.js';
 import { dueKind, left, shiftDays } from '../lib/payables.js';
-import { fmtPay, rnd } from '../lib/currency.js';
+import { fmtPay, fmtUzs, getRate, rnd } from '../lib/currency.js';
 import { formatFull, formatShort, todayISO } from '../lib/dates.js';
 import { t } from '../lib/i18n.js';
 
@@ -105,10 +105,11 @@ export default function PayableSheet({ item: x, projects, onSave, onPay, onUndo,
             <span className="label-like">{t('pvCurrency')}</span>
             <Choice value={f.cu} onChange={(v) => setF((p) => ({ ...p, cu: v }))} options={[{ v: '', label: t('pvUzs') }, { v: 'USD', label: '$ USD' }]} />
           </div>
-          <div className="row2">
+          <div>
             <div className="field">
-              <label htmlFor={`${uid}-a`}>{f.credit ? t('pvCrMonthly') : t('pvAmount')}</label>
-              <input id={`${uid}-a`} className="input" type="number" inputMode="decimal" step={f.cu === 'USD' ? '0.01' : '1'} min="0" value={f.amount} onChange={set('amount')} placeholder="1500000" />
+              <label htmlFor={`${uid}-a`}>{f.credit ? t('pvCrMonthly') : f.cu === 'USD' ? t('pvAmountUsd') : t('pvAmount')}</label>
+              <input id={`${uid}-a`} className="input" type="number" inputMode="decimal" step={f.cu === 'USD' ? '0.01' : '1'} min="0" value={f.amount} onChange={set('amount')} placeholder={f.cu === 'USD' ? '120' : '1500000'} />
+              {f.cu === 'USD' && Number(f.amount) > 0 && getRate() > 0 && <small className="hint">≈ {fmtUzs(Number(f.amount) * getRate())} {t('pvUzs')}</small>}
             </div>
             <div className="field">
               <label htmlFor={`${uid}-d`}>{t('pvDue')}</label>

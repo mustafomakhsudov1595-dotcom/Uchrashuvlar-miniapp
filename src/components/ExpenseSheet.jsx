@@ -32,8 +32,8 @@ export default function ExpenseSheet({ projects, onSave, onClose, defWallet = 'c
     >
       <form id={formId} onSubmit={submit} noValidate>
         <div className="field">
-          <label htmlFor={`${uid}-a`}>{t('exAmount')}</label>
-          <input id={`${uid}-a`} className={`input${err ? ' err' : ''}`} type="number" inputMode="decimal" step={f.w === 'usd' ? '0.01' : '1'} min="0" value={f.a} onChange={(e) => { set('a')(e); setErr(''); }} placeholder="150000" autoFocus />
+          <label htmlFor={`${uid}-a`}>{f.w === 'usd' ? t('pvAmountUsd') : t('exAmount')}</label>
+          <input id={`${uid}-a`} className={`input${err ? ' err' : ''}`} type="number" inputMode="decimal" step={f.w === 'usd' ? '0.01' : '1'} min="0" value={f.a} onChange={(e) => { set('a')(e); setErr(''); }} placeholder={f.w === 'usd' ? '50' : '150000'} autoFocus />
           {err && <p className="err-text">{err}</p>}
         </div>
         <div className="field">

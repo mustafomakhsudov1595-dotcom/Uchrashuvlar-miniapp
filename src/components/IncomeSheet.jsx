@@ -23,8 +23,8 @@ export default function IncomeSheet({ onSave, onClose, defWallet = 'cash' }) {
       footer={<><button type="button" className="btn btn-ghost" onClick={onClose}>{t('fCancel')}</button><button type="submit" form={formId} className="btn btn-primary">{t('fSave')}</button></>}>
       <form id={formId} onSubmit={submit} noValidate>
         <div className="field">
-          <label htmlFor={`${uid}-a`}>{t('exAmount')}</label>
-          <input id={`${uid}-a`} className={`input${err ? ' err' : ''}`} type="number" inputMode="decimal" step={f.w === 'usd' ? '0.01' : '1'} min="0" value={f.a} onChange={(e) => { setF((p) => ({ ...p, a: e.target.value })); setErr(''); }} placeholder="500000" autoFocus />
+          <label htmlFor={`${uid}-a`}>{f.w === 'usd' ? t('pvAmountUsd') : t('exAmount')}</label>
+          <input id={`${uid}-a`} className={`input${err ? ' err' : ''}`} type="number" inputMode="decimal" step={f.w === 'usd' ? '0.01' : '1'} min="0" value={f.a} onChange={(e) => { setF((p) => ({ ...p, a: e.target.value })); setErr(''); }} placeholder={f.w === 'usd' ? '100' : '500000'} autoFocus />
           {err && <p className="err-text">{err}</p>}
         </div>
         <div className="field">

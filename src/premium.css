@@ -475,3 +475,9 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .ld-w-main small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .ld-w-main { flex: 1 1 0; }
 .ld-w-sum { flex: none; }
+
+/* Qarzlar: soʻm + dollar, umumiy soʻmda */
+.pv-split { display: grid; gap: 4px; margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.12); font-size: 13px; }
+.pv-split em { font-style: normal; font-weight: 600; } .pv-split b { font-weight: 800; }
+.pv-split .pv-rate { opacity: 0.7; font-size: 12px; }
+.date-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
