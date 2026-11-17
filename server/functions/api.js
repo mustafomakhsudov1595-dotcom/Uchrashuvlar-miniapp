@@ -19,12 +19,23 @@ exports.handler = async (event) => {
   if (!(await S.isAllowed(st, user.id))) return json(403, { ok: false, error: 'closed' });
   await S.loadAdmins(st);
   const u = await S.getUser(st, user.id);
-  if (S.needLogin(u)) return json(401, { ok: false, error: 'login' });
   const fx = await S.getRate();
-  if (event.httpMethod === 'GET') return json(200, { ...view(u), fx });
+  if (event.httpMethod === 'GET') return S.needLogin(u) ? json(401, { ok: false, error: 'login' }) : json(200, { ...view(u), fx });
   if (event.httpMethod !== 'PUT' && event.httpMethod !== 'POST') return json(405, { ok: false });
   let b;
   try { b = JSON.parse(event.body || '{}'); } catch { return json(400, { ok: false }); }
+
+  if (b.action === 'login') { // mini ilovada login/parol bilan kirish
+    const r = await require('./ws').tryLogin(st, u, String(b.login || '').slice(0, 40), String(b.pass || '').slice(0, 100));
+    if (!r.ok) return json(r.error === 'lock' ? 429 : 401, { ok: false, error: r.error === 'already' ? 'already' : r.error });
+    await S.saveUser(st, u);
+    return json(200, { ok: true, login: r.w.login });
+  }
+  if (b.action === 'logout') {
+    if (u.ws) { await require('./ws').detach(st, u); await S.saveUser(st, u); }
+    return json(200, { ok: true });
+  }
+  if (S.needLogin(u)) return json(401, { ok: false, error: 'login' });
 
   if (b.action === 'cal') {
     if (!u.calToken) {

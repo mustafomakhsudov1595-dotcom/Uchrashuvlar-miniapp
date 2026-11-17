@@ -50,3 +50,5 @@ Pul → **Hisob** (kirim, chiqim, foyda, kassa, 6 oylik dinamika, amallar daftar
 
 ## 2026-11-17: Kirishda login majburiy
 `S.needLogin(u)` = GATE && !admin && !u.ws. Bot: `ws.gate` har xabarda (ruxsat: /start, /kirish, /til, /bekor va login yozilayotgan holat); mini ilova/API kirmagan foydalanuvchiga 401 `error:"login"` → `LoginGate` ekrani. Adminlar kirishsiz ishlaydi. Panel: «Kirishda login soʻrash» tugmasi (`ws/cfg`), favqulodda oʻchirish: Cloudflare var `LOGIN_REQUIRED=off`. Cron kirmagan foydalanuvchilarga eslatma yubormaydi.
+
+Mini ilova login: `LoginGate` (login+parol) → API `action:"login"` (`ws.tryLogin`), muvaffaqiyatda `clearLocalData()` (eski shaxsiy maʼlumot hisobga qoʻshilib ketmasin) va qayta yuklanadi. Sozlamalarda «Chiqish» (`action:"logout"`).

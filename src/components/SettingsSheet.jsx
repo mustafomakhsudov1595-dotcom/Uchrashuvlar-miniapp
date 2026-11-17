@@ -8,7 +8,7 @@ import { openExternal, openTelegramLink } from '../lib/telegram.js';
 const BOT = 'Improitnotes_bot';
 const MODE_KEY = { auto: 'modeAuto', light: 'modeLight', dark: 'modeDark' };
 
-export default function SettingsSheet({ places, onLang, onRemovePlace, onCalendarLink, onClose }) {
+export default function SettingsSheet({ account, onLogout, places, onLang, onRemovePlace, onCalendarLink, onClose }) {
   const cur = getLang();
   const theme = useTheme();
   const [cal, setCal] = useState(null);
@@ -25,6 +25,12 @@ export default function SettingsSheet({ places, onLang, onRemovePlace, onCalenda
 
   return (
     <Sheet title={t('sTitle')} onClose={onClose}>
+      {account && (
+        <div className="acc-box">
+          <span>🔐 {t('lgAccount')}: <b>{account.login}</b></span>
+          <button type="button" className="btn btn-ghost" onClick={onLogout}>{t('lgLogout')}</button>
+        </div>
+      )}
       <div className="section-title"><h4>{t('sLang')}</h4></div>
       <div className="seg" role="radiogroup" aria-label={t('sLang')}>
         {LANGS.map(([code, label]) => (

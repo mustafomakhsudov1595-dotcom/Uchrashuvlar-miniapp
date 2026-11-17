@@ -29,7 +29,7 @@ import Toast from './components/Toast.jsx';
 import Confetti from './components/Confetti.jsx';
 import {
   loadMeetings, saveMeetings, loadDeleted, saveDeleted, loadPlaces, savePlaces, syncRemote, createInvite, createReport, runSeo, requestPrompt, buildMessage, checkClaudeLink, getCalendarToken, signature,
-  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature, loadPayables, savePayables, loadBal, saveBal, fetchLeads, loadPvDeleted, savePvDeleted, payablesSignature,
+  loadProjects, saveProjects, loadPDeleted, savePDeleted, projSignature, loadSubs, saveSubs, loadSDeleted, saveSDeleted, subsSignature, loadExpenses, saveExpenses, loadEDeleted, saveEDeleted, expensesSignature, loadGoal, saveGoal, loadServices, saveServices, loadSvDeleted, saveSvDeleted, servicesSignature, loadPayables, savePayables, loadBal, saveBal, clearLocalData, logoutRemote, fetchLeads, loadPvDeleted, savePvDeleted, payablesSignature,
 } from './lib/storage.js';
 import { planTasks, shiftDate } from './lib/projects.js';
 import { newId } from './lib/meetings.js';
@@ -68,6 +68,7 @@ export default function App() {
   const [balState, setBalState] = useState(loadBal);
   const [fxState, setFxState] = useState(loadFx);
   const [needLogin, setNeedLogin] = useState(false);
+  const [account, setAccount] = useState(null);
   setRate(fxState.usd); // kurs hamma hisob-kitoblar uchun (har renderda yangilanadi)
   const [confirmSid, setConfirmSid] = useState(null);
   const [confirmPid, setConfirmPid] = useState(null);
@@ -215,6 +216,7 @@ export default function App() {
         }
       }
       setNeedLogin(false);
+      if (remote) setAccount(remote.ws || null);
     } catch (e) {
       if (e && e.code === 'login') setNeedLogin(true); // hisobga kirilmagan: botda /kirish
     } finally {
@@ -814,7 +816,7 @@ export default function App() {
   };
 
   const common = { meetings, now, onOpen: openDetail, onAdd: openAdd, onSettings: openSettings };
-  if (needLogin) return <LoginGate />;
+  if (needLogin) return <LoginGate onDone={() => { clearLocalData(); window.location.reload(); }} />;
 
   return (
     <div className="app" data-lang={lang || getLang()}>
@@ -960,7 +962,7 @@ export default function App() {
       )}
 
       {sheet?.type === 'settings' && (
-        <SettingsSheet places={places.list} onLang={changeLang} onRemovePlace={(p) => savePlacesList(places.list.filter((x) => x !== p))} onCalendarLink={calendarLink} onClose={closeTop} />
+        <SettingsSheet account={account} onLogout={async () => { await logoutRemote().catch(() => {}); clearLocalData(); window.location.reload(); }} places={places.list} onLang={changeLang} onRemovePlace={(p) => savePlacesList(places.list.filter((x) => x !== p))} onCalendarLink={calendarLink} onClose={closeTop} />
       )}
 
       {confirmId && (

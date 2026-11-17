@@ -75,14 +75,21 @@ const TX = {
   notIn: { uz: 'Siz hisobga kirmagansiz. /kirish', ru: 'Вы не вошли. /kirish', en: 'You are not signed in. /kirish' },
 };
 
+// Login/parolni tekshirib hisobga biriktiradi: { ok, w } yoki { ok:false, error: 'already' | 'lock' | 'bad' }
+async function tryLogin(st, u, login, pass) {
+  if (u.ws) return { ok: false, error: 'already' };
+  if (await locked(st, u.id)) return { ok: false, error: 'lock' };
+  const id = await st.get(`wslogin/${String(login || '').toLowerCase()}`), w = id ? await getWs(st, id) : null;
+  if (!w || !(await checkPass(String(pass || ''), w))) { await fail(st, u.id); return { ok: false, error: 'bad' }; }
+  await attach(st, u, w);
+  return { ok: true, w };
+}
 async function doLogin(chat, u, login, pass) {
   const st = store();
-  if (u.ws) { await send(chat, tr(u, TX.already)); return; }
-  if (await locked(st, u.id)) { await send(chat, tr(u, TX.lock)); return; }
   if (u.lastMsgId) tg('deleteMessage', { chat_id: chat, message_id: u.lastMsgId }); // parol chatda qolmasin
-  const id = await st.get(`wslogin/${String(login).toLowerCase()}`), w = id ? await getWs(st, id) : null;
-  if (!w || !(await checkPass(pass, w))) { await fail(st, u.id); await send(chat, tr(u, TX.bad)); return; }
-  await attach(st, u, w);
+  const r = await tryLogin(st, u, login, pass);
+  if (!r.ok) { await send(chat, tr(u, TX[r.error])); return; }
+  const w = r.w;
   await send(chat, tr(u, TX.ok)(esc(w.login), w.members.length), { inline_keyboard: [[S.appBtn(tr(u, { uz: '📱 Ilovani ochish', ru: '📱 Открыть приложение', en: '📱 Open app' }))]] });
 }
 // Kirish soʻrash: login/parol bosqichini boshlaydi
@@ -239,4 +246,4 @@ async function onCallback(ctx, u, act, a, b) {
   }
   return '';
 }
-module.exports = { onMessage, onCallback, gate, askLogin, createWs, attach, detach, checkPass, ACTS: ['wag', 'wlg', 'wlo', 'wal', 'wac', 'wad', 'wan', 'wap', 'waj', 'waq', 'wak', 'wam', 'wax', 'waxy'] };
+module.exports = { onMessage, onCallback, gate, askLogin, tryLogin, createWs, attach, detach, checkPass, ACTS: ['wag', 'wlg', 'wlo', 'wal', 'wac', 'wad', 'wan', 'wap', 'waj', 'waq', 'wak', 'wam', 'wax', 'waxy'] };

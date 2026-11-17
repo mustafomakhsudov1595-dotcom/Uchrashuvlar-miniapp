@@ -459,3 +459,7 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .login-gate .lg-ico { font-size: 56px; width: 100px; height: 100px; display: grid; place-items: center; border-radius: 32px; background: var(--grad); box-shadow: 0 24px 50px -24px var(--a1); }
 .login-gate h1 { font-family: var(--display); font-size: 24px; }
 .login-gate p { color: var(--muted); max-width: 300px; line-height: 1.5; }
+.lg-form { display: grid; gap: 10px; width: 100%; max-width: 320px; margin-top: 6px; }
+.lg-form .btn { margin-top: 4px; }
+.acc-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; margin-bottom: 14px; border-radius: 18px; background: var(--a-soft); font-size: 14px; }
+.lg-form .err-text { color: #e5484d; font-weight: 600; font-size: 13px; }

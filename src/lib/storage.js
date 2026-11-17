@@ -455,6 +455,7 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     goal: Number(data.goal) || 0,
     goalAt: Number(data.goalAt) || 0,
     bal: cleanBal(data.bal),
+    ws: data.ws && typeof data.ws === 'object' ? { login: String(data.ws.login || '') } : null,
     balAt: Number(data.balAt) || 0,
     fx: data.fx && Number(data.fx.usd) > 1000 ? { usd: Number(data.fx.usd), d: String(data.fx.d || '') } : null,
     lang: data.lang,
@@ -478,6 +479,24 @@ export async function createReport(id) {
 }
 
 // Instagram lidlar (faqat admin; boshqalarga 403)
+// Mini ilovada login/parol bilan kirish va chiqish
+export async function loginRemote(login, pass) {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'login', login, pass }) });
+  let j = {};
+  try { j = await res.json(); } catch { /* ignore */ }
+  return { ok: Boolean(j.ok), error: j.error || (res.ok ? '' : 'net') };
+}
+export async function logoutRemote() {
+  const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'logout' }) });
+  return res.ok;
+}
+// Hisob almashganda eski mahalliy maʼlumot yangi hisobga qoʻshilib ketmasin
+export function clearLocalData() {
+  try {
+    const keep = /^uchrashuvlar:(lang|mode|accent|accent2|fx:v1)$/;
+    for (const k of Object.keys(localStorage)) if (k.startsWith('uchrashuvlar:') && !keep.test(k)) localStorage.removeItem(k);
+  } catch { /* ignore */ }
+}
 export async function fetchLeads() {
   const res = await fetch('/api/meetings', { method: 'PUT', headers: headers(), body: JSON.stringify({ action: 'leads' }) });
   if (!res.ok) throw new Error(`leads ${res.status}`);
