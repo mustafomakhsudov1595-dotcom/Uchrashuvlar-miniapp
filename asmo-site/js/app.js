@@ -124,6 +124,8 @@ const P=[
 const byId=id=>P.find(p=>p.id===id);
 const HERO=['lucida-premium','lucida-bikser','perla','milano','eron-tosh','grunt','vodoemulsiya'];
 const R=(id,v)=>`assets/renders/${id}-${v||'front'}.webp`;
+const S=(id,v)=>R(id,v).replace('.webp','-sm.webp');
+const coarse=matchMedia('(pointer:coarse)').matches||innerWidth<700;
 const SW=['purple','gray','green','blue'];
 const ICONS=[
 '<svg viewBox="0 0 32 32"><path d="M4 15 16 5l12 10M7 13v14h18V13M13 27v-8h6v8"/></svg>',
@@ -156,7 +158,7 @@ function renderStatic(){
   if(openId)fillModal(openId);
 }
 function renderHeroPick(){
-  $('#pick').innerHTML=HERO.map(id=>`<button type="button" data-hero="${id}" aria-pressed="${id===heroId}" aria-label="${esc(byId(id).name)}"><img src="${R(id)}" alt="" width="56" height="52" loading="lazy"></button>`).join('');
+  $('#pick').innerHTML=HERO.map(id=>`<button type="button" data-hero="${id}" aria-pressed="${id===heroId}" aria-label="${esc(byId(id).name)}"><img src="${S(id)}" alt="" width="56" height="52" decoding="async"></button>`).join('');
 }
 function setHeroText(){
   const p=byId(heroId);
@@ -183,13 +185,16 @@ function renderPerla(){
 }
 function renderCards(){
   $('#cards').innerHTML=['milano','eron-tosh','grunt','vodoemulsiya'].map(id=>{const p=byId(id);
-   return `<button type="button" class="card rv" data-open="${id}"><div class="im"><img src="${R(id)}" alt="${esc(p.name)}" width="896" height="831" loading="lazy"></div><div class="in"><span class="bd">${esc(loc(p.tag))}</span><h3>${esc(p.name)}</h3><p>${esc(loc(p.d).split('. ')[0].replace(/\.$/,''))}.</p><span class="go"><span>${t('more')}</span>${svgArrow}</span></div></button>`;}).join('');
+   return `<button type="button" class="card rv" data-open="${id}"><div class="im"><img src="${S(id)}" srcset="${S(id)} 448w, ${R(id)} 896w" sizes="(max-width:620px) 76vw, (max-width:1100px) 45vw, 300px" alt="${esc(p.name)}" width="448" height="415" loading="lazy" decoding="async"></div><div class="in"><span class="bd">${esc(loc(p.tag))}</span><h3>${esc(p.name)}</h3><p>${esc(loc(p.d).split('. ')[0].replace(/\.$/,''))}.</p><span class="go"><span>${t('more')}</span>${svgArrow}</span></div></button>`;}).join('');
   $$('#cards .card').forEach(c=>{if(rvObs)rvObs.observe(c);else c.classList.add('in');});
 }
+const hasPhone=()=>!/[Xx_]/.test(CONFIG.phone)&&CONFIG.phone.replace(/\D/g,'').length>=9;
+const telHref=()=>'+'+CONFIG.phone.replace(/\D/g,'');
 function renderContact(){
   const c=t('cl');let r=`<div><dt>${c.addr}</dt><dd>${esc(loc(CONFIG.address))}</dd></div><div><dt>${c.phone}</dt><dd>${esc(CONFIG.phone)}</dd></div>`;
   if(CONFIG.telegram)r+=`<div><dt>${c.tg}</dt><dd><a href="https://t.me/${CONFIG.telegram}" target="_blank" rel="noopener">@${CONFIG.telegram}</a></dd></div>`;
   if(CONFIG.instagram)r+=`<div><dt>${c.ig}</dt><dd><a href="https://instagram.com/${CONFIG.instagram}" target="_blank" rel="noopener">@${CONFIG.instagram}</a></dd></div>`;
+  r=r.replace(`<dd>${esc(CONFIG.phone)}</dd>`,hasPhone()?`<dd><a href="tel:${telHref()}">${esc(CONFIG.phone)}</a></dd>`:`<dd>${esc(CONFIG.phone)}</dd>`);
   r+=`<div><dt>${c.map}</dt><dd><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONFIG.mapQuery)}" target="_blank" rel="noopener">${c.mapt} →</a></dd></div>`;
   $('#cl').innerHTML=r;
   const s=$('#fs'),v=s.value;s.innerHTML=P.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(v)s.value=v;
@@ -201,7 +206,7 @@ function fillModal(id){
   const p=byId(id),sp=t('sp');
   const views=p.view?['front','angle','back'].map(v=>R(id,v)):[p.png||R(id)];
   const show=src=>{$('#dbig').innerHTML=`<img src="${src}" alt="${esc(p.name)}" width="896" height="831">`;$$('#dth button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.src===src));};
-  $('#dth').innerHTML=views.length>1?views.map(v=>`<button type="button" data-src="${v}" aria-label="view"><img src="${v}" alt=""></button>`).join(''):'';
+  $('#dth').innerHTML=views.length>1?views.map(v=>`<button type="button" data-src="${v}" aria-label="view"><img src="${v.replace('.webp','-sm.webp')}" alt=""></button>`).join(''):'';
   show(views[0]);
   $('#dth').onclick=e=>{const b=e.target.closest('button');if(b)show(b.dataset.src);};
   $('#dtag').textContent=loc(p.tag);$('#dn').textContent=p.name;$('#dd').textContent=loc(p.d);
@@ -222,19 +227,21 @@ document.addEventListener('click',e=>{
   const lv=e.target.closest('#lSeg button');if(lv){lucida=lv.dataset.v;renderLucida();setLucidaImages();return;}
   if(e.target.closest('#lMore')){openModal('lucida-'+lucida);return;}
   const ord=e.target.closest('[data-order]');if(ord){$('#fs').value=ord.dataset.order;if(dlg.open)dlg.close();}
-  const lg=e.target.closest('[data-lang]');if(lg){lang=lg.dataset.lang;try{localStorage.setItem('asmo-lang',lang)}catch(_){}renderStatic();}
+  const lg=e.target.closest('[data-lang]');if(lg){lang=lg.dataset.lang;try{localStorage.setItem('asmo-lang',lang)}catch(_){}renderStatic();buildDock();}
 });
 $('#do').addEventListener('click',e=>{e.preventDefault();$('#fs').value=e.currentTarget.dataset.order;dlg.close();$('#contact').scrollIntoView({behavior:reduce?'auto':'smooth'});});
 
 /* ===== nav, menu, progress, scrollspy ===== */
-const hdr=$('#hdr'),prog=$('#prog'),totop=$('#totop'),menu=$('#menu'),burger=$('#burger');
+const hdr=$('#hdr'),prog=$('#prog'),totop=$('#totop'),menu=$('#menu'),burger=$('#burger'),dock=$('#dock');
+let lastY=0;
 function onScroll(){
   const y=scrollY,max=document.documentElement.scrollHeight-innerHeight;
+  if(!menu.classList.contains('open')){const d=y-lastY;if(y>140&&d>6)hdr.classList.add('hide');else if(d<-6||y<=140)hdr.classList.remove('hide');}lastY=y;
   hdr.classList.toggle('stuck',y>8);prog.style.transform=`scaleX(${max>0?Math.min(1,y/max):0})`;totop.classList.toggle('on',y>900);
 }
 addEventListener('scroll',onScroll,{passive:true});onScroll();
 totop.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'});
-function setMenu(open){menu.classList.toggle('open',open);burger.setAttribute('aria-expanded',open);document.body.style.overflow=open?'hidden':'';}
+function setMenu(open){hdr.classList.remove('hide');menu.classList.toggle('open',open);burger.setAttribute('aria-expanded',open);document.body.style.overflow=open?'hidden':'';}
 burger.onclick=()=>setMenu(!menu.classList.contains('open'));
 menu.addEventListener('click',e=>{if(e.target.closest('a'))setMenu(false);});
 addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false);});
@@ -265,7 +272,7 @@ function calc(){
   $('#kr').textContent=`${mn.toFixed(1)} – ${mx.toFixed(1)}`;
   $('#kb').textContent=nMn===nMx?`${nMx}`:`${nMn} – ${nMx}`;
   const show=Math.min(nMx,8);
-  $('#kbk').innerHTML=Array.from({length:show},(_,i)=>`<img src="${R(pid)}" alt="" style="animation-delay:${i*.05}s">`).join('')+(nMx>8?`<span style="align-self:center;margin-left:22px;color:var(--gold-hi)">+${nMx-8}</span>`:'');
+  $('#kbk').innerHTML=Array.from({length:show},(_,i)=>`<img src="${S(pid)}" alt="" width="74" height="69" style="animation-delay:${i*.05}s">`).join('')+(nMx>8?`<span style="align-self:center;margin-left:22px;color:var(--gold-hi)">+${nMx-8}</span>`:'');
 }
 $('#ka').addEventListener('input',calc);$('#kp').addEventListener('change',calc);
 $('#kl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;layers=+b.dataset.l;$$('#kl button').forEach(x=>x.setAttribute('aria-pressed',x===b));calc();});
@@ -303,17 +310,17 @@ function initHero3D(){
   const viewer=$('#viewer');let renderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});}catch(e){return;}
   if(!renderer.getContext()){return;}
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,coarse?1.6:2));renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor(0,0);
   const cv=renderer.domElement;cv.setAttribute('aria-hidden','true');viewer.insertBefore(cv,viewer.querySelector('.chip'));
-  const st=ASMO3D.stage(THREE,renderer),cam=st.cam;st.scene.environment&&0;
+  const st=ASMO3D.stage(THREE,renderer,{small:coarse}),cam=st.cam;
   const loader=new THREE.TextureLoader(),cache={};
   const isGL2=renderer.capabilities.isWebGL2,aniso=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-  const tex=n=>cache[n]||(cache[n]=new Promise((ok,no)=>loader.load(`assets/tex/${n}.jpg`,x=>{x.encoding=THREE.sRGBEncoding;x.anisotropy=aniso;if(!isGL2){x.minFilter=THREE.LinearFilter;x.generateMipmaps=false;}ok(x);},undefined,no)));
+  const tex=n=>cache[n]||(cache[n]=new Promise((ok,no)=>loader.load(`assets/tex/${coarse?'1k/':''}${n}.jpg`,x=>{x.encoding=THREE.sRGBEncoding;x.anisotropy=aniso;if(!isGL2){x.minFilter=THREE.LinearFilter;x.generateMipmaps=false;}ok(x);},undefined,no)));
   let group=null,rot=0,vel=0,dragging=false,lastX=0,idleAt=0,vis=true,anim=0,animDir=0,pending=null,sway=0,ready=false;
-  const ELEV=.17,ZOOM=.9;
-  function size(){const w=viewer.clientWidth,h=viewer.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);ASMO3D.frame(cam,w/h,ELEV,ZOOM);}
+  const ELEV=.17,ZOOM=.83,LY=.9;
+  function size(){const w=viewer.clientWidth,h=viewer.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);ASMO3D.frame(cam,w/h,ELEV,ZOOM,LY);}
   size();new ResizeObserver(size).observe(viewer);
   async function build(id){
     const p=byId(id);const [f,b]=await Promise.all([tex(p.tex[0]),tex(p.tex[1])]);
@@ -356,9 +363,28 @@ function initHero3D(){
   hero3d={show};show(heroId);kick();
 }
 
+
+/* ===== mobile action dock + carousel progress ===== */
+function buildDock(){
+  const ic={call:'<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',tg:'<svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z"/><path d="m9 13 8-6"/></svg>'};
+  let h='';
+  if(hasPhone())h+=`<a class="ic" href="tel:${telHref()}" aria-label="Call">${ic.call}</a>`;
+  if(CONFIG.telegram)h+=`<a class="ic" href="https://t.me/${CONFIG.telegram}" target="_blank" rel="noopener" aria-label="Telegram">${ic.tg}</a>`;
+  h+=`<a class="btn btn-gold" href="#contact" data-i="n_cta">${t('n_cta')}</a>`;
+  dock.innerHTML=h;
+}
+if('IntersectionObserver'in window){
+  new IntersectionObserver(es=>es.forEach(e=>dock.classList.toggle('hide',e.isIntersecting))).observe($('#contact'));
+}
+const cards=$('#cards'),cprog=$('#cprog i');
+function cardsProg(){const m=cards.scrollWidth-cards.clientWidth;const k=m>0?cards.scrollLeft/m:0;cprog.style.width='30%';cprog.style.transform=`translateX(${k*(100/0.3-100)}%)`;}
+cards.addEventListener('scroll',cardsProg,{passive:true});
+
 /* ===== init ===== */
 try{const s=localStorage.getItem('asmo-lang');if(s&&T[s])lang=s;}catch(_){}
-renderStatic();setLucidaImages();
+renderStatic();buildDock();cardsProg();setLucidaImages();
 if(rvObs)$$('.rv').forEach(x=>rvObs.observe(x));
-if(document.readyState==='complete')initHero3D();else addEventListener('load',initHero3D);
+const c=navigator.connection;
+const go=()=>{if(c&&(c.saveData||/(^|-)2g$/.test(c.effectiveType||'')))return;(window.requestIdleCallback||(f=>setTimeout(f,300)))(initHero3D,{timeout:2500});};
+if(document.readyState==='complete')go();else addEventListener('load',go);
 })();

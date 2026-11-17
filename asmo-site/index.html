@@ -6,7 +6,10 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>ASMO Construction Product</title>
 <meta name="description" content="ASMO Construction Product: premium dekorativ qoplamalar (Lucida, Perla, Travertin, Milano, Eron tosh), grunt va suv asosli bo'yoqlar. Farg'ona, Uchko'prik.">
-<meta name="theme-color" content="#0b0b0d">
+<meta name="theme-color" content="#ffffff">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preload" as="image" href="assets/renders/lucida-premium-front.webp" fetchpriority="high">
 <meta property="og:title" content="ASMO Construction Product">
 <meta property="og:description" content="Premium dekorativ qoplamalar, grunt va bo'yoqlar. 2019-yildan beri Farg'ona viloyatida.">
 <meta property="og:type" content="website">
@@ -99,8 +102,8 @@ header.stuck{border-color:var(--line);background:rgba(255,255,255,.93)}
 .viewer:active{cursor:grabbing}
 .viewer .disc{position:absolute;inset:6% 5% 8%;border-radius:50%;background:radial-gradient(circle at 50% 38%,#fff 0%,#f4f4f6 60%,#ebebee 100%);box-shadow:inset 0 -40px 80px rgba(20,20,30,.045),0 1px 0 #fff}
 .viewer img,.viewer canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.viewer canvas{opacity:0;transition:opacity .6s}.viewer canvas.on{opacity:1}
-.viewer img.fb{transition:opacity .5s}.viewer img.fb.off{opacity:0;pointer-events:none}
+.viewer canvas{opacity:0;transition:opacity .25s}.viewer canvas.on{opacity:1}
+.viewer img.fb{transition:opacity .25s}.viewer img.fb.off{opacity:0;pointer-events:none}
 .chip{position:absolute;z-index:3;display:flex;flex-direction:column;gap:2px;padding:12px 18px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(20,20,30,.08);animation:bob 8s ease-in-out infinite;pointer-events:none}
 .chip small{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .chip b{font-weight:500;font-size:1rem;letter-spacing:.01em;white-space:nowrap}
@@ -180,8 +183,6 @@ header.stuck{border-color:var(--line);background:rgba(255,255,255,.93)}
 .ch-media .life{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s var(--ease),transform 1.6s var(--ease);transform:scale(1.06)}
 .ch-media .life.on{opacity:1;transform:scale(1)}
 .plaster{--c:#587aa6}
-.plaster.blue{background:linear-gradient(115deg,rgba(255,255,255,.18),rgba(0,0,0,.28)),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='1000'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.009 .009' numOctaves='6' seed='7' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='%23587aa6' surfaceScale='3.2' diffuseConstant='1.25'%3E%3CfeDistantLight azimuth='235' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='1000' height='1000' filter='url(%23p)'/%3E%3C/svg%3E") center/cover}
-.plaster.brown{background:linear-gradient(115deg,rgba(255,235,200,.16),rgba(0,0,0,.3)),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='1000'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.009 .009' numOctaves='6' seed='11' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='%23b48a63' surfaceScale='3.2' diffuseConstant='1.25'%3E%3CfeDistantLight azimuth='235' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='1000' height='1000' filter='url(%23p)'/%3E%3C/svg%3E") center/cover}
 .ch-media::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0) 60%,rgba(0,0,0,.28));pointer-events:none}
 .chapter.rev .ch-media::after{background:linear-gradient(270deg,rgba(0,0,0,0) 60%,rgba(0,0,0,.28))}
 .ch-bucket{position:absolute;z-index:4;top:50%;left:46%;width:clamp(260px,34%,470px);transform:translate(-50%,-50%);pointer-events:none}
@@ -363,6 +364,100 @@ dialog::backdrop{background:rgba(8,8,10,.74);backdrop-filter:blur(6px)}
 .rv{transition:opacity 1s var(--ease),transform 1s var(--ease)}
 .js-rv .rv:not(.in){opacity:0;transform:translateY(30px)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}.js-rv .rv:not(.in){opacity:1;transform:none}}
+
+/* ===== touch & small-screen layer ===== */
+html{-webkit-tap-highlight-color:transparent}
+a,button,select,label{touch-action:manipulation}
+.chip small{font-size:.7rem}.hint{font-size:.72rem}.specs dt{font-size:.72rem}.card .bd{font-size:.7rem}.stats span{font-size:.8rem}
+.lang button{height:40px;min-width:46px}
+.burger{width:48px;height:48px}.burger i{left:15px;right:15px}.burger i:nth-child(1){top:19px}.burger i:nth-child(2){top:27px}
+.burger[aria-expanded="true"] i:nth-child(1),.burger[aria-expanded="true"] i:nth-child(2){top:23px}
+input[type=range]{height:44px;min-height:44px}
+.cl a{display:inline-block;padding:6px 0}
+footer nav a{padding:12px 0}
+header{transition:transform .45s var(--ease),border-color .3s,background .3s}
+header.hide{transform:translateY(-100%)}
+.plaster.blue{background:url(assets/parts/plaster-blue.jpg) center/cover}
+.plaster.brown{background:url(assets/parts/plaster-brown.jpg) center/cover}
+.plaster::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.16),rgba(0,0,0,.3))}
+.menu .lang{border-color:#44444b}.menu .lang button{color:#b5b5bb}.menu .lang button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+.menu .foot{justify-content:space-between}
+.grab{display:none}
+.cprog{display:none}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:65;display:none;gap:10px;align-items:center;padding:10px max(14px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:rgba(11,11,13,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid #3a3321;transition:transform .45s var(--ease)}
+.dock.hide{transform:translateY(112%)}
+.dock .btn{flex:1;min-height:52px}
+.dock .ic{flex:none;width:52px;height:52px;border-radius:50%;border:1px solid #44444b;display:grid;place-items:center;color:var(--gold-hi);text-decoration:none}
+.dock .ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+@media(hover:none){.card:hover,.btn:hover,.pick button:hover,.sw button:hover,.trav .pair button:hover{transform:none;box-shadow:none}.card:hover .im img{transform:none}.btn-gold:hover{box-shadow:none}}
+@media(max-width:1020px){
+  .hero{padding-top:calc(var(--hh) + env(safe-area-inset-top,0px) + 22px)}
+  .hero-grid{display:flex;flex-direction:column;align-items:stretch;gap:0}
+  .hero-grid>div:first-child{display:contents}
+  .hero .eyebrow{order:1}.hero .h1{order:2;margin-top:16px}.viewer-wrap{order:3;margin-top:8px}.hero .lead{order:4;margin-top:18px}.hero .cta{order:5;margin-top:24px}
+  .viewer{max-height:none}
+}
+@media(max-width:760px){
+  .dock{display:flex}
+  footer{padding-bottom:calc(36px + 78px + env(safe-area-inset-bottom,0px))}
+  .totop{bottom:calc(88px + env(safe-area-inset-bottom,0px));width:46px;height:46px}
+  dialog{width:100%;max-width:100%;max-height:92dvh;margin:auto 0 0;border-radius:22px 22px 0 0}
+  dialog[open]{animation:sheet .5s var(--ease)}
+  @keyframes sheet{from{transform:translateY(100%)}}
+  .dg{max-height:92dvh}
+  .grab{display:block;position:absolute;top:8px;left:50%;width:42px;height:4px;margin-left:-21px;border-radius:2px;background:#c9c9ce;z-index:6}
+  .dx{top:12px;right:12px;width:46px;height:46px}
+  .dm{padding:30px 16px 16px}.dm .big{max-width:270px}
+  .dth button{width:56px;height:56px}
+  .db{padding:22px 22px calc(28px + env(safe-area-inset-bottom,0px))}
+  .db .btn{width:100%}
+}
+@media(max-width:620px){
+  .sec{padding-block:60px}
+  .wrap{padding-inline:max(20px,env(safe-area-inset-left,0px)) max(20px,env(safe-area-inset-right,0px))}
+  .hero .cta .btn{flex:1 1 100%}
+  .h1{font-size:clamp(2.5rem,12.4vw,4rem);margin-top:0}
+  .hero .lead{font-size:1.02rem}
+  .bene{display:flex;overflow-x:auto;gap:10px;border-top:0;margin:22px -20px 0;padding:2px 20px 8px;scroll-snap-type:x proximity;scrollbar-width:none}
+  .bene::-webkit-scrollbar{display:none}
+  .bene li{flex:none;scroll-snap-align:start;border:1px solid var(--line)!important;border-radius:999px;padding:10px 18px 10px 14px!important;gap:10px;white-space:nowrap;font-size:.84rem}
+  .bene svg{width:22px;height:22px}
+  .coll-head{margin-bottom:34px}
+  .chapter{margin-top:20px}
+  .seg{display:flex;width:100%}.seg button{flex:1;padding:0 6px;font-size:.7rem;letter-spacing:.06em;min-height:46px}
+  .sw{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.sw button{width:100%;height:auto;aspect-ratio:1}
+  .ch-text .row .btn{flex:1 1 100%}
+  .specs div{padding:11px 0}
+  .cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin:34px -20px 0;padding:6px 20px 14px;scroll-padding-inline:20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .cards::-webkit-scrollbar{display:none}
+  .card{flex:0 0 76%;scroll-snap-align:start}
+  .card p{display:block}.card h3{font-size:1.25rem}.card .in{padding:6px 20px 22px}.card .im{padding:14px}
+  .cprog{display:block;height:2px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+  .cprog i{display:block;height:100%;width:30%;background:var(--gold);border-radius:2px;transform-origin:0 50%}
+  .steps{margin-top:40px}
+  .cw{margin-top:34px}
+  .lab output{font-size:1.7rem}
+  .kg{margin-top:36px}
+  .form{padding:24px 18px;margin-inline:-4px}
+  .photo{margin:18px 14px 0}
+  .stats{margin-top:40px}
+  .trav .pair{padding-inline:14px}
+  .trav .tx{padding:36px 22px 20px}
+}
+@media(max-width:760px){.sample em,.trav .pair span,.card .bd,.chip small,.ch-text .tag,.trav .tag{font-size:.76rem}}
+@media(max-width:380px){
+  .nav{gap:10px}.nav .logo img{height:34px}
+  .lang button{min-width:42px}
+  .chip{padding:7px 11px}.chip b{font-size:.8rem}.chip small{font-size:.66rem}
+  .hint{display:none}
+  .ch-text h3,.trav h3{font-size:2.4rem}
+}
+@media(orientation:landscape) and (max-height:560px){
+  .viewer-wrap{max-width:min(640px,calc((100svh - 130px)/.98))}
+  .hero{padding-top:calc(var(--hh) + 14px)}
+  .hint,.chip{display:none}
+  .menu{overflow-y:auto;justify-content:flex-start}
+}
 </style>
 </head>
 <body>
@@ -388,7 +483,7 @@ dialog::backdrop{background:rgba(8,8,10,.74);backdrop-filter:blur(6px)}
 </header>
 <div class="menu" id="menu">
   <a class="m" href="#coll" data-i="n_coll"></a><a class="m" href="#story" data-i="n_story"></a><a class="m" href="#process" data-i="n_proc"></a><a class="m" href="#calc" data-i="n_calc"></a><a class="m" href="#contact" data-i="n_contact"></a>
-  <div class="foot"><a class="btn btn-gold btn-sm" href="#contact" data-i="n_cta"></a></div>
+  <div class="foot"><a class="btn btn-gold" href="#contact" data-i="n_cta"></a><div class="lang" role="group" aria-label="Til / Язык"><button type="button" data-lang="uz" aria-pressed="true">UZ</button><button type="button" data-lang="ru" aria-pressed="false">RU</button></div></div>
 </div>
 
 <main id="top">
@@ -507,6 +602,7 @@ dialog::backdrop{background:rgba(8,8,10,.74);backdrop-filter:blur(6px)}
       <div class="eyebrow rv" data-i="m_eyebrow"></div><h2 class="h2 rv" data-i="m_h"></h2>
     </div>
     <div class="cards" id="cards"></div>
+    <div class="cprog" id="cprog" aria-hidden="true"><i></i></div>
   </div>
 </section>
 
@@ -555,8 +651,8 @@ dialog::backdrop{background:rgba(8,8,10,.74);backdrop-filter:blur(6px)}
       <dl class="cl rv" id="cl"></dl>
       <form class="form rv on-dark" id="fm" novalidate>
         <div class="two">
-          <label for="fn"><span data-i="f_name"></span><input id="fn" autocomplete="name"></label>
-          <label for="fp"><span data-i="f_phone"></span><input id="fp" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998 __ ___ __ __" aria-describedby="fpe"><span class="err" id="fpe" role="alert"></span></label>
+          <label for="fn"><span data-i="f_name"></span><input id="fn" name="name" autocomplete="name" autocapitalize="words" enterkeyhint="next"></label>
+          <label for="fp"><span data-i="f_phone"></span><input id="fp" name="phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" placeholder="+998 __ ___ __ __" aria-describedby="fpe"><span class="err" id="fpe" role="alert"></span></label>
         </div>
         <label for="fs"><span data-i="f_prod"></span><select id="fs"></select></label>
         <label for="fm2"><span data-i="f_msg"></span><textarea id="fm2"></textarea></label>
@@ -578,9 +674,12 @@ dialog::backdrop{background:rgba(8,8,10,.74);backdrop-filter:blur(6px)}
   </div>
 </footer>
 
+<div class="dock" id="dock"></div>
+
 <button class="totop" id="totop" type="button" aria-label="Up"><svg viewBox="0 0 18 18"><path d="M9 15V3M3 8l6-6 6 6"/></svg></button>
 
 <dialog id="dlg" aria-labelledby="dn">
+  <i class="grab" aria-hidden="true"></i>
   <button class="dx" id="dx" type="button" aria-label="Close">✕</button>
   <div class="dg">
     <div class="dm"><div class="big" id="dbig"></div><div class="dth" id="dth"></div></div>

@@ -76,7 +76,7 @@ function stage(THREE,renderer,opts){
   const scene=new THREE.Scene();
   scene.environment=makeEnv(THREE,renderer);
   const key=new THREE.DirectionalLight(0xffffff,1.15); key.position.set(-4,9,6); key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048); key.shadow.radius=9; key.shadow.bias=-0.0004;
+  key.shadow.mapSize.set(opts.small?1024:2048,opts.small?1024:2048); key.shadow.radius=9; key.shadow.bias=-0.0004;
   Object.assign(key.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:1,far:20}); scene.add(key);
   const rim=new THREE.DirectionalLight(0xfff3d6,.7); rim.position.set(5,4,-6); scene.add(rim);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.ShadowMaterial({opacity:.13})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
@@ -85,10 +85,10 @@ function stage(THREE,renderer,opts){
   const cam=new THREE.PerspectiveCamera(opts.fov||22,1,.1,100);
   return {scene,cam,floor,blob};
 }
-function frame(cam,aspect,elev,zoom){
+function frame(cam,aspect,elev,zoom,ly){
   cam.aspect=aspect;
   const dist=(aspect<1?9.2/aspect*0.78:9.2)*(zoom||1), e=(elev==null?0.19:elev);
-  cam.position.set(0,1.15+Math.sin(e)*dist,Math.cos(e)*dist); cam.lookAt(0,1.1,0); cam.updateProjectionMatrix();
+  const base=(ly==null?1.1:ly); cam.position.set(0,base+.05+Math.sin(e)*dist,Math.cos(e)*dist); cam.lookAt(0,base,0); cam.updateProjectionMatrix();
 }
 root.ASMO3D={build,stage,frame,H0,H1};
 })(window);
