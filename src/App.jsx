@@ -3,6 +3,7 @@ import HomeView from './components/HomeView.jsx';
 import CalendarView from './components/CalendarView.jsx';
 import MoneyView from './components/MoneyView.jsx';
 import QuickMenu from './components/QuickMenu.jsx';
+import IncomeSheet from './components/IncomeSheet.jsx';
 import ProjectsView from './components/ProjectsView.jsx';
 import ProjectDetail from './components/ProjectDetail.jsx';
 import ProjectForm from './components/ProjectForm.jsx';
@@ -351,10 +352,10 @@ export default function App() {
     setSheet({ type: 'form', date });
   };
   const todayStr = toISODate(now);
-  const moneyInit = useMemo(() => { try { const v = new URLSearchParams(window.location.search).get('view'); return v === 'income' || v === 'stats' ? v : 'pay'; } catch { return 'pay'; } }, []);
+  const [moneyTab, setMoneyTab] = useState(() => { try { const v = new URLSearchParams(window.location.search).get('view'); return ['income', 'stats', 'pay', 'ledger'].includes(v) ? v : 'ledger'; } catch { return 'ledger'; } });
   const paySum = useMemo(() => paySummary(payables, projects, subs, todayStr), [payables, projects, subs, todayStr]);
   const payStrip = paySum.open.length ? (
-    <button type="button" className="pay-strip" onClick={() => { haptic.tap(); setTab('stats'); }}>
+    <button type="button" className="pay-strip" onClick={() => { haptic.tap(); setTab('stats'); setMoneyTab('pay'); }}>
       <span className="ps-ico"><IconWallet width={20} height={20} /></span>
       <span className="ps-txt"><small>{t('pvTitle')}</small><b>{money(paySum.week)} <i>· {t('pvWeekLbl')}</i></b></span>
       {paySum.overdue > 0 && <span className="ps-over">{money(paySum.overdue)}</span>}
@@ -363,8 +364,9 @@ export default function App() {
   ) : null;
   const quickPick = (k) => {
     haptic.tap();
-    if (k === 'pay') { setTab('stats'); setSheet({ type: 'payable' }); }
-    else if (k === 'expense') setSheet({ type: 'expense' });
+    if (k === 'pay') { setTab('stats'); setMoneyTab('pay'); setSheet({ type: 'payable' }); }
+    else if (k === 'expense') { setTab('stats'); setMoneyTab('ledger'); setSheet({ type: 'expense' }); }
+    else if (k === 'income') { setTab('stats'); setMoneyTab('ledger'); setSheet({ type: 'income' }); }
     else if (k === 'meeting') setSheet({ type: 'form', date: tab === 'calendar' ? selectedDate : undefined });
     else if (k === 'project') setSheet({ type: 'pform' });
     else if (k === 'sub') setSheet({ type: 'sub' });
@@ -780,7 +782,7 @@ export default function App() {
       {tab === 'projects' && (
         <ProjectsView leads={leads} projects={projects} subs={subs} services={services} payables={payables} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onOpenService={(id) => { haptic.tap(); setSheet({ type: 'service', svid: id }); }} onAddService={() => { haptic.tap(); setSheet({ type: 'service' }); }} now={now} onOpenClient={(key) => { haptic.tap(); setSheet({ type: 'client', ckey: key }); }} onOpenSub={(id) => { haptic.tap(); setSheet({ type: 'sub', sid: id }); }} onAddSub={() => { haptic.tap(); setSheet({ type: 'sub' }); }} onPaySub={paySubNow} onOpen={openProject} onAdd={openProjectForm} onDone={(id) => projStatus(id, 'done')} onDelete={swipeProjDelete} onSettings={openSettings} />
       )}
-      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} initial={moneyInit} />}
+      {tab === 'stats' && <MoneyView payables={payables} projects={projects} subs={subs} expenses={expenses} goal={goalState.goal} meetings={meetings} today={todayStr} now={now} onOpenPayable={(id) => { haptic.tap(); setSheet({ type: 'payable', payid: id }); }} onAddPayable={() => { haptic.tap(); setSheet({ type: 'payable' }); }} onPayNow={payFull} onAddExpense={() => { haptic.tap(); setSheet({ type: 'expense' }); }} onAddIncome={() => { haptic.tap(); setSheet({ type: 'income' }); }} onDeleteExpense={deleteExpense} onSetGoal={setGoal} onSettings={openSettings} view={moneyTab} onView={setMoneyTab} />}
 
       <TabBar tab={tab} onTab={changeTab} onAdd={() => { haptic.tap(); setSheet({ type: 'quick' }); }} />
 
@@ -883,6 +885,7 @@ export default function App() {
       )}
 
       {sheet?.type === 'quick' && <QuickMenu onClose={closeTop} onPick={quickPick} />}
+      {sheet?.type === 'income' && <IncomeSheet onSave={addExpense} onClose={closeTop} />}
       {sheet?.type === 'expense' && <ExpenseSheet projects={projects} onSave={addExpense} onClose={closeTop} />}
 
       {sheet?.type === 'sub' && (!sheet.sid || curSub) && (

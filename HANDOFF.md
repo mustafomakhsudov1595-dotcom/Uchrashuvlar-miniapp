@@ -35,3 +35,6 @@ Hujjat: `server/README.md` (modullar roʻyxati).
 
 ## 2026-11-17: Video / sayt / bot yasash funksiyalari OLIB TASHLANDI
 Egasi talabi bilan `/video`, `/sayt`, `/botyasa`, `/mening` (agent.js, ubot.js, agent/, agent.yml) butunlay oʻchirildi. Cloudflare'da `GH_DISPATCH_TOKEN` va `GEMINI_API_KEY` secretlari, GitHub'dagi agent secretlari endi kerak emas (oʻchirish tavsiya qilinadi). Qolgan funksiyalar oʻzgarmagan.
+
+## 2026-11-17: Hisob-kitob
+Pul → **Hisob** (kirim, chiqim, foyda, kassa, 6 oylik dinamika, amallar daftari) va bot `/hisob`, `/kirim`. Qoʻlda kirim `expenses` ichida `k:"in"`; barcha chiqim hisoblari (`expensesIn`, `incomeByMonth`, PDF, CSV) buni hisobga oladi.

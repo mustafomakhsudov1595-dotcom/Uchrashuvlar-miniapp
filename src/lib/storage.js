@@ -213,7 +213,7 @@ export function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !DATE_RE.test(x.d)) return null;
   const a = Number(x.a);
   if (!Number.isFinite(a) || a <= 0) return null;
-  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', src: typeof x.src === 'string' ? x.src : '', ref: typeof x.ref === 'string' ? x.ref : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+  return { id: x.id, a: Math.round(a), d: x.d, ...(x.k === 'in' ? { k: 'in', ik: ['site', 'bot', 'video', 'other', 'sub'].includes(x.ik) ? x.ik : 'other' } : {}), cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim() : '', pid: typeof x.pid === 'string' ? x.pid : '', src: typeof x.src === 'string' ? x.src : '', ref: typeof x.ref === 'string' ? x.ref : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
 }
 export function loadExpenses() {
   try {
@@ -245,7 +245,7 @@ export const saveEDeleted = (ids) => {
     /* ignore */
   }
 };
-export const expensesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.a, x.d, x.cat, x.note, x.pid]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+export const expensesSignature = (list) => JSON.stringify(list.map((x) => [x.id, x.updatedAt, x.a, x.d, x.cat, x.note, x.pid, x.k, x.ik]).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
 export function loadGoal() {
   try {
     const d = JSON.parse(localStorage.getItem(GOAL_KEY) || '{}');

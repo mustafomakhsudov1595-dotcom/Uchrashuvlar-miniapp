@@ -6,6 +6,7 @@ import { t } from '../lib/i18n.js';
 export default function QuickMenu({ onPick, onClose }) {
   const items = [
     ['pay', IconWallet, t('qmPay'), t('qmPayS'), 'hot'],
+    ['income', IconWallet, t('qmIn'), t('qmInS')],
     ['expense', IconChart, t('qmExp'), t('qmExpS')],
     ['meeting', IconCalendar, t('qmMeet'), t('qmMeetS')],
     ['project', IconFolder, t('qmProj'), t('qmProjS')],

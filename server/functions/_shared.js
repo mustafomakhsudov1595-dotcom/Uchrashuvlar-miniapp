@@ -301,6 +301,7 @@ function paymentsOf(u) {
     if (rest > 0) out.push({ d: isoOfLocal(localNow(u.tz, p.updatedAt || p.createdAt || Date.now())), a: rest, k: p.type });
   }
   for (const x of u.subs) for (const y of x.pays || []) out.push({ d: y.d, a: y.a, k: 'sub' });
+  for (const x of u.expenses || []) if (x.k === 'in') out.push({ d: x.d, a: x.a, k: x.ik || 'other' }); // qoʻlda kiritilgan kirim
   return out;
 }
 const prevYM = (ym, n) => { let [y, m] = ym.split('-').map(Number); m -= n; while (m < 1) { m += 12; y -= 1; } return `${y}-${pad(m)}`; };
@@ -309,7 +310,7 @@ function incomeByMonth(u, months, today) {
   for (let i = months - 1; i >= 0; i--) list.push({ m: prevYM(cur, i), total: 0, exp: 0, k: { site: 0, bot: 0, video: 0, other: 0, sub: 0 } });
   const idx = new Map(list.map((x) => [x.m, x]));
   for (const x of paymentsOf(u)) { const e = idx.get(x.d.slice(0, 7)); if (e) { e.total += x.a; e.k[x.k in e.k ? x.k : 'other'] += x.a; } }
-  for (const x of u.expenses || []) { const e = idx.get(x.d.slice(0, 7)); if (e) e.exp += x.a; }
+  for (const x of u.expenses || []) { if (x.k === 'in') continue; const e = idx.get(x.d.slice(0, 7)); if (e) e.exp += x.a; }
   return list;
 }
 function clientsOf(u) {
@@ -334,7 +335,8 @@ function cleanExpense(x) {
   if (!x || typeof x !== 'object' || typeof x.id !== 'string' || x.id.length > 64 || !DATE_RE.test(x.d)) return null;
   const a = num(x.a);
   if (a === null || a <= 0) return null;
-  return { id: x.id, a: Math.round(a), d: x.d, cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', src: typeof x.src === 'string' ? x.src.slice(0, 64) : '', ref: typeof x.ref === 'string' ? x.ref.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
+  const isIn = x.k === 'in';
+  return { id: x.id, a: Math.round(a), d: x.d, ...(isIn ? { k: 'in', ik: ['site', 'bot', 'video', 'other', 'sub'].includes(x.ik) ? x.ik : 'other' } : {}), cat: EXCATS.includes(x.cat) ? x.cat : 'other', note: typeof x.note === 'string' ? x.note.trim().slice(0, 100) : '', pid: typeof x.pid === 'string' ? x.pid.slice(0, 64) : '', src: typeof x.src === 'string' ? x.src.slice(0, 64) : '', ref: typeof x.ref === 'string' ? x.ref.slice(0, 64) : '', createdAt: Number(x.createdAt) || Date.now(), updatedAt: Number(x.updatedAt) || 0 };
 }
 function mergeExpenses(u, clientList, clientDeleted) {
   const tomb = u.edeleted || {}, now = Date.now();
@@ -350,7 +352,21 @@ function mergeExpenses(u, clientList, clientDeleted) {
   u.edeleted = tomb; u.expenses = [...byId.values()].sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 1500);
   return u;
 }
-const expensesIn = (u, from, to) => u.expenses.filter((x) => x.d >= from && x.d <= to);
+const expensesIn = (u, from, to) => u.expenses.filter((x) => x.k !== 'in' && x.d >= from && x.d <= to);
+// Hisob daftari: barcha kirim (loyiha, oylik, qoʻlda) va chiqimlar, sana boʻyicha kamayish tartibida
+function ledger(u, from = '0000-01-01', to = '9999-12-31') {
+  const out = [];
+  const push = (e) => { if (e.d >= from && e.d <= to) out.push(e); };
+  for (const p of u.projects) {
+    let sum = 0;
+    for (const x of p.pays || []) { push({ d: x.d, a: x.a, dir: 'in', label: p.client || p.name, kind: p.type }); sum += x.a; }
+    const rest = (p.paid || 0) - sum;
+    if (rest > 0) push({ d: isoOfLocal(localNow(u.tz, p.updatedAt || p.createdAt || Date.now())), a: rest, dir: 'in', label: p.client || p.name, kind: p.type });
+  }
+  for (const x of u.subs) for (const y of x.pays || []) push({ d: y.d, a: y.a, dir: 'in', label: x.client || x.name, kind: 'sub' });
+  for (const x of u.expenses || []) push(x.k === 'in' ? { d: x.d, a: x.a, dir: 'in', label: x.note, kind: x.ik || 'other', id: x.id } : { d: x.d, a: x.a, dir: 'out', label: x.note, kind: x.cat, id: x.id });
+  return out.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : b.a - a.a));
+}
 const expenseSum = (list) => list.reduce((n, x) => n + x.a, 0);
 const monthRange = (ym) => [`${ym}-01`, `${ym}-31`];
 const incomeIn = (u, from, to) => paymentsOf(u).filter((x) => x.d >= from && x.d <= to).reduce((n, x) => n + x.a, 0);
@@ -628,5 +644,5 @@ module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
   tg, esc, bg, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
-  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
+  tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

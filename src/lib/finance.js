@@ -36,7 +36,7 @@ export function clientsOf(projects, subs) {
 }
 
 // Oxirgi n oy daromadi (toʻlov sanasi boʻyicha). Sanasiz eski toʻlov — oxirgi yangilangan oyga.
-export function incomeByMonth(projects, subs, months, today) {
+export function incomeByMonth(projects, subs, months, today, manual = []) {
   let [y, m] = today.split('-').map(Number);
   const list = [];
   for (let i = 0; i < months; i++) {
@@ -56,5 +56,6 @@ export function incomeByMonth(projects, subs, months, today) {
     if (rest > 0) add(toISODate(new Date(p.updatedAt || p.createdAt || Date.now())), rest, p.type);
   }
   for (const x of subs) for (const y of x.pays || []) add(y.d, y.a, 'sub');
+  for (const x of manual) if (x.k === 'in') add(x.d, x.a, x.ik || 'other');
   return list;
 }

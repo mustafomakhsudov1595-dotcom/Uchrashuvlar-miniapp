@@ -124,7 +124,7 @@ async function exportCsv(chat, u) {
   if (subs.length > 1) await sendDoc(chat, 'oylik.csv', csv(subs));
   if (u.payables.length) await sendDoc(chat, 'tolash.csv', csv([['Kimga', 'Nima uchun', 'Summa', 'Toʻlandi', 'Qoldi', 'Muddat', 'Takror'], ...u.payables.map((x) => [x.who, x.note, x.amount, x.paid, S.payLeft(x), x.due, x.repeat ? 'oylik' : ''])]));
   if (u.services.length) await sendDoc(chat, 'servis.csv', csv([['Sayt', 'Mijoz', 'Telefon', 'Sayt havolasi', 'Claude havolasi', 'Topshirilgan', 'Servis tugaydi'], ...u.services.map((x) => [x.name, x.client, x.phone, x.url, x.claudeUrl, x.doneAt, S.serviceEnd(x)])]));
-  if (u.expenses.length) await sendDoc(chat, 'xarajatlar.csv', csv([['Sana', 'Summa', 'Tur', 'Izoh', 'Loyiha'], ...u.expenses.map((x) => [x.d, x.a, P.exCats[x.cat].replace(/^\S+\s/, ''), x.note, (u.projects.find((p) => p.id === x.pid) || {}).name || ''])]));
+  if (u.expenses.some((x) => x.k !== 'in')) await sendDoc(chat, 'xarajatlar.csv', csv([['Sana', 'Summa', 'Tur', 'Izoh', 'Loyiha'], ...u.expenses.filter((x) => x.k !== 'in').map((x) => [x.d, x.a, P.exCats[x.cat].replace(/^\S+\s/, ''), x.note, (u.projects.find((p) => p.id === x.pid) || {}).name || ''])]));
 }
 
 /* ---------- yoʻnaltirgichlar ---------- */

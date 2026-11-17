@@ -384,3 +384,48 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .lead-card .sub-main { display: flex; align-items: center; gap: 12px; text-align: left; }
 .lead-card .pc-main { display: flex; flex-direction: column; min-width: 0; }
 .lead-chat .btn { text-decoration: none; }
+
+/* Hisob-kitob (kirim / chiqim / kassa) */
+.ld-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
+.ld-chips.sm { margin: 0; }
+.ld-hero { padding: 20px; border-radius: 26px; margin-bottom: 12px; background: var(--grad); color: var(--on-a); box-shadow: 0 22px 40px -22px var(--a1); }
+.ld-hero > small { opacity: 0.8; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 11px; }
+.ld-hero > b { display: block; font-family: var(--display); font-size: 38px; line-height: 1.1; margin: 4px 0 14px; letter-spacing: -0.03em; }
+.ld-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; font-weight: 700; }
+.ld-cols div { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 16px; background: rgba(255, 255, 255, 0.2); }
+.ld-cols strong { font-size: 16px; font-family: var(--display); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.dot.in { background: #1c7a4f; } .dot.out { background: #b3262e; }
+.ld-ratio { display: block; height: 6px; border-radius: 9px; margin: 14px 0; background: #b3262e66; overflow: hidden; }
+.ld-ratio em { display: block; height: 100%; background: #1c7a4f; border-radius: 9px; transition: width 0.4s; }
+.ld-cash { display: flex; align-items: baseline; justify-content: space-between; font-weight: 700; font-size: 13px; }
+.ld-cash small { opacity: 0.75; font-weight: 600; }
+.ld-cash strong { font-family: var(--display); font-size: 18px; }
+.ld-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.ld-panel { margin-bottom: 12px; }
+.ld-chart { display: flex; gap: 6px; align-items: flex-end; height: 140px; }
+.ld-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; }
+.ld-bars { flex: 1; width: 100%; display: flex; gap: 3px; align-items: flex-end; justify-content: center; }
+.ld-bars i { position: relative; flex: 1; max-width: 22px; min-height: 2px; border-radius: 7px 7px 3px 3px; transition: height 0.4s; }
+.ld-bars i.in { background: var(--a1); } .ld-bars i.out { background: #d95050; }
+.ld-bars i span { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--muted); white-space: nowrap; font-weight: 700; }
+.ld-col small { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+.ld-col.now small { color: var(--text); }
+.ld-bd { list-style: none; display: grid; gap: 12px; }
+.ld-bd li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 14px; font-weight: 600; }
+.ld-track { grid-column: 1 / -1; height: 6px; border-radius: 9px; background: var(--line); overflow: hidden; display: block; }
+.ld-track em { display: block; height: 100%; border-radius: 9px; }
+.ld-notes { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 12px 14px; margin-bottom: 14px; border-radius: 16px; background: var(--glass); border: 1px solid var(--line); font-size: 13px; }
+.ld-listhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
+.ld-listhead h3 { font-family: var(--display); font-size: 16px; }
+.ld-list { list-style: none; display: grid; gap: 8px; }
+.ld-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 18px; background: var(--glass); border: 1px solid var(--line); }
+.ld-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; flex: none; font-size: 18px; }
+.ld-ico.in { background: color-mix(in srgb, #2e9b6a 20%, transparent); } .ld-ico.out { background: color-mix(in srgb, #d95050 18%, transparent); }
+.ld-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ld-main b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-main small { color: var(--muted); font-size: 11.5px; }
+.ld-list strong { font-size: 14px; white-space: nowrap; }
+.pos { color: #2e9b6a; } .neg { color: #d95050; }
+.ld-hero .pos, .ld-hero .neg { color: inherit; }
+.seg.seg4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } .seg.seg4 button { font-size: 12px; padding: 10px 2px; }

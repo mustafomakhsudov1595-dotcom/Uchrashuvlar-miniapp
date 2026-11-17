@@ -171,14 +171,14 @@ export function IncomeCard({ projects, subs, expenses = [], goal = 0, onAddExpen
   const today = todayISO();
   const [editGoal, setEditGoal] = useState(false);
   const [goalText, setGoalText] = useState('');
-  const months = useMemo(() => incomeByMonth(projects, subs, 6, today), [projects, subs, today]);
+  const months = useMemo(() => incomeByMonth(projects, subs, 6, today, expenses), [projects, subs, today, expenses]);
   const cur = months[months.length - 1];
   const sum = months.reduce((n, x) => n + x.total, 0);
   const debt = projects.reduce((n, p) => n + owed(p), 0);
   const names = t('months');
   const kinds = Object.entries(cur.k).filter(([, v]) => v > 0);
   const ym = today.slice(0, 7);
-  const monthExp = useMemo(() => expenses.filter((x) => x.d.startsWith(ym)).sort((a, b) => (a.d < b.d ? 1 : -1)), [expenses, ym]);
+  const monthExp = useMemo(() => expenses.filter((x) => x.k !== 'in' && x.d.startsWith(ym)).sort((a, b) => (a.d < b.d ? 1 : -1)), [expenses, ym]);
   const expSum = monthExp.reduce((n, x) => n + x.a, 0);
   const net = cur.total - expSum;
   const pct = goal > 0 ? Math.min(100, Math.round((cur.total / goal) * 100)) : 0;
