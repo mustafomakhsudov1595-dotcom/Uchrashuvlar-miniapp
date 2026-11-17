@@ -240,11 +240,13 @@ async function getRate() {
   try { st = openStore({}); } catch { /* KV yoʻq */ }
   if (!st) return FX;
   try { const c = Number(await st.get(`fx/${today}`)); if (c > 1000) { FX = { usd: c, d: today }; return FX; } } catch { /* keyingisi */ }
-  try {
-    const r = await fetch('https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/', { headers: { 'user-agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) });
-    const j = await r.json(), rate = parseFloat(String(j[0].Rate).replace(',', '.'));
-    if (rate > 1000) { FX = { usd: rate, d: today }; await st.set(`fx/${today}`, rate); await st.set('fx/last', rate); return FX; }
-  } catch { /* oxirgi maʼlum kurs */ }
+  for (const url of ['https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/', 'https://cbu.uz/uz/arkhiv-kursov-valyut/json/']) {
+    try {
+      const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) });
+      const j = await r.json(), row = Array.isArray(j) ? j.find((x) => x.Ccy === 'USD') || j[0] : null, rate = row ? parseFloat(String(row.Rate).replace(',', '.')) : 0;
+      if (rate > 1000) { FX = { usd: rate, d: today }; await st.set(`fx/${today}`, rate); await st.set('fx/last', rate); return FX; }
+    } catch { /* keyingi manba */ }
+  }
   try { const l = Number(await st.get('fx/last')); if (l > 1000) FX = { usd: l, d: FX.d || '' }; } catch { /* ignore */ }
   return FX;
 }
