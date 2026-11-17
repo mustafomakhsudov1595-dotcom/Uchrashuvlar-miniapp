@@ -148,3 +148,10 @@ html{-webkit-text-size-adjust:100%}body{overscroll-behavior-y:none;-webkit-tap-h
 @media(max-width:860px){.nav a .full{display:none}.nav a .short{display:inline}}
 @media(max-width:860px){table.stack.lf td:first-child[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}}
 @media(max-width:860px){.card.cam{padding:0}}
+/* oynalar pastki menyudan yuqorida bo'lsin */
+.modal-bg{z-index:60}#toast{z-index:80}
+@media(max-width:860px){
+  .modal-bg{align-items:flex-end}
+  .modal,.modal.wide{max-height:88dvh;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #toast{top:calc(10px + env(safe-area-inset-top));bottom:auto}
+}

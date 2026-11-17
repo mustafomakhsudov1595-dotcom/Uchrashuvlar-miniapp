@@ -250,7 +250,7 @@ export class DB extends DurableObject {
   camOut(c) {
     const alive = c.last_ts && now() - c.last_ts < 15;
     return { id: c.id, user_id: c.user_id, name: c.name, source: c.source, role: c.role, enabled: c.enabled, ingest_key: c.ingest_key,
-      status: !c.enabled ? "disabled" : alive ? "online" : c.last_ts ? "offline" : "starting", error: c.last_ts ? "" : "Telefon/noutbukda kamera sahifasini oching va \"Boshlash\"ni bosing", fps: alive ? 2 : 0, people: alive ? c.people : 0 };
+      status: !c.enabled ? "disabled" : alive ? "online" : c.last_ts ? "offline" : "starting", error: c.last_ts ? "" : c.source === "ip" ? "Ofis kompyuterida ko'prik dasturini va monitor sahifasini ishga tushiring (\"Ulash ko'rsatmasi\")" : "Telefon/noutbukda kamera sahifasini oching va \"Boshlash\"ni bosing", fps: alive ? 2 : 0, people: alive ? c.people : 0 };
   }
   empOut(e) { return { id: e.id, name: e.name, position: e.position, gender: e.gender, faces: JSON.parse(e.embeddings || "[]").length, active: !!e.active }; }
 
@@ -266,7 +266,7 @@ export class DB extends DurableObject {
     const name = String(b.name || "").trim();
     if (!name) return ERR("Kamera nomini kiriting");
     const key = b64u(crypto.getRandomValues(new Uint8Array(18)));
-    const id = this.insert(`INSERT INTO cameras(user_id,name,source,role,enabled,ingest_key,created_at) VALUES(?,?,?,?,?,?,?)`, uid, name.slice(0, 80), "push", b.role === "entrance" ? "entrance" : "office", 1, key, now());
+    const id = this.insert(`INSERT INTO cameras(user_id,name,source,role,enabled,ingest_key,created_at) VALUES(?,?,?,?,?,?,?)`, uid, name.slice(0, 80), b.source === "ip" ? "ip" : "push", b.role === "entrance" ? "entrance" : "office", 1, key, now());
     return J(this.camOut(this.one(`SELECT * FROM cameras WHERE id=?`, id)));
   }
 
@@ -326,6 +326,7 @@ export class DB extends DurableObject {
       const eid = +p.eid || null;
       const label = eid ? "" : String(p.label || "Noma'lum").slice(0, 80);
       if (eid && !this.one(`SELECT id FROM employees WHERE id=? AND user_id=?`, eid, cam.user_id)) continue;
+      if (eid && typeof p.from === "string" && p.from) this.run(`UPDATE intervals SET employee_id=?, label='' WHERE user_id=? AND label=?`, eid, cam.user_id, p.from.slice(0, 80));
       const kinds = ["present", ...(Array.isArray(p.kinds) ? p.kinds.filter((k) => ["phone_call", "phone_use", "talking"].includes(k)) : [])];
       for (const kind of kinds) {
         const id = this.see(cam, eid, label, kind, ts, gapOf(kind));

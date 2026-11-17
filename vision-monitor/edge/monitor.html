@@ -19,8 +19,9 @@ button:disabled{opacity:.55}select{background:var(--card);border:1px solid var(-
 .bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--brand);width:0;transition:width .3s}
 </style></head><body><div class="wrap">
 <h1>📷 <span id="camname">Kamera monitori</span></h1>
-<div class="stage"><video id="v" playsinline muted autoplay></video><canvas id="ov"></canvas></div>
+<div class="stage"><video id="v" playsinline muted autoplay></video><canvas id="fc" style="display:none"></canvas><canvas id="ov"></canvas></div>
 <div class="card"><div id="st">Modellar yuklanmoqda...</div><div class="bar" style="margin-top:8px"><i id="pb"></i></div><div class="mute" id="sub" style="margin-top:6px"></div></div>
+<div class="card" id="bridgebox" style="display:none"><div class="mute">IP kamera ko'prigi manzili (shu kompyuterda <code>ipcam_bridge.py</code> ishlab turishi kerak):</div><input id="bridge" value="http://127.0.0.1:8099" style="width:100%;margin-top:6px;padding:11px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:#fff;font:inherit"></div>
 <div class="row"><select id="facing"><option value="user">Old kamera</option><option value="environment">Orqa kamera</option></select><button id="go" disabled>Boshlash</button></div>
 <div class="card people" id="people"><span class="mute">Hozircha hech kim ko'rinmayapti</span></div>
 <div class="mute">🔒 Video qurilmangizdan chiqmaydi: tahlil shu yerning o'zida bajariladi, serverga faqat hodisalar (kim, qachon, nima qildi) va hodisa paytidagi bitta kadr yuboriladi. Ishlash vaqtida ekranni yoqiq va sahifani ochiq qoldiring.</div>

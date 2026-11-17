@@ -13,13 +13,15 @@ dist.mkdir(exist_ok=True)
 
 files = {}
 SKIP = {"camera.html"}  # Python server uchun; edge da monitor.html ishlatiladi
-for f in list(web.glob("*")) + [here / "monitor.html", here / "monitor.js", here / "edge.js"]:
+for f in list(web.glob("*")) + [here / "monitor.html", here / "monitor.js", here / "edge.js", here.parent / "agent" / "ipcam_bridge.py"]:
     if f.name in SKIP or not f.is_file():
         continue
     data = f.read_bytes()
     if f.name == "index.html":
         data = data.decode().replace('<script src="app.js">', '<script src="edge.js"></script>\n<script src="app.js">').encode()
     ct = mimetypes.guess_type(f.name)[0] or "application/octet-stream"
+    if f.suffix == ".py":
+        ct = "text/x-python; charset=utf-8"
     if f.suffix == ".webmanifest":
         ct = "application/manifest+json"
     if f.suffix in (".html", ".js", ".css", ".json", ".webmanifest", ".svg"):

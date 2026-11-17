@@ -11,6 +11,18 @@ const $ = id => document.getElementById(id);
 const st = (t, c) => { $('st').textContent = t; $('st').className = c || ''; };
 const prog = p => $('pb').style.width = Math.round(p * 100) + '%';
 const SESS = Math.random().toString(36).slice(2, 5);
+const IP_MODE = q.get('src') === 'ip';
+const BRIDGE = () => ($('bridge')?.value || 'http://127.0.0.1:8099').replace(/\/+$/, '');
+const fc = document.getElementById('fc'); // IP rejimida kadr shu yerga chiziladi
+async function grabIp() {
+  const r = await fetch(BRIDGE() + '/frame.jpg?t=' + Date.now(), { cache: 'no-store' });
+  if (!r.ok) throw new Error('Kadr kelmayapti (ko\'prik dasturi ishlayaptimi? kamera ulanganmi?)');
+  const bmp = await createImageBitmap(await r.blob());
+  if (fc.width !== bmp.width) { fc.width = bmp.width; fc.height = bmp.height; }
+  fc.getContext('2d').drawImage(bmp, 0, 0); bmp.close();
+}
+// Tahlil manbai: telefon kamerasi (video) yoki IP kamera kadri (canvas)
+const SRC = { get el() { return IP_MODE ? fc : video; }, get w() { return IP_MODE ? fc.width : video.videoWidth; }, get h() { return IP_MODE ? fc.height : video.videoHeight; } };
 
 let cfg = null, FA = null, objDet = null, running = false, wake = null;
 const video = $('v'), ov = $('ov'), octx = ov.getContext('2d');
@@ -98,15 +110,15 @@ function track(boxes, t) {
 /* ------------------------------------------------------------ asosiy sikl */
 const work = document.createElement('canvas'), snapc = document.createElement('canvas');
 function crop(box, m = 0.4, size = 224) {
-  const vw = video.videoWidth, vh = video.videoHeight;
+  const vw = SRC.w, vh = SRC.h;
   const x = Math.max(0, box.x - box.w * m), y = Math.max(0, box.y - box.h * m), w = Math.min(vw - x, box.w * (1 + 2 * m)), h = Math.min(vh - y, box.h * (1 + 2 * m));
   const sc = Math.min(1, size / Math.max(w, h)); work.width = Math.max(1, Math.round(w * sc)); work.height = Math.max(1, Math.round(h * sc));
-  work.getContext('2d').drawImage(video, x, y, w, h, 0, 0, work.width, work.height);
+  work.getContext('2d').drawImage(SRC.el, x, y, w, h, 0, 0, work.width, work.height);
   return work;
 }
 function snapshot() {
-  const w = Math.min(640, video.videoWidth); snapc.width = w; snapc.height = Math.round(video.videoHeight * w / video.videoWidth);
-  snapc.getContext('2d').drawImage(video, 0, 0, snapc.width, snapc.height);
+  const w = Math.min(640, SRC.w); snapc.width = w; snapc.height = Math.round(SRC.h * w / SRC.w);
+  snapc.getContext('2d').drawImage(SRC.el, 0, 0, snapc.width, snapc.height);
   return snapc.toDataURL('image/jpeg', 0.6);
 }
 function mouthRatio(pos) { // ichki lab nuqtalari 60..67
@@ -120,12 +132,13 @@ async function tick() {
   if (!running) return;
   const t0 = performance.now();
   try {
-    if (video.videoWidth) {
-      const dets = await FA.detectAllFaces(video, new FA.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks(true);
+    if (IP_MODE) await grabIp();
+    if (SRC.w) {
+      const dets = await FA.detectAllFaces(SRC.el, new FA.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks(true);
       const boxes = dets.map(d => ({ x: d.detection.box.x, y: d.detection.box.y, w: d.detection.box.width, h: d.detection.box.height }));
       const trs = track(boxes, t0);
       let phones = [];
-      if (objDet) { try { phones = objDet.detectForVideo(video, t0).detections.map(d => d.boundingBox); } catch {} }
+      if (objDet) { try { phones = objDet.detectForVideo(SRC.el, t0).detections.map(d => d.boundingBox); } catch {} }
       // --- telefonlarni egasiga biriktirish
       trs.forEach(tr => { tr.phoneNow = null; });
       for (const p of phones) {
@@ -172,7 +185,7 @@ async function tick() {
 }
 
 function draw(trs, phones) {
-  ov.width = video.videoWidth; ov.height = video.videoHeight; octx.clearRect(0, 0, ov.width, ov.height); octx.lineWidth = Math.max(2, ov.width / 300); octx.font = `${Math.max(14, ov.width / 40)}px system-ui`;
+  ov.width = SRC.w; ov.height = SRC.h; octx.clearRect(0, 0, ov.width, ov.height); octx.lineWidth = Math.max(2, ov.width / 300); octx.font = `${Math.max(14, ov.width / 40)}px system-ui`;
   for (const p of phones) { octx.strokeStyle = '#d946ef'; octx.strokeRect(p.originX, p.originY, p.width, p.height); }
   for (const tr of trs) {
     const s = tr.states || [], col = s.includes('phone_call') ? '#ef4444' : s.includes('phone_use') ? '#f97316' : s.includes('talking') ? '#0ea5e9' : tr.ident.eid ? '#22c55e' : '#9ca3af';
@@ -193,13 +206,16 @@ async function post(trs, t) {
   const minMs = (cfg.settings.min_event_sec || 3) * 1000, people = [], unknown = [];
   for (const tr of trs) {
     const id = tr.ident, label = `Noma'lum (${cfg.camera.name} #${tr.id}-${SESS})`;
-    if (!id.eid && t - tr.born < 4000) continue; // qisqa vaqtli shovqinni yubormaymiz
+    if (!id.eid && t - tr.born < 9000 && id.n < 5) continue; // tanish tasdiqlanguncha 'noma'lum' deb yozmaymiz
     const snaps = {};
     for (const k of ['phone_call', 'phone_use', 'talking']) {
       if ((tr.states || []).includes(k)) { tr.lastActive[k] = t; tr.since[k] ??= t; if (!tr.snapped[k] && t - tr.since[k] >= minMs) { snaps[k] = snapshot(); tr.snapped[k] = true; } }
       else if (tr.lastActive[k] && t - tr.lastActive[k] > 3000) { delete tr.since[k]; delete tr.snapped[k]; delete tr.lastActive[k]; }
     }
-    people.push({ eid: id.eid, label: id.eid ? '' : label, kinds: tr.states || [], snaps });
+    const person = { eid: id.eid, label: id.eid ? '' : label, kinds: tr.states || [], snaps };
+    if (id.eid && tr.sentUnknown) { person.from = label; tr.sentUnknown = false; } // keyinroq tanilsa, oldingi 'noma'lum' yozuvlar xodimga o'tkaziladi
+    if (!id.eid) tr.sentUnknown = true;
+    people.push(person);
     if (id.unknownReady && id.last) {
       id.unkSent = true;
       unknown.push({ label, gender: id.gender || (id.last.gender === 'male' ? 'M' : 'F'), age: id.age, descriptor: Array.from(id.last.descriptor), photo: id.photo || '' });
@@ -216,12 +232,21 @@ let cfgAt = 0;
 
 $('go').onclick = async () => {
   try {
-    if (!navigator.mediaDevices) throw new Error('Kameraga ruxsat berilmadi: sahifa HTTPS orqali ochilishi kerak');
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: $('facing').value, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-    video.srcObject = s; await video.play(); $('go').disabled = true; running = true;
+    if (IP_MODE) {
+      const h = await (await fetch(BRIDGE() + '/health', { cache: 'no-store' })).json().catch(() => null);
+      if (!h) throw new Error("Ko'prik dasturiga ulanib bo'lmadi. ipcam_bridge.py ishlayaptimi? Sahifani Chrome/Edge da, ko'prik ishlayotgan kompyuterda oching.");
+      if (!h.ok) throw new Error('Ko\'prik ishlayapti, lekin kameradan kadr yo\'q: ' + (h.error || 'kuting yoki kamerani tekshiring'));
+      localStorage.setItem('vm_bridge', BRIDGE());
+      await grabIp(); $('go').disabled = true; running = true; tick();
+    } else {
+      if (!navigator.mediaDevices) throw new Error('Kameraga ruxsat berilmadi: sahifa HTTPS orqali ochilishi kerak');
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: $('facing').value, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      video.srcObject = s; await video.play(); $('go').disabled = true; running = true;
+      tick();
+    }
     try { wake = await navigator.wakeLock.request('screen'); } catch {}
     document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && running) { try { wake = await navigator.wakeLock.request('screen'); } catch {} } });
-    tick();
-  } catch (e) { st('Kamerani yoqib bo\'lmadi: ' + e.message, 'bad'); }
+  } catch (e) { st(e.message, 'bad'); }
 };
+if (IP_MODE) { $('facing').style.display = 'none'; $('bridgebox').style.display = 'block'; video.style.display = 'none'; fc.style.display = 'block'; try { $('bridge').value = localStorage.getItem('vm_bridge') || 'http://127.0.0.1:8099'; } catch {} }
 boot();

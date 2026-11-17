@@ -153,6 +153,13 @@ function feed(evs) {
 }
 function zoomSnap(name) { modal(`<img src="/api/snap/${esc(name)}?token=${token}" style="width:100%;border-radius:10px"><button class="btn ghost" onclick="this.closest('.modal-bg').remove()">Yopish</button>`, true); }
 
+/* QR kod (havolani telefon bilan skanerlash uchun) */
+function renderQR(el, text) {
+  const draw = () => { try { const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make(); el.innerHTML = qr.createSvgTag({cellSize: 4, margin: 2, scalable: true}); const svg = el.querySelector('svg'); if (svg) { svg.style.width = '100%'; svg.style.maxWidth = '220px'; svg.style.background = '#fff'; svg.style.borderRadius = '10px'; } } catch { el.textContent = ''; } };
+  if (window.qrcode) return draw();
+  const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'; sc.onload = draw; sc.onerror = () => { el.textContent = ''; }; document.head.append(sc);
+}
+
 /* ---------- Kameralar ---------- */
 async function cameras(el) {
   async function load() {
@@ -163,7 +170,7 @@ async function cameras(el) {
       <div class="card cam"><div class="view">${window.VM_EDGE ? `<div style="padding:20px;text-align:center">${c.status === 'online' ? `📱 Onlayn · ${c.people} kishi ko'rinmoqda<div class="small" style="margin-top:6px">Video qurilmada qoladi (maxfiylik)</div>` : esc(c.error || 'Kutilmoqda')}</div>` : c.status === 'online' ? `<img src="/api/cameras/${c.id}/stream?token=${token}" alt="">` : `<div style="padding:20px;text-align:center">${c.status === 'disabled' ? "O'chirilgan" : esc(c.error || 'Ulanmoqda...')}</div>`}</div>
       <div class="body"><div class="row"><h3>${esc(c.name)}</h3>${badge(c.status)}<span class="right muted small">${c.role === 'entrance' ? '🚪 Kirish' : '🏢 Ofis'}</span></div>
       <div class="muted small" style="word-break:break-all">${esc(c.source)}${c.status === 'online' ? ` · ${c.fps} kadr/s · ${c.people} kishi` : ''}</div>
-      <div class="row">${c.source === 'push' ? `<button class="btn ghost sm" data-push="${c.id}">Ulash ko'rsatmasi</button>` : ''}<button class="btn ghost sm" data-edit="${c.id}">Tahrirlash</button><button class="btn ghost sm" data-del="${c.id}">O'chirish</button></div></div></div>`).join('') ||
+      <div class="row">${c.source === 'push' || c.source === 'ip' ? `<button class="btn ghost sm" data-push="${c.id}">Ulash ko'rsatmasi</button>` : ''}<button class="btn ghost sm" data-edit="${c.id}">Tahrirlash</button><button class="btn ghost sm" data-del="${c.id}">O'chirish</button></div></div></div>`).join('') ||
       '<div class="card empty" style="grid-column:1/-1"><h3>Kamera yo\'q</h3><p class="muted">"+ Kamera qo\'shish" tugmasini bosing.</p></div>'}</div>`;
     $('#add').onclick = () => camForm();
     el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => camForm(cams.find(c => c.id == b.dataset.edit)));
@@ -173,7 +180,26 @@ async function cameras(el) {
       await api('/cameras/' + b.dataset.del, {method: 'DELETE'}); load();
     });
   }
+  function ipInfo(c) {
+    const link = `${location.origin}/monitor.html?c=${c.id}&k=${c.ingest_key}&src=ip`;
+    const dl = `${location.origin}/ipcam_bridge.py`;
+    const cmd = 'python ipcam_bridge.py --ip KAMERA_IP --user admin --password PAROL';
+    const m = modal(`<h2>IP kamerani ulash: ${esc(c.name)}</h2>
+      <div class="help"><b>Kamera bilan bir tarmoqdagi kompyuterda</b> (ofisdagi PC/noutbuk; u doim yoniq bo'lishi kerak) quyidagilarni bajaring:</div>
+      <h3>1. Ko'prik dasturini yuklang</h3><div class="help"><a href="${esc(dl)}" download style="color:var(--brand);font-weight:600">ipcam_bridge.py ni yuklab olish</a><br>Python 3 kerak, so'ng: <code>pip install opencv-python-headless</code></div>
+      <h3>2. Ishga tushiring</h3><div class="help"><code style="display:block;word-break:break-all">${esc(cmd)}</code>Dastur kameraning RTSP yo'lini o'zi topadi. Topilmasa: <code>--source "rtsp://login:parol@IP:554/yo'l"</code></div>
+      <button class="btn ghost sm" id="c1">Buyruqni nusxalash</button>
+      <h3>3. Monitor sahifasini oching</h3><div class="help">Shu kompyuterda <b>Chrome yoki Edge</b> da quyidagi havolani oching va "Boshlash"ni bosing (brauzer "mahalliy tarmoqqa ruxsat" so'rasa, ruxsat bering). AI tahlil shu sahifada ishlaydi, uni yopmang:<br><code style="word-break:break-all">${esc(link)}</code></div>
+      <div id="qr" style="text-align:center"></div>
+      <button class="btn ghost sm" id="c2">Havolani nusxalash</button>
+      <div class="muted small">Bir nechta kamera uchun har biriga alohida kamera qo'shing, ko'prikni <code>--listen 8100</code> kabi boshqa port bilan ishga tushiring va monitor sahifasidagi manzilni o'zgartiring.</div>
+      <button class="btn" onclick="this.closest('.modal-bg').remove()">Tushunarli</button>`);
+    m.querySelector('#c1').onclick = () => { navigator.clipboard?.writeText(cmd); toast('Nusxalandi'); };
+    m.querySelector('#c2').onclick = () => { navigator.clipboard?.writeText(link); toast('Nusxalandi'); };
+    renderQR(m.querySelector('#qr'), link);
+  }
   function pushInfo(c) {
+    if (window.VM_EDGE && c.source === 'ip') return ipInfo(c);
     const link = `${location.origin}/${window.VM_EDGE ? 'monitor' : 'camera'}.html?c=${c.id}&k=${c.ingest_key}`;
     const secure = location.protocol === 'https:' || location.hostname === 'localhost';
     const cmd = `python camera_agent.py --server ${location.origin} --camera ${c.id} --key ${c.ingest_key} --source "rtsp://LOGIN:PAROL@KAMERA_IP:554/YO'L"`;
@@ -181,6 +207,7 @@ async function cameras(el) {
       <h3>📱 Telefon yoki noutbuk kamerasi</h3>
       <div class="help">Telefon/noutbukda quyidagi havolani oching, kameraga ruxsat bering va "Boshlash"ni bosing (shu qurilma kamera + AI vazifasini bajaradi):<br><code style="word-break:break-all">${esc(link)}</code>
       ${secure ? '' : '<br><b style="color:var(--bad)">Diqqat: telefon kamerasi faqat HTTPS saytda ishlaydi.</b>'}</div>
+      <div id="qr2" style="text-align:center"></div>
       <button class="btn ghost sm" id="cl">Havolani nusxalash</button>
       ${window.VM_EDGE ? '' : `      <h3>🖥 Ofis agenti (IP kamera uchun, sayt internetda bo'lsa)</h3>
       <div class="help">Ofisdagi kompyuterda (kamera bilan bir tarmoqda): <code>pip install opencv-python-headless</code>, so'ng <code>agent/camera_agent.py</code> faylini yuklab, ishga tushiring:<br><code style="word-break:break-all;display:block;margin-top:6px">${esc(cmd)}</code></div>
@@ -188,17 +215,18 @@ async function cameras(el) {
 `}
       <button class="btn" onclick="this.closest('.modal-bg').remove()">Tushunarli</button>`);
     m.querySelector('#cl').onclick = () => { navigator.clipboard?.writeText(link); toast('Nusxalandi'); };
+    renderQR(m.querySelector('#qr2'), link);
     const cc = m.querySelector('#cc'); if (cc) cc.onclick = () => { navigator.clipboard?.writeText(cmd); toast('Nusxalandi'); };
   }
   function camForm(c) {
-    let method = window.VM_EDGE ? 'push' : c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
+    let method = window.VM_EDGE ? (c?.source === 'push' ? 'push' : 'ipbridge') : c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
     const m = modal('<div id="cfbody"></div>');
     const box = m.querySelector('#cfbody');
-    const METHODS = [['scan', '🔍 Tarmoqdan qidirish'], ['ip', '📷 IP kamera'], ['url', '✍️ Manzil (URL)'], ['push', '📱 Telefon / 🖥 Agent']];
+    const METHODS = window.VM_EDGE ? [['ipbridge', '📡 IP kamera (ofis / ko\'cha)'], ['push', '📱 Telefon / noutbuk']] : [['scan', '🔍 Tarmoqdan qidirish'], ['ip', '📷 IP kamera'], ['url', '✍️ Manzil (URL)'], ['push', '📱 Telefon / 🖥 Agent']];
     async function draw() {
       if (!brands.length) brands = await api('/cameras/brands');
       box.innerHTML = `<h2>${c ? 'Kamerani tahrirlash' : "Kamera qo'shish"}</h2>
-      ${c || window.VM_EDGE ? '' : `<div class="tabs" style="flex-wrap:wrap">${METHODS.map(([k, t]) => `<button data-m="${k}" class="${method === k ? 'on' : ''}">${t}</button>`).join('')}</div>`}
+      ${c ? '' : `<div class="tabs" style="flex-wrap:wrap">${METHODS.map(([k, t]) => `<button data-m="${k}" class="${method === k ? 'on' : ''}">${t}</button>`).join('')}</div>`}
       <div id="mbody" style="display:flex;flex-direction:column;gap:12px"></div>
       <form id="cf" style="display:flex;flex-direction:column;gap:12px">
         <label>Kamera nomi<input name="name" required value="${esc(c?.name || '')}" placeholder="Masalan: Ofis asosiy zal"></label>
@@ -241,18 +269,22 @@ async function cameras(el) {
         };
       }
       if (method === 'url') mb.innerHTML = `<div class="help">• IP kamera: <code>rtsp://login:parol@IP:554/yo'l</code><br>• HTTP/MJPEG: <code>http://IP:8080/video</code><br>• Serverga ulangan USB kamera: <code>0</code> · Sinash uchun: <code>demo</code></div>`;
+      if (method === 'ipbridge') {
+        mb.innerHTML = `<div class="help"><b>Ofis yoki ko'chadagi IP (CCTV) kamera.</b> Kamera RTSP oqimini beradi, brauzer uni to'g'ridan-to'g'ri o'qiy olmaydi, shuning uchun <b>kamera bilan bir tarmoqdagi kompyuterda</b> kichik ko'prik dasturi ishlaydi. Saqlagandan so'ng aniq ko'rsatma chiqadi.<br>Kerak: kamerada RTSP/ONVIF yoqilgan, uning IP manzili va login/paroli.</div>`;
+        src = 'ip';
+      }
       if (method === 'push') {
         mb.innerHTML = `${window.VM_EDGE ? `<div class="help"><b>Kamera = telefon yoki noutbuk.</b> Saqlagandan so'ng havola chiqadi: uni kamera sifatida ishlatmoqchi bo'lgan qurilmada oching. Yuz tanish, jins, telefon va gaplashuv shu qurilmaning o'zida aniqlanadi, video internetga chiqmaydi.</div>` : `<div class="help"><b>Sayt internetda (bulutda) bo'lganda</b> u ofis ichidagi IP kameraga ulana olmaydi. Bu usulda kadrlar sizning tomoningizdan yuboriladi:<br>• <b>Telefon/noutbuk kamerasi</b> — maxsus havolani brauzerda ochasiz<br>• <b>Ofis agenti</b> — ofisdagi kompyuterda kichik dastur kameradan olib saytga yuboradi (portlarni ochish shart emas)<br>Saqlagandan so'ng ko'rsatma chiqadi.</div>`}`;
         src = 'push';
       }
       const form = box.querySelector('#cf');
-      const data = () => { const f = new FormData(form); return {name: f.get('name'), source: method === 'push' ? 'push' : (f.get('source') || ''), role: f.get('role'), enabled: !!f.get('enabled')}; };
+      const data = () => { const f = new FormData(form); return {name: f.get('name'), source: method === 'push' ? 'push' : method === 'ipbridge' ? 'ip' : (f.get('source') || ''), role: f.get('role'), enabled: !!f.get('enabled')}; };
       const ct = box.querySelector('#ct');
       if (ct) ct.onclick = async e => { e.target.disabled = true; say('Tekshirilmoqda...'); try { const r = await api('/cameras/test', {method: 'POST', json: {source: data().source}}); say(r.message, r.ok ? 'var(--ok)' : 'var(--bad)'); } catch (er) { say(er.message, 'var(--bad)'); } e.target.disabled = false; };
       form.onsubmit = async e => {
         e.preventDefault(); const d = data();
         if (!d.source) return say("Avval kamerani ulang (manzilni kiriting yoki 'Avtomatik ulash' ni bosing)", 'var(--bad)');
-        try { const r = await api(c ? '/cameras/' + c.id : '/cameras', {method: c ? 'PUT' : 'POST', json: d}); m.close(); toast('Saqlandi'); await load(); if (d.source === 'push' && !c) pushInfo(r); }
+        try { const r = await api(c ? '/cameras/' + c.id : '/cameras', {method: c ? 'PUT' : 'POST', json: d}); m.close(); toast('Saqlandi'); await load(); if ((d.source === 'push' || d.source === 'ip') && !c) pushInfo(r); }
         catch (er) { say(er.message, 'var(--bad)'); }
       };
     }
