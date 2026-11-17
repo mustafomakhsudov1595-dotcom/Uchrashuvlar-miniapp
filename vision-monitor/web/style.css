@@ -147,3 +147,4 @@ html{-webkit-text-size-adjust:100%}body{overscroll-behavior-y:none;-webkit-tap-h
 .nav a i{font-style:normal}.nav a .short{display:none}
 @media(max-width:860px){.nav a .full{display:none}.nav a .short{display:inline}}
 @media(max-width:860px){table.stack.lf td:first-child[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}}
+@media(max-width:860px){.card.cam{padding:0}}
