@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="ASMO Construction Product — dekorativ qoplamalar, grunt va suv asosli bo'yoqlar. Farg'ona, Uchko'prik.">
+<title>ASMO Construction Product</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout concept: black + brushed-gold brand shell; every product sits on a pure white stage so labels read clean. */
+:root{
+  --ink:#0d0d0f; --ink2:#161619; --ink3:#222226;
+  --gold:#d8b45c; --gold-hi:#f1df7c; --gold-lo:#9d813a;
+  --paper:#ffffff; --mist:#f2f3f4; --line:#e4e5e7; --line-d:#2b2b30;
+  --text:#18181b; --muted:#6a6b72; --muted-d:#a3a4ab;
+  --f-head:'Montserrat','Segoe UI',Arial,sans-serif;
+  --f-serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --gutter:max(16px,env(safe-area-inset-left,0px));
+  --w:240px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--ink);color:var(--text);font:400 16px/1.65 var(--f-head);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+img{max-width:100%;display:block}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.wrap{width:100%;max-width:1220px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+section{padding-block:clamp(64px,9vw,120px)}
+h1,h2,h3,p{margin:0}
+h2{font-weight:700;font-size:clamp(1.7rem,3.6vw,2.7rem);line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
+.eyebrow{font-size:.72rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.eyebrow::before{content:"";width:34px;height:1px;background:currentColor}
+.serif{font-family:var(--f-serif);font-style:italic;font-weight:500}
+.gold-text{background:linear-gradient(100deg,var(--gold-lo) 0%,var(--gold-hi) 35%,var(--gold) 55%,var(--gold-hi) 80%,var(--gold-lo) 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 9s linear infinite}
+@keyframes sheen{to{background-position:-220% 0}}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 28px;border-radius:2px;font-weight:600;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;border:1px solid transparent;transition:.25s}
+.btn-gold{background:linear-gradient(100deg,var(--gold-lo),var(--gold-hi) 50%,var(--gold));color:var(--ink)}
+.btn-gold:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.btn-line{border-color:rgba(255,255,255,.28);color:#fff}
+.btn-line:hover{border-color:var(--gold);color:var(--gold)}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-dark:hover{background:var(--ink3)}
+
+/* NAV */
+header{position:fixed;inset:0 0 auto;z-index:50;background:rgba(13,13,15,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line-d);padding-top:env(safe-area-inset-top,0px)}
+.nav{display:flex;align-items:center;gap:28px;height:68px}
+.nav .logo{height:38px;width:auto}
+.nav nav{display:flex;gap:26px;margin-left:auto}
+.nav nav a{color:#d5d6da;text-decoration:none;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:500;transition:.2s}
+.nav nav a:hover{color:var(--gold)}
+.lang{display:flex;border:1px solid var(--line-d);border-radius:2px}
+.lang button{background:none;border:0;color:var(--muted-d);padding:7px 11px;font-size:.7rem;font-weight:600;letter-spacing:.1em}
+.lang button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+.burger{display:none;background:none;border:1px solid var(--line-d);color:#fff;width:42px;height:38px;border-radius:2px}
+@media(max-width:940px){
+  .burger{display:block;margin-left:auto}
+  .nav nav{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:0;background:var(--ink);padding:8px max(20px,env(safe-area-inset-left,0px)) 18px;border-bottom:1px solid var(--line-d);display:none;margin:0}
+  .nav nav.open{display:flex}
+  .nav nav a{padding:14px 0;border-bottom:1px solid var(--line-d)}
+}
+
+/* HERO */
+.hero{position:relative;padding-top:calc(68px + clamp(40px,6vw,80px) + env(safe-area-inset-top,0px));padding-bottom:clamp(50px,7vw,90px);background:radial-gradient(900px 500px at 78% 30%,#26231a 0%,transparent 70%),var(--ink);overflow:hidden}
+.hero::after{content:"";position:absolute;left:-4%;right:-4%;bottom:-2px;height:240px;background:url(assets/logo.png) center bottom/auto 100% no-repeat;opacity:.045;pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1.02fr 1fr;gap:clamp(30px,5vw,70px);align-items:center;position:relative;z-index:1}
+.hero h1{font-size:clamp(2.5rem,6.2vw,5rem);font-weight:800;line-height:1.02;letter-spacing:-.025em;color:#fff;text-wrap:balance}
+.hero h1 em{display:block;font-family:var(--f-serif);font-weight:500;font-style:italic;letter-spacing:0;font-size:1.08em}
+.hero p.lead{margin-top:26px;color:var(--muted-d);max-width:30em;font-size:1.04rem}
+.hero .cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+.stage{background:var(--paper);border-radius:6px;position:relative;aspect-ratio:1/.8;display:flex;align-items:flex-end;justify-content:center;padding:0 2% 13%;box-shadow:0 40px 90px rgba(0,0,0,.55);overflow:hidden;min-width:0;container-type:inline-size}
+.stage::before{content:"";position:absolute;inset:auto 0 0 0;height:30%;background:linear-gradient(#fff,#ececee)}
+.stage .tag{position:absolute;top:18px;left:20px;font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:#8b8c92;font-weight:600}
+.stage > *{position:relative}
+.stage .p1{--w:35cqw;margin-right:-6cqw;z-index:1;animation:bob 7s ease-in-out infinite}
+.stage .p2{--w:45cqw;z-index:3;animation:bob 7s -2s ease-in-out infinite}
+.stage .p3{width:33cqw;margin-left:-8cqw;z-index:2;animation:bob 7s -4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-9px)}}
+@media(max-width:940px){.hero-grid{grid-template-columns:1fr}.stage{aspect-ratio:1/.8}}
+
+/* BUCKET (CSS tub that wraps the real label art) */
+.tub{width:var(--w);position:relative;flex:none}
+.tub .handle{position:absolute;left:-3%;right:-3%;top:calc(var(--w)*.03);height:calc(var(--w)*.62);border:calc(var(--w)*.011) solid #8f9096;border-bottom:0;border-radius:50% 50% 0 0/100% 100% 0 0;z-index:0}
+.tub .lid{position:relative;z-index:2;height:calc(var(--w)*.19);border-radius:9px 9px 2px 2px;background:linear-gradient(90deg,#040404,#2b2b2f 28%,#101012 52%,#050505);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),inset 0 -5px 0 rgba(0,0,0,.6)}
+.tub .lid::after{content:"";position:absolute;left:41%;right:41%;top:22%;height:30%;border-radius:3px;background:#0c0c0e;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.tub .bd{position:relative;z-index:1;margin:0 2.2%;height:calc(var(--w)*.58);border-radius:0 0 calc(var(--w)*.075) calc(var(--w)*.075)/0 0 calc(var(--w)*.04) calc(var(--w)*.04);overflow:hidden;background:#141416}
+.tub .bd img.lab{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.tub .bd::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.05) 13%,rgba(255,255,255,.2) 27%,rgba(255,255,255,0) 44%,rgba(0,0,0,.18) 80%,rgba(0,0,0,.66) 100%)}
+.tub .sh{position:absolute;left:6%;right:6%;bottom:calc(var(--w)*-.05);height:calc(var(--w)*.1);background:radial-gradient(closest-side,rgba(0,0,0,.34),transparent);z-index:0}
+.png-wrap{position:relative}
+.png-wrap img{width:100%;height:auto;filter:drop-shadow(0 18px 14px rgba(0,0,0,.18))}
+/* generated label for products without supplied artwork */
+.gen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--w)*.025);background:radial-gradient(120% 90% at 50% 0%,#2a2a2e,#101012);padding:0 6%;text-align:center}
+.gen img{height:calc(var(--w)*.15);width:auto}
+.gen .band{width:100%;padding:calc(var(--w)*.025) 0;background:linear-gradient(90deg,var(--gold-lo),var(--gold-hi) 45%,var(--gold) 70%,var(--gold-lo));color:#111;font-weight:800;letter-spacing:.14em;font-size:calc(var(--w)*.075);line-height:1.1}
+.gen small{color:#d9d9dd;font-size:calc(var(--w)*.033);letter-spacing:.2em;text-transform:uppercase;font-weight:500}
+
+/* MARQUEE */
+.marq{background:linear-gradient(100deg,var(--gold-lo),var(--gold-hi) 50%,var(--gold-lo));color:var(--ink);padding:0;overflow:hidden;border:0}
+.marq .tr{display:flex;width:max-content;animation:mq 38s linear infinite}
+.marq span{padding:15px 26px;font-weight:700;font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap}
+.marq span::after{content:"◆";margin-left:52px;font-size:.55rem;opacity:.55}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* ABOUT */
+.about{background:var(--ink2);color:#fff}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,6vw,90px);align-items:center}
+.about p{color:var(--muted-d);margin-top:22px;max-width:34em}
+.about p strong{color:#fff;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:46px;border-top:1px solid var(--line-d)}
+.stats div{padding:22px 16px 0 0}
+.stats b{display:block;font-size:clamp(1.5rem,2.6vw,2.1rem);font-weight:800;line-height:1.1}
+.stats span{display:block;margin-top:8px;font-size:.72rem;color:var(--muted-d);letter-spacing:.06em;line-height:1.4}
+.photo{position:relative}
+.photo img{border-radius:3px;width:100%;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.photo figcaption{position:absolute;left:-14px;bottom:26px;background:var(--gold);color:var(--ink);padding:12px 18px;font-size:.66rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+.photo{margin:0}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-d);margin-top:clamp(50px,6vw,80px);border:1px solid var(--line-d)}
+.feat div{background:var(--ink2);padding:26px 22px;display:flex;flex-direction:column;gap:14px;font-size:.84rem;font-weight:500;color:#dedfe3}
+.feat svg{width:34px;height:34px;stroke:var(--gold);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr}.feat{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}.photo figcaption{left:12px}}
+
+/* PRODUCTS */
+.products{background:var(--paper)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:38px}
+.head h2{max-width:14em}
+.products h2{color:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;color:var(--text);padding:10px 18px;border-radius:40px;font-size:.74rem;font-weight:600;letter-spacing:.06em;transition:.2s}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;text-align:left;padding:0;display:flex;flex-direction:column;transition:.3s;min-width:0;color:inherit}
+.card:hover{transform:translateY(-6px);box-shadow:0 26px 50px rgba(13,13,15,.12);border-color:#cfd0d4}
+.card .art{background:#fff;display:flex;align-items:flex-end;justify-content:center;height:270px;padding:26px 20px 30px;position:relative;--w:210px}
+.card .art::after{content:"";position:absolute;left:12%;right:12%;bottom:18px;height:14px;background:radial-gradient(closest-side,rgba(0,0,0,.14),transparent)}
+.card .art .tub,.card .art .png-wrap{z-index:1}
+.card .art .png-wrap{width:210px}
+.card .info{padding:18px 22px 24px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;flex:1}
+.card h3{font-size:1.08rem;font-weight:700;color:var(--ink)}
+.card p{font-size:.84rem;color:var(--muted);line-height:1.55}
+.card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:12px;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--gold-lo)}
+.card .meta i{font-style:normal;color:var(--ink);transition:.2s}
+.card:hover .meta i{transform:translateX(5px)}
+.badge{align-self:flex-start;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;padding:4px 9px;background:var(--mist);color:#44454b;border-radius:2px}
+
+/* MODAL */
+dialog{border:0;padding:0;max-width:960px;width:calc(100% - 32px);border-radius:4px;background:#fff;color:var(--text);box-shadow:0 50px 120px rgba(0,0,0,.5);overflow:hidden}
+dialog::backdrop{background:rgba(8,8,10,.72);backdrop-filter:blur(4px)}
+.m-grid{display:grid;grid-template-columns:.95fr 1.05fr;max-height:min(86vh,720px)}
+.m-art{background:linear-gradient(#fff,#f1f1f3);display:flex;align-items:center;justify-content:center;padding:40px 24px;--w:310px}
+.m-art .png-wrap{width:300px}
+.m-body{padding:38px 36px 34px;overflow:auto;min-width:0}
+.m-body h3{font-size:1.7rem;font-weight:800;color:var(--ink);line-height:1.15}
+.m-body .lead{margin:12px 0 20px;color:var(--muted);font-size:.92rem}
+.spec{width:100%;border-collapse:collapse;font-size:.84rem}
+.spec th,.spec td{padding:10px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.spec th{font-weight:600;color:var(--muted);width:42%;padding-right:12px}
+.spec td{font-weight:500;color:var(--ink)}
+.vars{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+.vars span{border:1px solid var(--gold);color:var(--gold-lo);padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.08em;border-radius:2px}
+.m-body .btn{margin-top:24px}
+.x{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;border:0;background:var(--ink);color:#fff;font-size:1.2rem;z-index:3}
+@media(max-width:760px){.m-grid{grid-template-columns:1fr;max-height:88vh;overflow:auto}.m-art{padding:28px 16px;--w:230px}.m-art .png-wrap{width:210px}.m-body{padding:24px 22px 28px;overflow:visible}}
+
+/* TYPES */
+.types{background:var(--mist);color:var(--ink)}
+.types .sub{color:var(--muted);max-width:36em;margin-top:14px}
+.tcols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px}
+.tc{background:#fff;border:1px solid var(--line);border-radius:4px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.tc h3{font-size:1.15rem;font-weight:800;padding:22px 24px 4px}
+.tc>p{padding:0 24px 18px;font-size:.84rem;color:var(--muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);margin-top:auto}
+.pair div{background:#fff;padding:14px 16px 18px;font-size:.78rem;min-width:0}
+.pair b{display:block;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-lo);margin-bottom:4px}
+.pair img{width:100%;aspect-ratio:2/1;object-fit:cover;object-position:left center;border-radius:2px;margin-bottom:12px;background:#111}
+.fin{height:92px;border-radius:2px;margin-bottom:12px}
+.fin.gloss{background:linear-gradient(115deg,#7d6a3a 0%,#e9d487 28%,#fff6c9 38%,#b69a4a 55%,#6e5d2f 100%)}
+.fin.matte{background:#8e7f55;box-shadow:inset 0 0 40px rgba(0,0,0,.18)}
+.fin.sand{background:#9a8a62 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E")}
+@media(max-width:940px){.tcols{grid-template-columns:1fr}}
+
+/* COLORS */
+.colors{background:var(--paper);color:var(--ink)}
+.cgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(30px,6vw,80px);align-items:center}
+.colors p{color:var(--muted);margin-top:18px;max-width:32em}
+.sw{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sw img{width:100%;border-radius:2px;object-fit:cover}
+.sw .big{grid-column:1/-1;height:130px}
+.sw .s{height:130px}
+.sw figure{margin:0;display:flex;flex-direction:column;gap:6px;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sw figure.big{grid-column:1/-1}
+.sw figure.big img{height:140px}
+.sw figure:not(.big) img{height:120px}
+.ul{margin:24px 0 0;padding:0;list-style:none;display:grid;gap:10px;font-size:.88rem}
+.ul li{display:flex;gap:12px;color:var(--text)}
+.ul li::before{content:"";flex:none;width:7px;height:7px;margin-top:.62em;background:var(--gold);transform:rotate(45deg)}
+@media(max-width:900px){.cgrid{grid-template-columns:1fr}}
+
+/* CALC */
+.calc{background:var(--ink)}
+.calc h2{color:#fff}
+.cwrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,5vw,70px);margin-top:44px;align-items:stretch}
+.form{display:grid;gap:22px;align-content:start}
+label{display:grid;gap:9px;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-d);font-weight:600}
+input,select,textarea{font:500 1rem var(--f-head);background:var(--ink2);color:#fff;border:1px solid var(--line-d);border-radius:2px;padding:14px 16px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:0}
+input[type=range]{padding:0;height:6px;accent-color:var(--gold);border:0;background:var(--ink3);cursor:pointer}
+.rv{display:flex;align-items:baseline;justify-content:space-between}
+.rv output{font-size:1.9rem;color:#fff;letter-spacing:0;font-weight:800;text-transform:none}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:13px;background:var(--ink2);color:var(--muted-d);border:1px solid var(--line-d);border-radius:2px;font-weight:600}
+.seg button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.out{background:linear-gradient(160deg,#1c1b17,#101012);border:1px solid #3a3322;padding:clamp(26px,4vw,44px);border-radius:3px;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0}
+.out .k{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted-d);font-weight:600}
+.out .v{font-size:clamp(2.6rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.out .u{color:var(--muted-d);font-size:.86rem;margin-bottom:14px}
+.out hr{border:0;border-top:1px solid var(--line-d);margin:14px 0;width:100%}
+.out .note{font-size:.74rem;color:var(--muted-d);line-height:1.55;margin-top:10px}
+@media(max-width:860px){.cwrap{grid-template-columns:1fr}}
+
+/* PROCESS */
+.process{background:var(--mist);color:var(--ink)}
+.steps{list-style:none;margin:44px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:s;border-top:2px solid var(--ink)}
+.steps li{counter-increment:s;padding:26px 20px 0 0;position:relative}
+.steps li::before{content:counter(s);position:absolute;top:-16px;left:0;width:30px;height:30px;background:var(--ink);color:var(--gold);font-weight:700;font-size:.8rem;display:grid;place-items:center}
+.steps h3{font-size:.98rem;font-weight:700;margin-top:10px}
+.steps p{font-size:.8rem;color:var(--muted);margin-top:8px;line-height:1.55}
+@media(max-width:940px){.steps{grid-template-columns:1fr 1fr;row-gap:36px;border-top:0}.steps li{border-top:2px solid var(--ink)}}
+@media(max-width:520px){.steps{grid-template-columns:1fr}}
+
+/* CONTACT */
+.contact{background:var(--ink2);color:#fff}
+.kgrid{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(30px,6vw,90px)}
+.contact h2{color:#fff}
+.cl{margin-top:32px;display:grid;gap:0;border-top:1px solid var(--line-d)}
+.cl div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:18px 0;border-bottom:1px solid var(--line-d);font-size:.92rem}
+.cl dt{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600;padding-top:3px}
+.cl dd{margin:0;color:#e5e5e8;min-width:0;overflow-wrap:anywhere}
+.cl a{color:var(--gold)}
+.fm{display:grid;gap:18px;align-content:start}
+.fm .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+textarea{min-height:110px;resize:vertical}
+.res{background:var(--ink);border:1px dashed var(--gold-lo);padding:18px;font-size:.86rem;white-space:pre-wrap;color:#ddd;display:grid;gap:14px;border-radius:2px}
+.res[hidden]{display:none}
+.res .row{display:flex;gap:10px;flex-wrap:wrap}
+.btn-sm{padding:11px 18px}
+@media(max-width:860px){.kgrid{grid-template-columns:1fr}.fm .two{grid-template-columns:1fr}.cl div{grid-template-columns:1fr;gap:4px}}
+footer{background:var(--ink);padding:36px 0 calc(36px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line-d);color:var(--muted-d);font-size:.76rem}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+footer img{height:40px;width:auto}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#home" aria-label="ASMO"><img class="logo" src="assets/logo.png" alt="ASMO Construction Products"></a>
+    <nav id="nav" aria-label="Menu">
+      <a href="#about" data-i="n_about"></a>
+      <a href="#products" data-i="n_products"></a>
+      <a href="#types" data-i="n_types"></a>
+      <a href="#colors" data-i="n_colors"></a>
+      <a href="#calc" data-i="n_calc"></a>
+      <a href="#contact" data-i="n_contact"></a>
+    </nav>
+    <div class="lang" role="group" aria-label="Til / Язык">
+      <button type="button" data-lang="uz" aria-pressed="true">UZ</button>
+      <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+    </div>
+    <button class="burger" id="burger" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main id="home">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow" data-i="h_eyebrow"></div>
+      <h1><span data-i="h_t1"></span><em class="gold-text" data-i="h_t2"></em></h1>
+      <p class="lead" data-i="h_lead"></p>
+      <div class="cta">
+        <a class="btn btn-gold" href="#products" data-i="h_cta1"></a>
+        <a class="btn btn-line" href="#contact" data-i="h_cta2"></a>
+      </div>
+    </div>
+    <div class="stage" aria-label="ASMO products">
+      <span class="tag">ASMO · Construction Product</span>
+      <div class="p1" id="hp1"></div>
+      <div class="p2" id="hp2"></div>
+      <div class="p3" id="hp3"></div>
+    </div>
+  </div>
+</section>
+
+<div class="marq" aria-hidden="true"><div class="tr" id="mq"></div></div>
+
+<section class="about" id="about">
+  <div class="wrap">
+    <div class="about-grid">
+      <div>
+        <div class="eyebrow" data-i="a_eyebrow"></div>
+        <h2 data-i="a_h"></h2>
+        <p data-i="a_p1"></p>
+        <p data-i="a_p2"></p>
+        <div class="stats">
+          <div><b class="gold-text">2019</b><span data-i="s1"></span></div>
+          <div><b class="gold-text">9</b><span data-i="s2"></span></div>
+          <div><b class="gold-text">5–6 m²</b><span data-i="s3"></span></div>
+          <div><b class="gold-text">12</b><span data-i="s4"></span></div>
+        </div>
+      </div>
+      <figure class="photo"><img src="assets/photo-lucido.jpg" alt="ASMO Lucida Bikser"><figcaption data-i="a_cap"></figcaption></figure>
+    </div>
+    <div class="feat" id="feat"></div>
+  </div>
+</section>
+
+<section class="products" id="products">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow" data-i="p_eyebrow"></div><h2 data-i="p_h"></h2></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="types" id="types">
+  <div class="wrap">
+    <div class="eyebrow" data-i="t_eyebrow"></div>
+    <h2 data-i="t_h"></h2>
+    <p class="sub" data-i="t_sub"></p>
+    <div class="tcols">
+      <article class="tc">
+        <h3>Lucida</h3><p data-i="t1_p"></p>
+        <div class="pair">
+          <div><img src="assets/label-bikser.jpg" alt="Lucida Bikser"><b data-i="t1_a"></b><span data-i="t1_ad"></span></div>
+          <div><img src="assets/label-premium.jpg" alt="Lucida Premium"><b data-i="t1_b"></b><span data-i="t1_bd"></span></div>
+        </div>
+      </article>
+      <article class="tc">
+        <h3>Milano</h3><p data-i="t2_p"></p>
+        <div class="pair">
+          <div><div class="fin gloss"></div><b data-i="t2_a"></b><span data-i="t2_ad"></span></div>
+          <div><div class="fin matte"></div><b data-i="t2_b"></b><span data-i="t2_bd"></span></div>
+        </div>
+      </article>
+      <article class="tc">
+        <h3>Travertin</h3><p data-i="t3_p"></p>
+        <div class="pair">
+          <div><div class="fin sand"></div><b data-i="t3_a"></b><span data-i="t3_ad"></span></div>
+          <div><div class="fin gloss"></div><b data-i="t3_b"></b><span data-i="t3_bd"></span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="colors" id="colors">
+  <div class="wrap cgrid">
+    <div>
+      <div class="eyebrow" data-i="c_eyebrow"></div>
+      <h2 data-i="c_h"></h2>
+      <p data-i="c_p"></p>
+      <ul class="ul"><li data-i="c_l1"></li><li data-i="c_l2"></li><li data-i="c_l3"></li></ul>
+    </div>
+    <div class="sw">
+      <figure class="big"><img src="assets/sw-purple.jpg" alt="Perla binafsha"><figcaption data-i="c_s1"></figcaption></figure>
+      <figure><img src="assets/sw-gray.jpg" alt="Perla kulrang"><figcaption data-i="c_s2"></figcaption></figure>
+      <figure><img src="assets/sw-green.jpg" alt="Perla yashil"><figcaption data-i="c_s3"></figcaption></figure>
+      <figure><img src="assets/sw-blue.jpg" alt="Perla ko'k"><figcaption data-i="c_s4"></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="calc" id="calc">
+  <div class="wrap">
+    <div class="eyebrow" data-i="k_eyebrow"></div>
+    <h2 data-i="k_h"></h2>
+    <div class="cwrap">
+      <div class="form">
+        <label for="kp"><span data-i="k_prod"></span>
+          <select id="kp"><option value="Perla">Perla</option><option value="Lucida Bikser">Lucida Bikser</option><option value="Lucida Premium">Lucida Premium</option></select>
+        </label>
+        <label for="ka"><span class="rv"><span data-i="k_area"></span><output id="kao" for="ka">40 m²</output></span>
+          <input type="range" id="ka" min="5" max="500" step="5" value="40">
+        </label>
+        <div><label style="margin-bottom:9px"><span data-i="k_layers"></span></label>
+          <div class="seg" id="kl"><button type="button" data-l="1" aria-pressed="false">1</button><button type="button" data-l="2" aria-pressed="true">2</button></div>
+        </div>
+      </div>
+      <div class="out" aria-live="polite">
+        <div class="k" data-i="k_need"></div>
+        <div class="v gold-text" id="kr">—</div>
+        <div class="u">kg</div>
+        <hr>
+        <div class="k" data-i="k_buckets"></div>
+        <div class="v" id="kb" style="color:#fff;font-size:clamp(1.8rem,4vw,2.8rem)">—</div>
+        <div class="note" data-i="k_note"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="process" id="process">
+  <div class="wrap">
+    <div class="eyebrow" data-i="r_eyebrow"></div>
+    <h2 data-i="r_h"></h2>
+    <ol class="steps" id="steps"></ol>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="wrap kgrid">
+    <div>
+      <div class="eyebrow" data-i="o_eyebrow"></div>
+      <h2 data-i="o_h"></h2>
+      <dl class="cl" id="cl"></dl>
+    </div>
+    <form class="fm" id="fm" novalidate>
+      <div class="two">
+        <label for="fn"><span data-i="f_name"></span><input id="fn" autocomplete="name"></label>
+        <label for="fp"><span data-i="f_phone"></span><input id="fp" type="tel" autocomplete="tel" placeholder="+998"></label>
+      </div>
+      <label for="fs"><span data-i="f_prod"></span><select id="fs"></select></label>
+      <label for="fm2"><span data-i="f_msg"></span><textarea id="fm2"></textarea></label>
+      <button class="btn btn-gold" type="submit" data-i="f_send"></button>
+      <div class="res" id="res" hidden></div>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="assets/logo.png" alt="ASMO">
+    <span data-i="foot"></span>
+  </div>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dn">
+  <button class="x" id="dx" type="button" aria-label="Close">✕</button>
+  <div class="m-grid">
+    <div class="m-art" id="dart"></div>
+    <div class="m-body">
+      <div class="eyebrow" id="dtag" style="margin-bottom:10px"></div>
+      <h3 id="dn"></h3>
+      <p class="lead" id="dd"></p>
+      <div class="vars" id="dv"></div>
+      <table class="spec" id="ds"></table>
+      <a class="btn btn-dark" id="do" href="#contact"></a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* ===== Fill these in with the real company details ===== */
+const CONFIG={
+  phone:'+998 XX XXX XX XX',
+  telegram:'',            // masalan: 'asmo_uz'  (t.me/asmo_uz)
+  instagram:'',           // masalan: 'asmo.uz'
+  address:{uz:"Farg'ona viloyati, Uchko'prik tumani",ru:'Ферганская область, Учкуприкский район'},
+  mapQuery:"Uchko'prik tumani, Farg'ona viloyati"
+};
+
+const L=(uz,ru)=>({uz,ru});
+const T={
+uz:{
+n_about:'Biz haqimizda',n_products:'Mahsulotlar',n_types:'Turlari',n_colors:'Ranglar',n_calc:'Kalkulyator',n_contact:'Aloqa',
+h_eyebrow:"Farg'ona · O'zbekiston",h_t1:'Devor —',h_t2:"san'at asari.",
+h_lead:"2019-yildan beri premium dekorativ qoplamalar, grunt va suv asosli bo'yoqlar ishlab chiqaramiz. Italy Quality belgisi bilan, O'zbekistonda tayyorlangan.",
+h_cta1:"Mahsulotlarni ko'rish",h_cta2:'Buyurtma berish',
+mq:["Nafas oluvchi","Yuviladigan","Ekologik","Cho'tka yoki valik","Ichki va tashqi ishlar","Product Guarantee","Italy Quality"],
+a_eyebrow:'Kompaniya',a_h:"Uchko'prikdan chiqqan italyancha sifat",
+a_p1:"<strong>ASMO ishini 2019-yilda boshlagan.</strong> Ishlab chiqarish Farg'ona viloyati, Uchko'prik tumanida joylashgan.",
+a_p2:"Biz dekorativ qoplamalar (Lucida, Perla, Milano, Travertin, Eron tosh), 20 kg li grunt emulsiya va uch xil suv asosli bo'yoq chiqaramiz. Har bir qadoq Product Guarantee va Italy Quality belgisi bilan keladi.",
+s1:"yildan beri bozorda",s2:'mahsulot turi',s3:'1 kg qoplama sarfi (bir qatlam)',s4:'oy saqlash kafolati',
+a_cap:"Lucida · Bikser",
+feats:['Ichki va tashqi ishlar uchun','Nafas oluvchi qoplama','Yuviladigan sirt','Cho\'tka yoki valik bilan','Ekologik tarkib','Italy Quality belgisi'],
+p_eyebrow:'Katalog',p_h:'Barcha mahsulotlar bir joyda',
+cats:{all:'Hammasi',deco:'Dekorativ',facade:'Fasad',base:"Grunt va bo'yoq"},
+more:'Batafsil',order:'Buyurtma berish',
+sp:{pack:'Qadoq',use:'Qayerda',apply:'Surtish',cons:'Sarf',dil:'Suyultirish',tint:'Rang berish',temp:'Harorat',dry:'Quriish',shelf:'Saqlash muddati',base:'Asos',kind:'Turi',price:'Narx'},
+t_eyebrow:'Turlari',t_h:'Bir mahsulot, bir necha xarakter',t_sub:"Eng ko'p so'raladigan mahsulotlarning farqi shu yerda.",
+t1_p:"Yumshoq oltin tekstura va yorug'lik-soya o'yini. Ikki xil sirt.",t1_a:'Bikser',t1_ad:'Qumli. Sirt chuqur teksturali.',t1_b:'Premium',t1_bd:'Qumsiz. Sirt silliq.',
+t2_p:"Milano ikki xil yakun bilan chiqadi.",t2_a:'Glyans',t2_ad:'Yaltiroq sirt, yorug\'likni qaytaradi.',t2_b:'Mat',t2_bd:'Yaltiramaydigan, tinch sirt.',
+t3_p:"Tosh teksturasi va uni himoyalaydigan lak.",t3_a:'Travertin',t3_ad:'Dekorativ tosh tekstura, 25 kg.',t3_b:'Travertin Lak',t3_bd:'Yakuniy himoya qatlami.',
+c_eyebrow:'Ranglar',c_h:"Perla: istalgan rangda sadaf yaltirashi",
+c_p:"Perla marvarid kabi nur sochadigan qoplama. Rangni tayyor to'plamdan tanlaysiz yoki koler pasta bilan o'zingiz tusini berasiz.",
+c_l1:"Koler pasta hajmi 5% dan oshmasligi kerak.",c_l2:"Qoplamani 10% gacha suv bilan suyultirish mumkin.",c_l3:"Teksturani surtish usuli belgilaydi: standart yoki teksturali.",
+c_s1:'Binafsha',c_s2:'Kulrang',c_s3:'Yashil',c_s4:"Ko'k",
+k_eyebrow:'Kalkulyator',k_h:'Qancha material kerak?',k_prod:'Mahsulot',k_area:'Devor maydoni',k_layers:'Qatlamlar soni',
+k_need:'Taxminiy sarf',k_buckets:'5 kg lik chelak',k_note:"Hisob etiketkadagi sarfga asoslangan: 1 kg ≈ 5–6 m² (bir qatlam). Aniq sarf asos turi va surtish usuliga bog'liq.",
+r_eyebrow:'Surtish tartibi',r_h:"Perla va Lucida qanday surtiladi",
+steps:[["Asosni tayyorlang","Sirt toza, quruq, mustahkam va yog'siz bo'lsin."],["Akril grunt","To'ldiruvchili italiano gruntovka suriladi. 2–4 soat quriydi."],["Shpaklevka","Akril shpaklevka bilan tekis tekstura hosil qilinadi."],["Silliqlash","Quriganidan keyin jilvir qog'oz, so'ng finish grunt."],["Qoplama","Valik bilan 1–2 qatlam. To'liq quriishi 24 soat."]],
+o_eyebrow:'Aloqa',o_h:'Narx va mavjudligini aniqlang',
+cl:{addr:'Manzil',phone:'Telefon',tg:'Telegram',ig:'Instagram',map:'Xarita',mapt:'Xaritada ochish'},
+f_name:'Ismingiz',f_phone:'Telefon',f_prod:'Mahsulot',f_msg:'Izoh',f_send:'Xabar tayyorlash',
+f_hello:'Assalomu alaykum! ASMO mahsulotlari bo\'yicha so\'rov:',f_copy:'Nusxa olish',f_copied:'Nusxa olindi',f_tg:'Telegramda yuborish',
+f_hint:'Xabar tayyor. Nusxa olib, Telegram yoki telefon orqali yuboring.',
+foot:"© 2019–2026 ASMO Construction Products. Farg'ona, O'zbekiston.",
+pending:'Narxni menejerdan so\'rang'
+},
+ru:{
+n_about:'О нас',n_products:'Продукция',n_types:'Виды',n_colors:'Цвета',n_calc:'Калькулятор',n_contact:'Контакты',
+h_eyebrow:'Фергана · Узбекистан',h_t1:'Стена —',h_t2:'произведение искусства.',
+h_lead:'С 2019 года производим премиальные декоративные покрытия, грунты и водоэмульсионные краски. Знак Italy Quality, сделано в Узбекистане.',
+h_cta1:'Смотреть продукцию',h_cta2:'Оставить заявку',
+mq:['Дышащая','Моющаяся','Экологично','Кисть или валик','Для внутренних и наружных работ','Product Guarantee','Italy Quality'],
+a_eyebrow:'Компания',a_h:'Итальянское качество из Учкуприка',
+a_p1:'<strong>ASMO работает с 2019 года.</strong> Производство находится в Ферганской области, Учкуприкский район.',
+a_p2:'Мы выпускаем декоративные покрытия (Lucida, Perla, Milano, Travertin, Эрон тош), грунт-эмульсию 20 кг и три вида водоэмульсионных красок. Каждая упаковка имеет знаки Product Guarantee и Italy Quality.',
+s1:'лет на рынке',s2:'видов продукции',s3:'расход на 1 кг (один слой)',s4:'месяцев гарантия хранения',
+a_cap:'Lucida · Биксер',
+feats:['Для внутренних и наружных работ','Дышащее покрытие','Моющаяся поверхность','Кисть или валик','Экологичный состав','Знак Italy Quality'],
+p_eyebrow:'Каталог',p_h:'Вся продукция в одном месте',
+cats:{all:'Все',deco:'Декоративные',facade:'Фасад',base:'Грунт и краски'},
+more:'Подробнее',order:'Заказать',
+sp:{pack:'Фасовка',use:'Применение',apply:'Нанесение',cons:'Расход',dil:'Разбавление',tint:'Колеровка',temp:'Температура',dry:'Высыхание',shelf:'Срок хранения',base:'Основание',kind:'Вид',price:'Цена'},
+t_eyebrow:'Виды',t_h:'Один продукт, несколько характеров',t_sub:'Чем отличаются самые востребованные позиции.',
+t1_p:'Мягкая золотистая текстура и игра света и тени. Две поверхности.',t1_a:'Биксер',t1_ad:'С песком. Глубокая фактура.',t1_b:'Premium',t1_bd:'Без песка. Гладкая поверхность.',
+t2_p:'Milano выпускается в двух финишах.',t2_a:'Глянец',t2_ad:'Блестящая поверхность, отражает свет.',t2_b:'Мат',t2_bd:'Спокойная поверхность без блеска.',
+t3_p:'Фактура камня и лак для её защиты.',t3_a:'Travertin',t3_ad:'Декоративная каменная фактура, 25 кг.',t3_b:'Travertin Lak',t3_bd:'Финишный защитный слой.',
+c_eyebrow:'Цвета',c_h:'Perla: перламутровый блеск в любом цвете',
+c_p:'Perla светится как жемчуг. Цвет выбирается из готовой палитры или колеруется пастой.',
+c_l1:'Колеровочной пасты не более 5% от объёма.',c_l2:'Можно разбавить водой до 10% от объёма.',c_l3:'Фактуру задаёт способ нанесения: стандартный или текстурный.',
+c_s1:'Фиолетовый',c_s2:'Серый',c_s3:'Зелёный',c_s4:'Синий',
+k_eyebrow:'Калькулятор',k_h:'Сколько материала нужно?',k_prod:'Продукт',k_area:'Площадь стен',k_layers:'Количество слоёв',
+k_need:'Ориентировочный расход',k_buckets:'Вёдер по 5 кг',k_note:'Расчёт по данным этикетки: 1 кг ≈ 5–6 м² (один слой). Точный расход зависит от основания и способа нанесения.',
+r_eyebrow:'Порядок нанесения',r_h:'Как наносить Perla и Lucida',
+steps:[['Подготовьте основание','Поверхность чистая, сухая, прочная, обезжиренная.'],['Акриловый грунт','Наносится итальяно-грунт с наполнителем. Сохнет 2–4 часа.'],['Шпатлёвка','Акриловой шпатлёвкой создаётся ровная структура.'],['Шлифовка','После высыхания наждачная бумага, затем финишный грунт.'],['Покрытие','Валиком в 1–2 слоя. Полное высыхание 24 часа.']],
+o_eyebrow:'Контакты',o_h:'Узнайте цену и наличие',
+cl:{addr:'Адрес',phone:'Телефон',tg:'Telegram',ig:'Instagram',map:'Карта',mapt:'Открыть на карте'},
+f_name:'Ваше имя',f_phone:'Телефон',f_prod:'Продукт',f_msg:'Комментарий',f_send:'Подготовить сообщение',
+f_hello:'Здравствуйте! Запрос по продукции ASMO:',f_copy:'Скопировать',f_copied:'Скопировано',f_tg:'Отправить в Telegram',
+f_hint:'Сообщение готово. Скопируйте и отправьте в Telegram или по телефону.',
+foot:'© 2019–2026 ASMO Construction Products. Фергана, Узбекистан.',
+pending:'Уточняйте у менеджера'
+}};
+
+const P=[
+{id:'lucida-bikser',cat:'deco',name:'Lucida Bikser',kind:'label',src:'assets/label-bikser.jpg',
+ tag:L('Qumli · Yangi','С песком · Новинка'),
+ d:L("Yumshoq oltin tekstura va yorug'lik-soya o'yini. Qumli tur sirtga chuqur tekstura beradi. Klassik va shinam interyer uchun.","Мягкая золотистая текстура и игра света и тени. Вариант с песком даёт глубокую фактуру. Для классического и уютного интерьера."),
+ vars:[L('Qumli','С песком')],
+ sp:[['pack',L('5 kg ±50 g','5 кг ±50 г')],['use',L("Ichki ishlar (etiketka bo'yicha)",'Внутренние работы (по этикетке)')],['apply',L("Cho'tka / valik","Кисть / валик")],['cons',L('1 kg ≈ 5–6 m² (bir qatlam)','1 кг ≈ 5–6 м² (один слой)')],['shelf',L('12 oy','12 месяцев')]]},
+{id:'lucida-premium',cat:'deco',name:'Lucida Premium',kind:'label',src:'assets/label-premium.jpg',
+ tag:L('Qumsiz · Yangi','Без песка · Новинка'),
+ d:L("Qumsiz tur: sirt silliq, tekstura yumshoq oltin tusli. Yorug'lik bilan o'ynaydigan premium yakun.","Вариант без песка: гладкая поверхность с мягкой золотистой фактурой. Премиальный финиш, играющий со светом."),
+ vars:[L('Qumsiz','Без песка')],
+ sp:[['pack',L('5 kg ±50 g','5 кг ±50 г')],['use',L("Ichki ishlar (etiketka bo'yicha)",'Внутренние работы (по этикетке)')],['apply',L("Cho'tka / valik","Кисть / валик")],['cons',L('1 kg ≈ 5–6 m² (bir qatlam)','1 кг ≈ 5–6 м² (один слой)')],['shelf',L('12 oy','12 месяцев')]]},
+{id:'perla',cat:'deco',name:'Perla',kind:'label',src:'assets/label-perla.jpg',
+ tag:L('Sadaf effekti · Yangi','Перламутр · Новинка'),
+ d:L("Sadaf (perlamutr) effektli dekorativ qoplama. Sirtda marvarid yaltirashi paydo bo'ladi. Gipsli va betonli asoslarga.","Декоративное покрытие с перламутровым эффектом. На поверхности появляется жемчужный блеск. Для гипсовых и бетонных оснований."),
+ vars:[L('Binafsha','Фиолетовый'),L('Kulrang','Серый'),L('Yashil','Зелёный'),L("Ko'k",'Синий')],
+ sp:[['pack',L('5 kg ±50 g','5 кг ±50 г')],['base',L('Gips, beton','Гипс, бетон')],['use',L('Ichki va tashqi ishlar','Внутренние и наружные работы')],['apply',L("1–2 qatlam, valik yoki purkagich","1–2 слоя, валик или пульверизатор")],['cons',L('1 kg ≈ 5–6 m² (bir qatlam)','1 кг ≈ 5–6 м² (один слой)')],['dil',L("Suv bilan 10% gacha",'Водой до 10%')],['tint',L('Koler pasta 5% gacha','Колер-паста до 5%')],['temp',L('+5 … +30 °C','+5 … +30 °C')],['dry',L('24 soat','24 часа')],['shelf',L('12 oy','12 месяцев')]]},
+{id:'travertin',cat:'facade',name:'Travertin',kind:'png',src:'assets/travertin.png',
+ tag:L('Dekorativ tekstura','Декоративная текстура'),
+ d:L("Tabiiy travertin toshini eslatuvchi dekorativ tekstura. Fasad va interyer devorlari uchun.","Декоративная текстура под натуральный травертин. Для фасадов и интерьеров."),
+ vars:[],sp:[['pack',L('25 kg ±100 g','25 кг ±100 г')],['use',L('Ichki va tashqi ishlar','Внутренние и наружные работы')]]},
+{id:'travertin-lak',cat:'facade',name:'Travertin Lak',kind:'png',src:'assets/travertin-lak.png',
+ tag:L('New creation','New creation'),
+ d:L("Travertin sirtini yakunlovchi va himoyalovchi lak. Dekorativ ichki va tashqi devor qoplamalari uchun.","Лак для завершения и защиты поверхности Travertin. Для декоративных внутренних и наружных покрытий."),
+ vars:[],sp:[['use',L('Ichki va tashqi ishlar','Внутренние и наружные работы')],['kind',L('Himoya laki','Защитный лак')]]},
+{id:'milano',cat:'deco',name:'Milano',kind:'gen',gen:L('MILANO','MILANO'),sub:L('Glyans · Mat','Глянец · Мат'),
+ tag:L('2 xil yakun','2 вида финиша'),
+ d:L("Milano ikki xil yakun bilan chiqadi: yaltiroq (glyans) va yaltiramaydigan (mat).","Milano выпускается в двух финишах: глянцевом и матовом."),
+ vars:[L('Glyans (yaltiroq)','Глянец'),L('Mat','Мат')],sp:[['kind',L('Dekorativ qoplama','Декоративное покрытие')],['price',L("Menejerdan so'rang",'Уточняйте у менеджера')]]},
+{id:'eron-tosh',cat:'facade',name:'Eron tosh',kind:'gen',gen:L('ERON TOSH','ЭРОН ТОШ'),sub:L('Travertin turi','Вид травертина'),
+ tag:L('Tosh effekti','Эффект камня'),
+ d:L("Travertin turkumiga kiruvchi tosh teksturali qoplama. Fasad va interyerga mos.","Покрытие с каменной фактурой из линейки Travertin. Подходит для фасада и интерьера."),
+ vars:[],sp:[['kind',L('Dekorativ qoplama','Декоративное покрытие')],['price',L("Menejerdan so'rang",'Уточняйте у менеджера')]]},
+{id:'grunt',cat:'base',name:'Grunt emulsiya',kind:'gen',gen:L('GRUNT','ГРУНТ'),sub:L('Emulsiya · 20 kg','Эмульсия · 20 кг'),
+ tag:L('Asos qatlam','Основа'),
+ d:L("Dekorativ qoplama ostiga suriladigan asos qatlam. Sirtni tayyorlaydi va qoplamaning yopishishini yaxshilaydi.","Основа под декоративное покрытие. Подготавливает поверхность и улучшает сцепление."),
+ vars:[],sp:[['pack',L('20 kg','20 кг')],['kind',L('Grunt emulsiya','Грунт-эмульсия')]]},
+{id:'vodoemulsiya',cat:'base',name:'Vodoemulsiya',kind:'gen',gen:L('VODOEMULSIYA','ВОДОЭМУЛЬСИЯ'),sub:L('3 xil tur','3 вида'),
+ tag:L('Suv asosli','Водная основа'),
+ d:L("Suv asosli bo'yoq, uch xil turda ishlab chiqariladi. Turini tanlashda menejer yordam beradi.","Водоэмульсионная краска, выпускается в трёх видах. Менеджер поможет выбрать нужный."),
+ vars:[],sp:[['kind',L("Suv asosli bo'yoq",'Водоэмульсионная краска')],['price',L("Menejerdan so'rang",'Уточняйте у менеджера')]]}
+];
+
+const ICONS=[
+'<svg viewBox="0 0 32 32"><path d="M4 15 16 5l12 10M7 13v14h18V13M13 27v-8h6v8"/></svg>',
+'<svg viewBox="0 0 32 32"><path d="M3 11c4-4 6 4 10 0s6 4 10 0 5 2 6 1M3 18c4-4 6 4 10 0s6 4 10 0 5 2 6 1M3 25c4-4 6 4 10 0s6 4 10 0 5 2 6 1"/></svg>',
+'<svg viewBox="0 0 32 32"><path d="M16 4C9 11 7 16 7 20a9 9 0 0 0 18 0c0-4-2-9-9-16zM12 21a4 4 0 0 0 4 4"/></svg>',
+'<svg viewBox="0 0 32 32"><path d="M20 3l9 9-7 4-6-6zM16 10 6 20c-2 2-3 5-3 8 4 0 7-1 9-3l10-10"/></svg>',
+'<svg viewBox="0 0 32 32"><path d="M5 27C5 12 14 5 28 4c0 14-6 23-20 23zM5 27 18 14"/></svg>',
+'<svg viewBox="0 0 32 32"><path d="M16 3l11 4v8c0 7-5 12-11 14C10 27 5 22 5 15V7zM11 16l4 4 7-8"/></svg>'];
+
+let lang='uz',cat='all',cur=null,layers=2;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const t=k=>T[lang][k];
+const loc=o=>o[lang];
+
+/* ---------- tub renderer ---------- */
+function tub(p,w){
+  const st=w?` style="--w:${w}px"`:'';
+  if(p.kind==='png') return `<div class="png-wrap"${w?` style="width:${w}px"`:''}><img src="${p.src}" alt="${p.name}"></div>`;
+  const inner=p.kind==='label'
+    ? `<img class="lab" src="${p.src}" alt="${p.name}">`
+    : `<div class="gen"><img src="assets/logo.png" alt=""><div class="band">${loc(p.gen)}</div><small>${loc(p.sub)}</small></div>`;
+  return `<div class="tub"${st}><i class="handle"></i><div class="lid"></div><div class="bd">${inner}</div><i class="sh"></i></div>`;
+}
+const byId=id=>P.find(p=>p.id===id);
+
+/* ---------- render ---------- */
+function renderHero(){
+  $('#hp1').innerHTML=tub(byId('perla'));
+  $('#hp2').innerHTML=tub(byId('lucida-premium'));
+  $('#hp3').innerHTML=tub(byId('travertin'));
+}
+function renderChips(){
+  $('#chips').innerHTML=Object.keys(t('cats')).map(k=>`<button class="chip" type="button" data-cat="${k}" aria-pressed="${k===cat}">${t('cats')[k]}</button>`).join('');
+}
+function renderGrid(){
+  $('#grid').innerHTML=P.filter(p=>cat==='all'||p.cat===cat).map(p=>`
+  <button class="card" type="button" data-id="${p.id}" aria-label="${p.name}">
+    <div class="art">${tub(p)}</div>
+    <div class="info"><span class="badge">${loc(p.tag)}</span><h3>${p.name}</h3><p>${loc(p.d).split('. ')[0].replace(/\.$/,'')}.</p>
+    <div class="meta"><span>${t('more')}</span><i>→</i></div></div>
+  </button>`).join('');
+}
+function renderStatic(){
+  $$('[data-i]').forEach(e=>{const v=t(e.dataset.i); if(v!==undefined) e.innerHTML=v;});
+  const m=t('mq'); $('#mq').innerHTML=[...m,...m,...m,...m].map(x=>`<span>${x}</span>`).join('');
+  $('#feat').innerHTML=t('feats').map((x,i)=>`<div>${ICONS[i]}<span>${x}</span></div>`).join('');
+  $('#steps').innerHTML=t('steps').map(s=>`<li><h3>${s[0]}</h3><p>${s[1]}</p></li>`).join('');
+  const c=t('cl'),a=loc(CONFIG.address);
+  let rows=`<div><dt>${c.addr}</dt><dd>${a}</dd></div><div><dt>${c.phone}</dt><dd>${CONFIG.phone}</dd></div>`;
+  if(CONFIG.telegram) rows+=`<div><dt>${c.tg}</dt><dd><a href="https://t.me/${CONFIG.telegram}" target="_blank" rel="noopener">@${CONFIG.telegram}</a></dd></div>`;
+  if(CONFIG.instagram) rows+=`<div><dt>${c.ig}</dt><dd><a href="https://instagram.com/${CONFIG.instagram}" target="_blank" rel="noopener">@${CONFIG.instagram}</a></dd></div>`;
+  rows+=`<div><dt>${c.map}</dt><dd><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONFIG.mapQuery)}" target="_blank" rel="noopener">${c.mapt} →</a></dd></div>`;
+  $('#cl').innerHTML=rows;
+  const sel=$('#fs'),v=sel.value;
+  sel.innerHTML=P.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  if(v) sel.value=v;
+  document.documentElement.lang=lang;
+  $$('.lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===lang));
+  renderChips(); renderGrid(); renderHero(); calc();
+  if(cur) openProduct(cur,true);
+}
+
+/* ---------- modal ---------- */
+const dlg=$('#dlg');
+function openProduct(id,keep){
+  const p=byId(id); cur=id; const sp=t('sp');
+  $('#dart').innerHTML=tub(p,p.kind==='png'?300:310);
+  $('#dtag').textContent=loc(p.tag);
+  $('#dn').textContent=p.name; $('#dd').textContent=loc(p.d);
+  $('#dv').innerHTML=p.vars.map(v=>`<span>${loc(v)}</span>`).join(''); $('#dv').hidden=!p.vars.length;
+  $('#ds').innerHTML=p.sp.map(r=>`<tr><th>${sp[r[0]]}</th><td>${loc(r[1])}</td></tr>`).join('');
+  $('#do').textContent=t('order'); $('#do').dataset.id=id;
+  if(!keep && !dlg.open) dlg.showModal();
+}
+$('#grid').addEventListener('click',e=>{const c=e.target.closest('.card'); if(c) openProduct(c.dataset.id);});
+$('#dx').onclick=()=>dlg.close();
+dlg.addEventListener('click',e=>{if(e.target===dlg) dlg.close();});
+dlg.addEventListener('close',()=>{cur=null;});
+$('#do').addEventListener('click',e=>{e.preventDefault();const id=e.currentTarget.dataset.id;$('#fs').value=byId(id).name;dlg.close();$('#contact').scrollIntoView({behavior:'smooth'});});
+
+/* ---------- interactions ---------- */
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b) return; cat=b.dataset.cat; renderChips(); renderGrid();});
+$$('.lang button').forEach(b=>b.onclick=()=>{lang=b.dataset.lang; try{localStorage.setItem('asmo-lang',lang)}catch(_){} renderStatic();});
+$('#burger').onclick=()=>{const o=$('#nav').classList.toggle('open'); $('#burger').setAttribute('aria-expanded',o);};
+$('#nav').addEventListener('click',e=>{if(e.target.closest('a')){$('#nav').classList.remove('open');$('#burger').setAttribute('aria-expanded',false);}});
+
+/* ---------- calculator: 1 kg covers 5–6 m² per layer (label data) ---------- */
+function calc(){
+  const a=+$('#ka').value; $('#kao').textContent=a+' m²';
+  const min=a*layers/6, max=a*layers/5;
+  $('#kr').textContent=`${min.toFixed(1)} – ${max.toFixed(1)}`;
+  const nMin=Math.ceil(min/5), nMax=Math.ceil(max/5);
+  $('#kb').textContent=nMin===nMax?`${nMax}`:`${nMin} – ${nMax}`;
+}
+$('#ka').addEventListener('input',calc);
+$('#kl').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; layers=+b.dataset.l; $$('#kl button').forEach(x=>x.setAttribute('aria-pressed',x===b)); calc();});
+
+/* ---------- form: builds a ready message ---------- */
+$('#fm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const msg=[t('f_hello'),`• ${t('f_prod')}: ${$('#fs').value}`,$('#fn').value&&`• ${t('f_name')}: ${$('#fn').value}`,$('#fp').value&&`• ${t('f_phone')}: ${$('#fp').value}`,$('#fm2').value&&`• ${$('#fm2').value}`].filter(Boolean).join('\n');
+  const r=$('#res'); r.hidden=false;
+  r.innerHTML=''; const pre=document.createElement('div'); pre.textContent=msg; r.append(pre);
+  const row=document.createElement('div'); row.className='row';
+  const cp=document.createElement('button'); cp.type='button'; cp.className='btn btn-line btn-sm'; cp.textContent=t('f_copy');
+  cp.onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText(msg):Promise.reject()).then(()=>cp.textContent=t('f_copied')).catch(()=>{const rg=document.createRange();rg.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(rg);});};
+  row.append(cp);
+  if(CONFIG.telegram){const a=document.createElement('a');a.className='btn btn-gold btn-sm';a.target='_blank';a.rel='noopener';a.href=`https://t.me/${CONFIG.telegram}?text=${encodeURIComponent(msg)}`;a.textContent=t('f_tg');row.append(a);}
+  r.append(row);
+});
+
+try{const s=localStorage.getItem('asmo-lang'); if(s&&T[s]) lang=s;}catch(_){}
+renderStatic();
+</script>
+</body>
+</html>
