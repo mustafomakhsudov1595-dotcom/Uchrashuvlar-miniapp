@@ -6,4 +6,6 @@ numpy
 opencv-python-headless>=4.9
 # AI qismi (kamera tahlili uchun kerak; "demo" rejimi ularsiz ham ishlaydi)
 ultralytics>=8.3
+insightface>=0.7
+onnxruntime>=1.17
 mediapipe>=0.10

@@ -20,7 +20,11 @@ def draw(frame, items, phones, status=""):
         key = "phone_call" if "phone_call" in st else "phone_use" if "phone_use" in st else "talking" if "talking" in st else ("ok" if it.get("name") else "unk")
         col = COLORS[key]
         cv2.rectangle(frame, (x1, y1), (x2, y2), col, 2)
-        name = ascii_text(it["name"]) if it.get("name") else f"Nomalum #{it['track']}"
+        g = {"M": "Erkak", "F": "Ayol"}.get(it.get("gender"), "")
+        if it.get("name"):
+            name = ascii_text(it["name"]) + (f" ({g})" if g else "")
+        else:
+            name = f"Nomalum {g} {it.get('age') or ''}y".replace("  ", " ") if g else f"Nomalum #{it['track']}"
         lines = [name] + ([LABELS[key]] if key in LABELS else [])
         y = max(18, y1 - 6 - 20 * (len(lines) - 1))
         for ln in lines:

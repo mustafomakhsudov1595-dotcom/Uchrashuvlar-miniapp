@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telefon kamerasi — VisionMonitor</title>
+<style>
+body{margin:0;background:#0b1220;color:#e6edf7;font:16px system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px}
+video{width:100%;max-width:560px;border-radius:14px;background:#000}
+button,select{font:inherit;padding:12px 18px;border-radius:10px;border:0;background:#2563eb;color:#fff;font-weight:600}
+select{background:#131c2e;border:1px solid #233049}
+#st{min-height:24px;text-align:center}.ok{color:#4ade80}.bad{color:#f87171}
+</style></head><body>
+<h2>📱 Kamera sifatida ishlatish</h2>
+<video id="v" playsinline muted autoplay></video>
+<select id="facing"><option value="environment">Orqa kamera</option><option value="user">Old kamera</option></select>
+<button id="go">Boshlash</button>
+<div id="st">Kamerani yoqish uchun "Boshlash" ni bosing. Telefonni ekrani yoqiq holda, xodimlarga qaratib qo'ying.</div>
+<script>
+const q=new URLSearchParams(location.search),cid=q.get('c'),key=q.get('k');
+const st=document.getElementById('st'),v=document.getElementById('v');let run=false,sent=0,wake=null;
+function msg(t,c){st.textContent=t;st.className=c||''}
+document.getElementById('go').onclick=async e=>{
+  if(run)return;
+  if(!cid||!key)return msg("Havola noto'g'ri: kabinetdan yangi havola oling",'bad');
+  if(!navigator.mediaDevices)return msg("Brauzer kameraga ruxsat bermayapti: sayt HTTPS orqali ochilishi kerak",'bad');
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:document.getElementById('facing').value,width:{ideal:1280}},audio:false});
+    v.srcObject=s;run=true;e.target.disabled=true;
+    try{wake=await navigator.wakeLock.request('screen')}catch{}
+    loop();
+  }catch(er){msg("Kameraga ruxsat berilmadi: "+er.message,'bad')}
+};
+async function loop(){
+  const c=document.createElement('canvas');
+  while(run){
+    const t=Date.now();
+    if(v.videoWidth){
+      const w=Math.min(960,v.videoWidth);c.width=w;c.height=Math.round(v.videoHeight*w/v.videoWidth);
+      c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.75));
+      try{
+        const r=await fetch('/api/ingest/'+cid,{method:'POST',headers:{'X-Camera-Key':key,'Content-Type':'image/jpeg'},body:blob});
+        if(r.ok){sent++;msg('✅ Yuborilmoqda: '+sent+' kadr','ok')}else if(r.status===403){msg("Kalit noto'g'ri — kabinetdan yangi havola oling",'bad');run=false}else msg('Server xatosi '+r.status,'bad');
+      }catch{msg("Aloqa uzildi, qayta urinilmoqda...",'bad')}
+    }
+    await new Promise(r=>setTimeout(r,Math.max(50,300-(Date.now()-t))));
+  }
+}
+</script></body></html>

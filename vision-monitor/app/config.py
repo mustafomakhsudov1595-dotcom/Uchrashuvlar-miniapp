@@ -36,8 +36,14 @@ SECRET = _secret()
 
 # Model manzillari (birinchi ishga tushirishda avtomatik yuklab olinadi)
 URL_FACE_LANDMARKER = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
-URL_YUNET = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
-URL_SFACE = "https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx"
+URL_YUNET_UNUSED = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
+URL_SFACE_UNUSED = "https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx"
 
 # RTSP uchun TCP (paket yo'qolishini kamaytiradi); cv2 import qilinishidan oldin o'rnatiladi
 os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp|stimeout;8000000")
+
+FACE_MODEL = os.environ.get("VM_FACE_MODEL", "buffalo_l")  # buffalo_l (eng aniq) | buffalo_s (yengilroq)
+URL_FACE_PACK = "https://github.com/deepinsight/insightface/releases/download/v0.7/{}.zip"
+# Shaxsni tasdiqlash qat'iyligi (ArcFace kosinus o'xshashligi)
+ID_THRESHOLD = float(os.environ.get("VM_ID_THRESHOLD", "0.45"))
+ID_MARGIN = float(os.environ.get("VM_ID_MARGIN", "0.08"))

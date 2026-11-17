@@ -39,6 +39,7 @@ const STATUS = {working: 'Ish joyida', phone_call: 'Telefonda gaplashmoqda', pho
   away: 'Tashqarida', absent: 'Kelmagan', present_day: 'Kelgan', online: 'Onlayn', offline: 'Oflayn', error: 'Xatolik', disabled: "O'chirilgan", starting: 'Ulanmoqda'};
 const KIND = {phone_call: 'Telefonda gaplashdi', phone_use: 'Telefon ishlatdi', talking: 'Gaplashib turdi'};
 const KCOL = {phone_call: 'var(--phone)', phone_use: 'var(--use)', talking: 'var(--talk)'};
+const GEN = {M: '♂ Erkak', F: '♀ Ayol', '': '—'};
 const badge = st => `<span class="badge b-${st}"><i></i>${STATUS[st] || st}</span>`;
 const initials = n => esc(n.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase());
 
@@ -82,7 +83,7 @@ function authView(mode = 'login') {
 }
 
 /* ---------- Shell ---------- */
-const NAV = [['dashboard', '🏠', 'Bosh sahifa'], ['cameras', '📹', 'Kameralar'], ['employees', '👥', 'Xodimlar'], ['reports', '📊', 'Hisobotlar'], ['settings', '⚙️', 'Sozlamalar']];
+const NAV = [['dashboard', '🏠', 'Bosh sahifa'], ['cameras', '📹', 'Kameralar'], ['employees', '👥', 'Xodimlar'], ['unknown', '🧑‍🤝‍🧑', 'Tanilmaganlar'], ['reports', '📊', 'Hisobotlar'], ['settings', '⚙️', 'Sozlamalar']];
 async function render() {
   clearInterval(timer);
   if (!token) return authView();
@@ -93,7 +94,7 @@ async function render() {
     <div class="who"><b>${esc(me.name)}</b><div class="muted">${esc(me.company || me.email)}</div><button class="link" id="lo" style="margin-top:6px;color:#93c5fd">Chiqish</button></div></aside>
     <main class="main" id="main"></main></div>`;
   $('#lo').onclick = logout;
-  const pages = {dashboard, cameras, employees, reports, settings: settingsPage};
+  const pages = {dashboard, cameras, employees, unknown: unknownPage, reports, settings: settingsPage};
   try { await (pages[page] || dashboard)($('#main')); } catch (e) { $('#main').innerHTML = `<div class="card empty">${esc(e.message)}</div>`; }
 }
 window.addEventListener('hashchange', render);
@@ -123,7 +124,7 @@ async function dashboard(el) {
     }
     $('#dash').innerHTML = `
     <div class="grid g4">
-      <div class="card kpi"><div class="l">Hozir ishxonada</div><div class="v">${s.now_present}<span class="muted" style="font-size:18px"> / ${s.total}</span></div><div class="s">Bugun kelgan: ${s.came} · Kelmagan: ${s.absent}</div></div>
+      <div class="card kpi"><div class="l">Hozir ishxonada</div><div class="v">${s.now_present}<span class="muted" style="font-size:18px"> / ${s.total}</span></div><div class="s">Kelgan: ${s.came} · Kelmagan: ${s.absent} · ♂ ${s.male} ♀ ${s.female}${s.unknown_count ? ` · <a href="#/unknown" style="color:var(--warn)">${s.unknown_count} begona</a>` : ''}</div></div>
       <div class="card kpi"><div class="l">Kechikkanlar</div><div class="v" style="color:${s.late ? 'var(--bad)' : 'inherit'}">${s.late}</div><div class="s">Ish boshlanishi ${day.work_start}</div></div>
       <div class="card kpi"><div class="l">Hozir telefonda</div><div class="v" style="color:${s.on_phone ? 'var(--phone)' : 'inherit'}">${s.on_phone}</div><div class="s">Bugun jami: ${dur(s.phone_sec)}</div></div>
       <div class="card kpi"><div class="l">Hozir gaplashmoqda</div><div class="v">${s.talking}</div><div class="s">Bugun jami: ${dur(s.talk_sec)}</div></div>
@@ -131,7 +132,7 @@ async function dashboard(el) {
     <div class="grid g2" style="margin-top:16px;grid-template-columns:minmax(0,1fr) 340px">
       <div class="card"><h2 style="margin-bottom:10px">Xodimlar holati (jonli)</h2><div class="scroll"><table class="compact">
         <tr><th>Xodim</th><th>Holat</th><th>Kelgan</th><th>Tashqarida</th><th>📱 / 💬</th></tr>
-        ${emps.map(p => `<tr class="click" data-e="${p.employee_id}"><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.position)}</div></td><td>${badge(p.status)}</td>
+        ${emps.map(p => `<tr class="click" data-e="${p.employee_id}"><td><b>${esc(p.name)}</b> <span class="muted">${p.gender === 'M' ? '♂' : p.gender === 'F' ? '♀' : ''}</span><div class="muted small">${esc(p.position)}</div></td><td>${badge(p.status)}</td>
           <td>${p.arrival ? esc(p.arrival.slice(0, 5)) + (p.late_min ? ` <span class="pill-late">(+${p.late_min} daq)</span>` : ' <span class="pill-ok">✓</span>') : '—'}</td>
           <td>${p.away_count ? dur(p.away_sec) + ` <span class="muted small">(${p.away_count}×)</span>` : '—'}</td>
           <td>📱 ${dur(p.phone_call.sec + p.phone_use.sec)}<div class="muted small">💬 ${dur(p.talking.sec)}</div></td></tr>`).join('') || '<tr><td colspan=5 class="empty">Xodimlar yo\'q</td></tr>'}
@@ -157,42 +158,104 @@ async function cameras(el) {
   async function load() {
     const [cams, sys] = await Promise.all([api('/cameras'), api('/system')]);
     el.innerHTML = `<div class="top"><div><h1>Kameralar</h1><div class="muted">Kamera qo'shing — sun'iy intellekt avtomatik tahlil qiladi</div></div><button class="btn right" id="add">+ Kamera qo'shish</button></div>
-    ${!sys.yolo ? `<div class="card" style="border-color:var(--warn);margin-bottom:16px"><b>⚠️ AI kutubxonalari o'rnatilmagan.</b> Haqiqiy kamera tahlili uchun serverda <code>pip install ultralytics mediapipe</code> ni ishga tushiring. "demo" manba bunsiz ishlaydi.</div>` : ''}
+    ${!(sys.yolo && sys.insightface && sys.mediapipe) ? `<div class="card" style="border-color:var(--warn);margin-bottom:16px"><b>⚠️ AI kutubxonalari to'liq o'rnatilmagan.</b> Serverda <code>pip install -r requirements.txt</code> ni ishga tushiring. "demo" manba bunsiz ishlaydi.</div>` : ''}
     <div class="grid g2" style="grid-template-columns:repeat(auto-fill,minmax(360px,1fr))">${cams.map(c => `
       <div class="card cam"><div class="view">${c.status === 'online' ? `<img src="/api/cameras/${c.id}/stream?token=${token}" alt="">` : `<div style="padding:20px;text-align:center">${c.status === 'disabled' ? "O'chirilgan" : esc(c.error || 'Ulanmoqda...')}</div>`}</div>
       <div class="body"><div class="row"><h3>${esc(c.name)}</h3>${badge(c.status)}<span class="right muted small">${c.role === 'entrance' ? '🚪 Kirish' : '🏢 Ofis'}</span></div>
       <div class="muted small" style="word-break:break-all">${esc(c.source)}${c.status === 'online' ? ` · ${c.fps} kadr/s · ${c.people} kishi` : ''}</div>
-      <div class="row"><button class="btn ghost sm" data-edit="${c.id}">Tahrirlash</button><button class="btn ghost sm" data-del="${c.id}">O'chirish</button></div></div></div>`).join('') ||
+      <div class="row">${c.source === 'push' ? `<button class="btn ghost sm" data-push="${c.id}">Ulash ko'rsatmasi</button>` : ''}<button class="btn ghost sm" data-edit="${c.id}">Tahrirlash</button><button class="btn ghost sm" data-del="${c.id}">O'chirish</button></div></div></div>`).join('') ||
       '<div class="card empty" style="grid-column:1/-1"><h3>Kamera yo\'q</h3><p class="muted">"+ Kamera qo\'shish" tugmasini bosing.</p></div>'}</div>`;
     $('#add').onclick = () => camForm();
     el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => camForm(cams.find(c => c.id == b.dataset.edit)));
+    el.querySelectorAll('[data-push]').forEach(b => b.onclick = () => pushInfo(cams.find(c => c.id == b.dataset.push)));
     el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
       if (!confirm("Kamerani o'chirasizmi? Hisobotlar saqlanib qoladi.")) return;
       await api('/cameras/' + b.dataset.del, {method: 'DELETE'}); load();
     });
   }
+  function pushInfo(c) {
+    const link = `${location.origin}/camera.html?c=${c.id}&k=${c.ingest_key}`;
+    const secure = location.protocol === 'https:' || location.hostname === 'localhost';
+    const cmd = `python camera_agent.py --server ${location.origin} --camera ${c.id} --key ${c.ingest_key} --source "rtsp://LOGIN:PAROL@KAMERA_IP:554/YO'L"`;
+    const m = modal(`<h2>Ulash ko'rsatmasi: ${esc(c.name)}</h2>
+      <h3>📱 Telefon yoki noutbuk kamerasi</h3>
+      <div class="help">Telefonda quyidagi havolani oching va "Boshlash"ni bosing:<br><code style="word-break:break-all">${esc(link)}</code>
+      ${secure ? '' : '<br><b style="color:var(--bad)">Diqqat: telefon kamerasi faqat HTTPS saytda ishlaydi.</b>'}</div>
+      <button class="btn ghost sm" id="cl">Havolani nusxalash</button>
+      <h3>🖥 Ofis agenti (IP kamera uchun, sayt internetda bo'lsa)</h3>
+      <div class="help">Ofisdagi kompyuterda (kamera bilan bir tarmoqda): <code>pip install opencv-python-headless</code>, so'ng <code>agent/camera_agent.py</code> faylini yuklab, ishga tushiring:<br><code style="word-break:break-all;display:block;margin-top:6px">${esc(cmd)}</code></div>
+      <button class="btn ghost sm" id="cc">Buyruqni nusxalash</button>
+      <button class="btn" onclick="this.closest('.modal-bg').remove()">Tushunarli</button>`);
+    m.querySelector('#cl').onclick = () => { navigator.clipboard?.writeText(link); toast('Nusxalandi'); };
+    m.querySelector('#cc').onclick = () => { navigator.clipboard?.writeText(cmd); toast('Nusxalandi'); };
+  }
   function camForm(c) {
-    const m = modal(`<h2>${c ? 'Kamerani tahrirlash' : "Kamera qo'shish"}</h2>
+    let method = c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
+    const m = modal('<div id="cfbody"></div>');
+    const box = m.querySelector('#cfbody');
+    const METHODS = [['scan', '🔍 Tarmoqdan qidirish'], ['ip', '📷 IP kamera'], ['url', '✍️ Manzil (URL)'], ['push', '📱 Telefon / 🖥 Agent']];
+    async function draw() {
+      if (!brands.length) brands = await api('/cameras/brands');
+      box.innerHTML = `<h2>${c ? 'Kamerani tahrirlash' : "Kamera qo'shish"}</h2>
+      ${c ? '' : `<div class="tabs" style="flex-wrap:wrap">${METHODS.map(([k, t]) => `<button data-m="${k}" class="${method === k ? 'on' : ''}">${t}</button>`).join('')}</div>`}
+      <div id="mbody" style="display:flex;flex-direction:column;gap:12px"></div>
       <form id="cf" style="display:flex;flex-direction:column;gap:12px">
-      <label>Nomi<input name="name" required value="${esc(c?.name || '')}" placeholder="Masalan: Ofis asosiy zal"></label>
-      <label>Kamera manzili<input name="source" required value="${esc(c?.source || '')}" placeholder="rtsp://admin:parol@192.168.1.64:554/stream1"></label>
-      <div class="help">Qo'llab-quvvatlanadi: <br>• IP kamera: <code>rtsp://login:parol@IP:554/stream1</code> (Hikvision, Dahua, TP-Link Tapo va b.)<br>• HTTP oqim: <code>http://IP:8080/video</code><br>• Serverga ulangan USB kamera: <code>0</code><br>• Sinash uchun: <code>demo</code></div>
-      <label>Joylashuvi<select name="role"><option value="office">🏢 Ofis ichida (ish joyi)</option><option value="entrance">🚪 Kirish/chiqish eshigi</option></select></label>
-      <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="enabled" ${c && !c.enabled ? '' : 'checked'}> Yoqilgan</label>
-      <div class="err" id="cerr"></div><div class="row"><button type="button" class="btn ghost" id="ct">Ulanishni tekshirish</button><button class="btn right">Saqlash</button></div></form>`);
-    if (c) m.querySelector('[name=role]').value = c.role;
-    const data = () => { const f = new FormData(m.querySelector('#cf')); return {name: f.get('name'), source: f.get('source'), role: f.get('role'), enabled: !!f.get('enabled')}; };
-    m.querySelector('#ct').onclick = async e => {
-      e.target.disabled = true; m.querySelector('#cerr').style.color = 'var(--mute)'; m.querySelector('#cerr').textContent = 'Tekshirilmoqda...';
-      try { const r = await api('/cameras/test', {method: 'POST', json: {source: data().source}}); m.querySelector('#cerr').style.color = r.ok ? 'var(--ok)' : 'var(--bad)'; m.querySelector('#cerr').textContent = r.message; }
-      catch (er) { m.querySelector('#cerr').style.color = 'var(--bad)'; m.querySelector('#cerr').textContent = er.message; }
-      e.target.disabled = false;
-    };
-    m.querySelector('#cf').onsubmit = async e => {
-      e.preventDefault();
-      try { await api(c ? '/cameras/' + c.id : '/cameras', {method: c ? 'PUT' : 'POST', json: data()}); m.close(); toast('Saqlandi'); load(); }
-      catch (er) { m.querySelector('#cerr').style.color = 'var(--bad)'; m.querySelector('#cerr').textContent = er.message; }
-    };
+        <label>Kamera nomi<input name="name" required value="${esc(c?.name || '')}" placeholder="Masalan: Ofis asosiy zal"></label>
+        <label>Joylashuvi<select name="role"><option value="office">🏢 Ofis ichida (ish joyi)</option><option value="entrance">🚪 Kirish/chiqish eshigi</option></select></label>
+        ${method === 'url' ? `<label>Kamera manzili<input name="source" required value="${esc(src)}" placeholder="rtsp://admin:parol@192.168.1.64:554/Streaming/Channels/101"></label>` : ''}
+        ${method === 'ip' || method === 'scan' ? `<input type="hidden" name="source" value="${esc(src)}">` : ''}
+        <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="enabled" ${c && !c.enabled ? '' : 'checked'}> Yoqilgan</label>
+        <div class="err" id="cerr"></div><div class="row">${method === 'url' ? '<button type="button" class="btn ghost" id="ct">Ulanishni tekshirish</button>' : ''}<button class="btn right" id="csave">Saqlash</button></div></form>`;
+      if (c) box.querySelector('[name=role]').value = c.role;
+      box.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { method = b.dataset.m; src = ''; draw(); });
+      const mb = box.querySelector('#mbody'), err = box.querySelector('#cerr');
+      const say = (t, col) => { err.style.color = col || 'var(--mute)'; err.textContent = t; };
+      if (method === 'scan') {
+        mb.innerHTML = `<div class="help">Server joylashgan tarmoqdagi kameralarni topadi (ONVIF + RTSP port). Faqat sayt <b>ofis tarmog'ida</b> ishlasa mos keladi.</div><button class="btn ghost" id="sc">Qidirishni boshlash</button><div id="res"></div>`;
+        mb.querySelector('#sc').onclick = async e => {
+          e.target.disabled = true; e.target.textContent = 'Qidirilmoqda (10–20 soniya)...';
+          try {
+            const r = await api('/cameras/discover', {method: 'POST'});
+            mb.querySelector('#res').innerHTML = r.devices.length ? `<table>${r.devices.map(d => `<tr><td><b>${esc(d.ip)}</b><div class="muted small">${esc(d.name || '')} ${d.onvif ? 'ONVIF' : ''} · portlar: ${d.ports.join(', ') || '—'}</div></td><td style="text-align:right"><button class="btn sm" data-ip="${esc(d.ip)}" data-b="${esc(d.brand)}">Tanlash</button></td></tr>`).join('')}</table>` : `<div class="muted small">${esc(r.note || 'Kamera topilmadi. IP kamerani qo\'lda kiriting.')}</div>`;
+            mb.querySelectorAll('[data-ip]').forEach(b => b.onclick = () => { method = 'ip'; box.dataset.ip = b.dataset.ip; box.dataset.brand = b.dataset.b; draw(); });
+          } catch (er) { say(er.message, 'var(--bad)'); }
+          e.target.disabled = false; e.target.textContent = 'Qayta qidirish';
+        };
+      }
+      if (method === 'ip') {
+        mb.innerHTML = `<div class="help">Kameraning IP manzili va loginini kiriting — tizim to'g'ri RTSP yo'lini <b>o'zi topadi</b>.<br>Login/parol — kameraning sozlamasida yaratilgan (ko'pincha <code>admin</code>). IP kamera ilovasidan yoki routerning "ulangan qurilmalar" ro'yxatidan topiladi.</div>
+          <div class="row"><label style="flex:2">IP manzil<input id="ih" value="${esc(box.dataset.ip || '')}" placeholder="192.168.1.64"></label><label style="flex:1">Port<input id="ip" type="number" value="554"></label></div>
+          <div class="row"><label style="flex:1">Login<input id="iu" value="admin" autocomplete="off"></label><label style="flex:1">Parol<input id="iw" type="password" autocomplete="new-password"></label></div>
+          <label>Marka<select id="ib">${brands.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></label>
+          <button type="button" class="btn ghost" id="ia">⚡ Avtomatik ulash</button>`;
+        if (box.dataset.brand) mb.querySelector('#ib').value = box.dataset.brand;
+        mb.querySelector('#ia').onclick = async e => {
+          e.target.disabled = true; say('Sinalmoqda (10–30 soniya)...');
+          try {
+            const r = await api('/cameras/autoconnect', {method: 'POST', json: {host: mb.querySelector('#ih').value.trim(), port: +mb.querySelector('#ip').value || 554, user: mb.querySelector('#iu').value, password: mb.querySelector('#iw').value, brand: mb.querySelector('#ib').value}});
+            if (r.ok) { src = r.url; box.querySelector('[name=source]').value = src; say('✅ ' + r.message + ' — endi nom bering va saqlang', 'var(--ok)'); }
+            else say(r.message, 'var(--bad)');
+          } catch (er) { say(er.message, 'var(--bad)'); }
+          e.target.disabled = false;
+        };
+      }
+      if (method === 'url') mb.innerHTML = `<div class="help">• IP kamera: <code>rtsp://login:parol@IP:554/yo'l</code><br>• HTTP/MJPEG: <code>http://IP:8080/video</code><br>• Serverga ulangan USB kamera: <code>0</code> · Sinash uchun: <code>demo</code></div>`;
+      if (method === 'push') {
+        mb.innerHTML = `<div class="help"><b>Sayt internetda (bulutda) bo'lganda</b> u ofis ichidagi IP kameraga ulana olmaydi. Bu usulda kadrlar sizning tomoningizdan yuboriladi:<br>• <b>Telefon/noutbuk kamerasi</b> — maxsus havolani brauzerda ochasiz<br>• <b>Ofis agenti</b> — ofisdagi kompyuterda kichik dastur kameradan olib saytga yuboradi (portlarni ochish shart emas)<br>Saqlagandan so'ng ko'rsatma chiqadi.</div>`;
+        src = 'push';
+      }
+      const form = box.querySelector('#cf');
+      const data = () => { const f = new FormData(form); return {name: f.get('name'), source: method === 'push' ? 'push' : (f.get('source') || ''), role: f.get('role'), enabled: !!f.get('enabled')}; };
+      const ct = box.querySelector('#ct');
+      if (ct) ct.onclick = async e => { e.target.disabled = true; say('Tekshirilmoqda...'); try { const r = await api('/cameras/test', {method: 'POST', json: {source: data().source}}); say(r.message, r.ok ? 'var(--ok)' : 'var(--bad)'); } catch (er) { say(er.message, 'var(--bad)'); } e.target.disabled = false; };
+      form.onsubmit = async e => {
+        e.preventDefault(); const d = data();
+        if (!d.source) return say("Avval kamerani ulang (manzilni kiriting yoki 'Avtomatik ulash' ni bosing)", 'var(--bad)');
+        try { const r = await api(c ? '/cameras/' + c.id : '/cameras', {method: c ? 'PUT' : 'POST', json: d}); m.close(); toast('Saqlandi'); await load(); if (d.source === 'push' && !c) pushInfo(r); }
+        catch (er) { say(er.message, 'var(--bad)'); }
+      };
+    }
+    draw();
   }
   await load(); timer = setInterval(() => { if (!document.querySelector('.modal-bg') && !document.hidden) load().catch(() => {}); }, 15000);
 }
@@ -202,10 +265,10 @@ async function employees(el) {
   async function load() {
     const list = await api('/employees');
     el.innerHTML = `<div class="top"><div><h1>Xodimlar</h1><div class="muted">Yuz rasmi qo'shilsa, kamera xodimni ismi bilan taniydi</div></div><button class="btn right" id="add">+ Xodim qo'shish</button></div>
-    <div class="card scroll"><table><tr><th>Xodim</th><th>Lavozim</th><th>Yuz namunalari</th><th></th></tr>
-    ${list.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.position) || '—'}</td>
+    <div class="card scroll"><table><tr><th>Xodim</th><th>Lavozim</th><th>Jins</th><th>Yuz namunalari</th><th></th></tr>
+    ${list.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.position) || '—'}</td><td>${GEN[e.gender] || '—'}</td>
       <td>${e.faces ? `<span class="pill-ok">✓ ${e.faces} ta rasm</span>` : '<span class="pill-late">Rasm yo\'q — tanib bo\'lmaydi</span>'}</td>
-      <td style="text-align:right"><button class="btn ghost sm" data-f="${e.id}">📷 Yuz rasmi</button> <button class="btn ghost sm" data-e="${e.id}">Tahrirlash</button> <button class="btn ghost sm" data-d="${e.id}">O'chirish</button></td></tr>`).join('') || '<tr><td colspan=4 class="empty">Hali xodim qo\'shilmagan</td></tr>'}</table></div>
+      <td style="text-align:right"><button class="btn ghost sm" data-f="${e.id}">📷 Yuz rasmi</button> <button class="btn ghost sm" data-e="${e.id}">Tahrirlash</button> <button class="btn ghost sm" data-d="${e.id}">O'chirish</button></td></tr>`).join('') || '<tr><td colspan=5 class="empty">Hali xodim qo\'shilmagan</td></tr>'}</table></div>
     <div class="help" style="margin-top:14px">💡 Eng yaxshi natija uchun xodimning 3–5 ta rasmini yuklang: yuz aniq, oldindan, yaxshi yoritilgan, ko'zoynak/niqobsiz.</div>`;
     $('#add').onclick = () => empForm();
     el.querySelectorAll('[data-e]').forEach(b => b.onclick = () => empForm(list.find(x => x.id == b.dataset.e)));
@@ -215,7 +278,8 @@ async function employees(el) {
   function empForm(e) {
     const m = modal(`<h2>${e ? 'Xodimni tahrirlash' : "Xodim qo'shish"}</h2><form id="ef" style="display:flex;flex-direction:column;gap:12px">
       <label>Ism-familiya<input name="name" required minlength="2" value="${esc(e?.name || '')}"></label>
-      <label>Lavozim<input name="position" value="${esc(e?.position || '')}"></label><div class="err" id="eerr"></div><button class="btn">Saqlash</button></form>`);
+      <label>Lavozim<input name="position" value="${esc(e?.position || '')}"></label><label>Jins (yuz rasmidan avtomatik aniqlanadi)<select name="gender"><option value="">Avtomatik</option><option value="M">Erkak</option><option value="F">Ayol</option></select></label><div class="err" id="eerr"></div><button class="btn">Saqlash</button></form>`);
+    if (e) m.querySelector('[name=gender]').value = e.gender || '';
     m.querySelector('#ef').onsubmit = async ev => {
       ev.preventDefault();
       try { await api(e ? '/employees/' + e.id : '/employees', {method: e ? 'PUT' : 'POST', json: Object.fromEntries(new FormData(ev.target))}); m.close(); load(); }
@@ -223,19 +287,40 @@ async function employees(el) {
     };
   }
   function faceForm(e) {
-    const m = modal(`<h2>${esc(e.name)} — yuz rasmlari</h2><p class="muted small">Hozirgi namunalar: <b>${e.faces}</b> ta</p>
+    const m = modal(`<h2>${esc(e.name)} — yuz rasmlari</h2><p class="muted small">Hozirgi namunalar: <b>${e.faces}</b> ta. Yaxshi natija uchun turli burchak/yorug'likdagi 3–5 ta rasm.</p>
       <input type="file" id="ff" accept="image/*" multiple><div class="err" id="ferr"></div>
       <div class="row"><button class="btn" id="fu">Yuklash</button>${e.faces ? '<button class="btn ghost" id="fc">Hammasini o\'chirish</button>' : ''}</div>`);
     m.querySelector('#fu').onclick = async ev => {
       const fs = m.querySelector('#ff').files; if (!fs.length) return;
       ev.target.disabled = true; m.querySelector('#ferr').style.color = 'var(--mute)'; m.querySelector('#ferr').textContent = 'Yuklanmoqda (birinchi marta model yuklanishi mumkin)...';
       const fd = new FormData(); [...fs].forEach(f => fd.append('files', f));
-      try { const r = await api(`/employees/${e.id}/faces`, {method: 'POST', body: fd}); toast(`${r.added} ta rasm qo'shildi` + (r.failed ? `, ${r.failed} tasida yuz topilmadi` : '')); m.close(); load(); }
+      try { const r = await api(`/employees/${e.id}/faces`, {method: 'POST', body: fd});
+        if (r.problems.length) { m.querySelector('#ferr').style.color = 'var(--bad)'; m.querySelector('#ferr').innerHTML = `${r.added} ta qabul qilindi. Rad etilganlar:<br>` + r.problems.map(esc).join('<br>'); ev.target.disabled = false; load(); return; }
+        toast(`${r.added} ta rasm qo'shildi${r.gender ? ' · jins: ' + GEN[r.gender] : ''}`); m.close(); load(); }
       catch (er) { m.querySelector('#ferr').style.color = 'var(--bad)'; m.querySelector('#ferr').textContent = er.message; ev.target.disabled = false; }
     };
     const fc = m.querySelector('#fc'); if (fc) fc.onclick = async () => { await api(`/employees/${e.id}/faces`, {method: 'DELETE'}); m.close(); load(); };
   }
   await load();
+}
+
+
+/* ---------- Tanilmagan yuzlar ---------- */
+async function unknownPage(el) {
+  const [list, emps] = await Promise.all([api('/unknown'), api('/employees')]);
+  el.innerHTML = `<div class="top"><div><h1>Tanilmagan yuzlar</h1><div class="muted">Tizim ishonchi komil bo'lmagan odamlarni xato nom bilan yozmaydi — bu yerda siz tasdiqlaysiz va tizim o'rganadi</div></div></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))">${list.map(f => `<div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+    <img src="/api/unknown/${f.id}/photo?token=${token}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:#05080f" alt="">
+    <div class="small muted">${GEN[f.gender] || ''} · ~${f.age || '?'} yosh · ${f.seen} marta ko'rildi · ${esc(f.last)}</div>
+    <select data-s="${f.id}"><option value="">Kim bu?</option>${emps.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}<option value="new">➕ Yangi xodim...</option></select>
+    <div class="row"><button class="btn sm" data-ok="${f.id}">Tasdiqlash</button><button class="btn ghost sm" data-no="${f.id}">Begona / o'tkazib yuborish</button></div></div>`).join('') || '<div class="card empty" style="grid-column:1/-1">Tanilmagan yuz yo\'q 🎉</div>'}</div>`;
+  el.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.ok, v = el.querySelector(`[data-s="${id}"]`).value; if (!v) return toast('Xodimni tanlang', true);
+    let body = {employee_id: +v};
+    if (v === 'new') { const name = prompt('Yangi xodim ism-familiyasi:'); if (!name) return; body = {name}; }
+    try { await api(`/unknown/${id}/assign`, {method: 'POST', json: body}); toast("Tasdiqlandi. Tizim bu odamni endi taniydi"); render(); } catch (e) { toast(e.message, true); }
+  });
+  el.querySelectorAll('[data-no]').forEach(b => b.onclick = async () => { await api(`/unknown/${b.dataset.no}/dismiss`, {method: 'POST'}); render(); });
 }
 
 /* ---------- Hisobotlar ---------- */
@@ -277,7 +362,7 @@ async function reports(el) {
     if (!p.came) return `<div class="card" data-p="${p.employee_id}"><div class="row"><b>${esc(p.name)}</b><span class="muted small">${esc(p.position)}</span>${badge('absent')}</div></div>`;
     return `<div class="card" data-p="${p.employee_id ?? ''}">
       <div class="row"><div class="badge" style="width:36px;height:36px;justify-content:center;border-radius:50%;background:var(--brand);color:#fff">${initials(p.name)}</div>
-        <div><h3>${esc(p.name)}</h3><div class="muted small">${esc(p.position)}</div></div>${d.is_today ? badge(p.status) : ''}
+        <div><h3>${esc(p.name)} <span class="muted">${p.gender === 'M' ? '♂' : p.gender === 'F' ? '♀' : ''}</span></h3><div class="muted small">${esc(p.position)}</div></div>${d.is_today ? badge(p.status) : ''}
         <button class="btn ghost sm right toggle">Batafsil ▾</button></div>
       <div class="grid g4" style="margin:12px 0;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
         ${stat('Kelgan vaqti', esc(p.arrival.slice(0, 5)), p.late_min ? `<span class="pill-late">${p.late_min} daq kechikdi</span>` : '<span class="pill-ok">Vaqtida</span>')}

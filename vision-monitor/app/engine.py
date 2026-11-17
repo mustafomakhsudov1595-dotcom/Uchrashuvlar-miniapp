@@ -10,6 +10,7 @@ import numpy as np
 from . import db
 from . import settings as settings_mod
 from .activity import Recorder
+from . import unknown
 from .ai import overlay
 from .config import ANALYZE_FPS, SNAPS
 
@@ -75,65 +76,70 @@ def _is_file(src):
 
 
 class CameraWorker(BaseWorker):
-    """Haqiqiy kamera: RTSP/HTTP oqimi, USB kamera (0,1..) yoki video fayl."""
+    """Haqiqiy kamera: RTSP/HTTP oqimi yoki USB kamera (0,1..). Tahlil sikli PushWorker bilan umumiy."""
 
+    def __init__(self, cam):
+        super().__init__(cam)
+        self.latest = {"f": None}
+        self.overlay_state = {"items": [], "phones": []}
+
+    # --- kadr manbai (PushWorker buni almashtiradi)
+    def start_reader(self):
+        threading.Thread(target=self._reader, daemon=True).start()
+
+    def _reader(self):
+        src = self.cam["source"].strip()
+        src_open = int(src) if src.isdigit() else src
+        backoff = 2
+        while not self.stop_ev.is_set():
+            cap = cv2.VideoCapture(src_open)
+            if not cap.isOpened():
+                self.status, self.error = "error", "Kameraga ulanib bo'lmadi (manzil, login/parol yoki tarmoqni tekshiring)"
+                cap.release()
+                self.stop_ev.wait(backoff)
+                backoff = min(30, backoff * 2)
+                continue
+            backoff = 2
+            self.status, self.error = "online", ""
+            last_pub = 0
+            while not self.stop_ev.is_set():
+                ok, f = cap.read()
+                if not ok:
+                    break
+                self.latest["f"] = f
+                now = time.time()
+                if now - last_pub >= 0.1:  # oqim ~10 kadr/s
+                    self.show(f)
+                    last_pub = now
+            cap.release()
+            self.status, self.error = "error", "Oqim uzildi, qayta ulanmoqda..."
+            self.stop_ev.wait(backoff)
+
+    def show(self, f):
+        view = f.copy()
+        overlay.draw(view, self.overlay_state["items"], self.overlay_state["phones"], time.strftime("%H:%M:%S"))
+        self.publish(view)
+
+    # --- tahlil sikli
     def run(self):
+        from .ai import faces
         from .ai.pipeline import Analyzer
 
         uid = self.cam["user_id"]
         rec = recorder(uid)
-        src = self.cam["source"].strip()
-        src_open = int(src) if src.isdigit() else src
         analyzer = None
-        latest = {"f": None}
-        overlay_state = {"items": [], "phones": []}
-        reader_done = threading.Event()
-
-        def reader():
-            backoff = 2
-            while not self.stop_ev.is_set():
-                cap = cv2.VideoCapture(src_open)
-                if not cap.isOpened():
-                    self.status, self.error = "error", "Kameraga ulanib bo'lmadi (manzil, login/parol yoki tarmoqni tekshiring)"
-                    cap.release()
-                    self.stop_ev.wait(backoff)
-                    backoff = min(30, backoff * 2)
-                    continue
-                backoff = 2
-                self.status, self.error = "online", ""
-                native = cap.get(cv2.CAP_PROP_FPS) or 25
-                last_pub = 0
-                while not self.stop_ev.is_set():
-                    ok, f = cap.read()
-                    if not ok:
-                        if _is_file(src):  # fayl tugadi -> qaytadan
-                            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                            continue
-                        break
-                    latest["f"] = f
-                    now = time.time()
-                    if now - last_pub >= 0.1:  # oqim ~10 kadr/s
-                        view = f.copy()
-                        overlay.draw(view, overlay_state["items"], overlay_state["phones"], time.strftime("%H:%M:%S"))
-                        self.publish(view)
-                        last_pub = now
-                    if _is_file(src):
-                        time.sleep(1 / native)
-                cap.release()
-                self.status, self.error = "error", "Oqim uzildi, qayta ulanmoqda..."
-                self.stop_ev.wait(backoff)
-            reader_done.set()
-
-        threading.Thread(target=reader, daemon=True).start()
+        self.start_reader()
         snap_done: set[int] = set()
         period = 1.0 / ANALYZE_FPS
         frames, t0 = 0, time.time()
+        last_frame_id = None
         while not self.stop_ev.is_set():
             t_start = time.time()
-            f = latest["f"]
-            if f is None:
-                time.sleep(0.2)
+            f = self.latest["f"]
+            if f is None or f is last_frame_id:
+                self.stop_ev.wait(0.1)
                 continue
+            last_frame_id = f
             try:
                 if analyzer is None:
                     analyzer = Analyzer(uid, settings_mod.get(uid)["talk_sensitivity"])
@@ -143,19 +149,26 @@ class CameraWorker(BaseWorker):
                 self.stop_ev.wait(5)
                 continue
             self.people_now = len(items)
-            overlay_state["items"], overlay_state["phones"] = items, phones
+            self.overlay_state["items"], self.overlay_state["phones"] = items, phones
             ts = time.time()
             for it in items:
                 t = it["tobj"]
                 if it["employee_id"]:
-                    if t.__dict__.get("_unk_subject"):
-                        rec.reassign(t._unk_subject, it["employee_id"])
-                        t._unk_subject = None
+                    if t.unk_subject:
+                        rec.reassign(t.unk_subject, it["employee_id"])
+                        t.unk_subject = None
                     subj, label = ("e", it["employee_id"]), ""
                 else:
                     label = f"Noma'lum (kamera {self.cam['id']} #{t.id})"
                     subj = ("u", label)
-                    t._unk_subject = subj
+                    t.unk_subject = subj
+                    idn = t.ident
+                    if idn.unknown_ready and idn.best is not None:
+                        idn.unknown_saved = True
+                        try:
+                            unknown.save(uid, self.cam["id"], label, idn.best)
+                        except Exception:
+                            pass
                 rec.see(subj, label, self.cam["id"], "present", ts)
                 for kind in it["state"]:
                     iid, age = rec.see(subj, label, self.cam["id"], kind, ts)
@@ -166,7 +179,22 @@ class CameraWorker(BaseWorker):
             if time.time() - t0 >= 5:
                 self.fps, frames, t0 = frames / (time.time() - t0), 0, time.time()
             self.stop_ev.wait(max(0, period - (time.time() - t_start)))
-        self.stop_ev.set()
+
+
+class PushWorker(CameraWorker):
+    """Kadrlar tashqaridan keladi: ofisdagi agent yoki telefon/brauzer kamerasi (/api/ingest)."""
+
+    def start_reader(self):
+        self.status = "starting"
+        self.error = "Kadr kutilmoqda: agentni yoki telefon sahifasini ishga tushiring"
+
+    def feed(self, jpeg: bytes):
+        f = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
+        if f is None:
+            raise ValueError("Rasm o'qilmadi")
+        self.latest["f"] = f
+        self.status, self.error = "online", ""
+        self.show(f)
 
 
 # ------------------------------------------------------------------ DEMO
@@ -234,7 +262,8 @@ def start_camera(cam):
     stop_camera(cam["id"])
     if not cam["enabled"]:
         return
-    w = DemoWorker(cam) if cam["source"].strip().lower() == "demo" else CameraWorker(cam)
+    src = cam["source"].strip().lower()
+    w = DemoWorker(cam) if src == "demo" else PushWorker(cam) if src == "push" else CameraWorker(cam)
     with _lock:
         _workers[cam["id"]] = w
     w.start()

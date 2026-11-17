@@ -7,18 +7,18 @@ from . import db
 from . import settings as settings_mod
 from .reports import day_bounds, tzinfo
 
-NAMES = [("Aziz Karimov", "Menejer"), ("Malika Yusupova", "Buxgalter"), ("Jasur Toshmatov", "Dasturchi"),
-         ("Dilnoza Rahimova", "Dizayner"), ("Sardor Ismoilov", "Sotuv bo'limi"), ("Nigora Abdullayeva", "Operator")]
+NAMES = [("Aziz Karimov", "Menejer", "M"), ("Malika Yusupova", "Buxgalter", "F"), ("Jasur Toshmatov", "Dasturchi", "M"),
+         ("Dilnoza Rahimova", "Dizayner", "F"), ("Sardor Ismoilov", "Sotuv bo'limi", "M"), ("Nigora Abdullayeva", "Operator", "F")]
 
 
 def seed(user_id: int, days: int = 7):
     st = settings_mod.get(user_id)
     tz = tzinfo(st["tz"])
     emp_ids = []
-    for n, pos in NAMES:
+    for n, pos, g in NAMES:
         r = db.one("SELECT id FROM employees WHERE user_id=? AND name=?", (user_id, n))
         emp_ids.append(r["id"] if r else db.run(
-            "INSERT INTO employees(user_id,name,position,created_at) VALUES(?,?,?,?)", (user_id, n, pos, time.time())))
+            "INSERT INTO employees(user_id,name,position,gender,created_at) VALUES(?,?,?,?,?)", (user_id, n, pos, g, time.time())))
     if not db.one("SELECT id FROM cameras WHERE user_id=? AND source='demo'", (user_id,)):
         db.run("INSERT INTO cameras(user_id,name,source,role,enabled,created_at) VALUES(?,?,?,?,1,?)",
                (user_id, "Demo kamera (sun'iy)", "demo", "office", time.time()))

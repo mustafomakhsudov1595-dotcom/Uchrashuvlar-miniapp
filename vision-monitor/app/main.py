@@ -12,7 +12,9 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import auth, db, demo, engine, reports
+import secrets
+
+from . import auth, db, demo, discovery, engine, reports, unknown
 from . import settings as settings_mod
 from .config import FACES, SNAPS, WEB
 
@@ -83,7 +85,7 @@ def me(u=User):
 
 
 # ------------------------------------------------------------------ cameras
-ALLOWED_SRC = re.compile(r"^(rtsp|rtsps|http|https|rtmp)://\S+$|^\d{1,2}$|^demo$", re.I)
+ALLOWED_SRC = re.compile(r"^(rtsp|rtsps|http|https|rtmp)://\S+$|^\d{1,2}$|^demo$|^push$", re.I)
 
 
 def mask(src: str) -> str:
@@ -102,6 +104,8 @@ def _cam_out(r):
     w = engine.worker(d["id"])
     info = w.info() if w else dict(status="disabled" if not d["enabled"] else "offline", error="", fps=0, people=0)
     d["source"] = mask(d["source"])
+    if d["source"].lower() != "push":
+        d.pop("ingest_key", None)
     d.update(info)
     return d
 
@@ -110,6 +114,10 @@ def _check_src(src: str):
     s = src.strip()
     if not ALLOWED_SRC.match(s):
         raise HTTPException(400, "Manba noto'g'ri. Misol: rtsp://login:parol@192.168.1.10:554/stream1, http://..., 0 (USB kamera) yoki demo")
+    if "://" in s:
+        h = discovery.source_host(s)
+        if not h or not discovery.host_allowed(h):
+            raise HTTPException(400, "Bu manzilga ulanishga ruxsat yo'q yoki manzil topilmadi")
     return s
 
 
@@ -121,8 +129,9 @@ def cameras(u=User):
 @app.post("/api/cameras")
 def add_camera(b: CameraIn, u=User):
     src = _check_src(b.source)
-    cid = db.run("INSERT INTO cameras(user_id,name,source,role,enabled,created_at) VALUES(?,?,?,?,?,?)",
-                 (u["id"], b.name.strip(), src, b.role, int(b.enabled), time.time()))
+    key = secrets.token_urlsafe(24) if src.lower() == "push" else ""
+    cid = db.run("INSERT INTO cameras(user_id,name,source,role,enabled,ingest_key,created_at) VALUES(?,?,?,?,?,?,?)",
+                 (u["id"], b.name.strip(), src, b.role, int(b.enabled), key, time.time()))
     engine.start_camera(dict(db.one("SELECT * FROM cameras WHERE id=?", (cid,))))
     return _cam_out(db.one("SELECT * FROM cameras WHERE id=?", (cid,)))
 
@@ -138,7 +147,8 @@ def _own_cam(cid, u):
 def edit_camera(cid: int, b: CameraIn, u=User):
     old = _own_cam(cid, u)
     src = old["source"] if b.source.strip() == mask(old["source"]) else _check_src(b.source)
-    db.run("UPDATE cameras SET name=?,source=?,role=?,enabled=? WHERE id=?", (b.name.strip(), src, b.role, int(b.enabled), cid))
+    key = old["ingest_key"] or (secrets.token_urlsafe(24) if src.lower() == "push" else "")
+    db.run("UPDATE cameras SET name=?,source=?,role=?,enabled=?,ingest_key=? WHERE id=?", (b.name.strip(), src, b.role, int(b.enabled), key, cid))
     engine.start_camera(dict(db.one("SELECT * FROM cameras WHERE id=?", (cid,))))
     return _cam_out(db.one("SELECT * FROM cameras WHERE id=?", (cid,)))
 
@@ -160,6 +170,8 @@ def test_camera(b: TestIn, u=User):
     src = _check_src(b.source)
     if src.lower() == "demo":
         return dict(ok=True, message="Demo manba tayyor")
+    if src.lower() == "push":
+        return dict(ok=True, message="Bu usulda kadrlar tashqaridan keladi — saqlagandan so'ng ulash ko'rsatmasi chiqadi")
     cap = cv2.VideoCapture(int(src) if src.isdigit() else src)
     try:
         if not cap.isOpened():
@@ -203,15 +215,117 @@ def cam_snapshot(cid: int, u=User):
     return Response(w.jpeg, media_type="image/jpeg")
 
 
+# ------------------------------------------------------------------ kamera ulash yordamchilari
+@app.get("/api/cameras/brands")
+def brands(u=User):
+    return [dict(id=k, name=v) for k, v in discovery.BRAND_LABELS.items()]
+
+
+@app.post("/api/cameras/discover")
+def discover(u=User):
+    """Server joylashgan tarmoqdagi kameralarni qidiradi (ONVIF + RTSP port skaneri)."""
+    return discovery.scan_network()
+
+
+class AutoIn(BaseModel):
+    host: str = Field(min_length=3, max_length=100, pattern=r"^[A-Za-z0-9.\-]+$")
+    port: int = Field(default=554, ge=1, le=65535)
+    user: str = Field(default="", max_length=64)
+    password: str = Field(default="", max_length=128)
+    brand: str = Field(default="auto", max_length=20)
+
+
+@app.post("/api/cameras/autoconnect")
+def autoconnect(b: AutoIn, u=User):
+    return discovery.autoconnect(b.host, b.port, b.user, b.password, b.brand)
+
+
+@app.post("/api/ingest/{cid}")
+async def ingest(cid: int, request: Request):
+    """Ofisdagi agent yoki telefon/brauzer kamerasi kadr yuboradi. Autentifikatsiya: X-Camera-Key."""
+    key = request.headers.get("x-camera-key", "")
+    r = db.one("SELECT ingest_key,source,enabled FROM cameras WHERE id=?", (cid,))
+    if not r or r["source"].lower() != "push" or not r["ingest_key"] or not secrets.compare_digest(r["ingest_key"], key):
+        raise HTTPException(403, "Kamera kaliti noto'g'ri")
+    w = engine.worker(cid)
+    if not w or not hasattr(w, "feed"):
+        raise HTTPException(409, "Kamera o'chirilgan")
+    data = await request.body()
+    if not data or len(data) > 3_000_000:
+        raise HTTPException(413, "Kadr hajmi noto'g'ri")
+    try:
+        w.feed(data)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return dict(ok=True)
+
+
+# ------------------------------------------------------------------ tanilmagan yuzlar
+@app.get("/api/unknown")
+def unknown_list(u=User):
+    rows = db.q("SELECT * FROM unknown_faces WHERE user_id=? AND status='pending' ORDER BY last_ts DESC LIMIT 60", (u["id"],))
+    st = settings_mod.get(u["id"])
+    tz = reports.tzinfo(st["tz"])
+    return [dict(id=r["id"], gender=r["gender"], age=r["age"], seen=r["seen"], photo=r["photo"],
+                 last=datetime.fromtimestamp(r["last_ts"], tz).strftime("%d.%m %H:%M")) for r in rows]
+
+
+@app.get("/api/unknown/{uid}/photo")
+def unknown_photo(uid: int, u=User):
+    r = db.one("SELECT photo FROM unknown_faces WHERE id=? AND user_id=?", (uid, u["id"]))
+    if not r or not r["photo"] or not (FACES / r["photo"]).exists():
+        raise HTTPException(404)
+    return FileResponse(FACES / r["photo"], media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
+
+
+class AssignIn(BaseModel):
+    employee_id: int | None = None
+    name: str = Field(default="", max_length=80)
+    position: str = Field(default="", max_length=80)
+
+
+@app.post("/api/unknown/{uid}/assign")
+def unknown_assign(uid: int, b: AssignIn, u=User):
+    r = db.one("SELECT * FROM unknown_faces WHERE id=? AND user_id=? AND status='pending'", (uid, u["id"]))
+    if not r:
+        raise HTTPException(404, "Topilmadi")
+    if b.employee_id:
+        emp = _own_emp(b.employee_id, u)
+        eid = emp["id"]
+    else:
+        if len(b.name.strip()) < 2:
+            raise HTTPException(400, "Xodim ismini kiriting")
+        eid = db.run("INSERT INTO employees(user_id,name,position,gender,created_at) VALUES(?,?,?,?,?)",
+                     (u["id"], b.name.strip(), b.position.strip(), r["gender"], time.time()))
+        emp = db.one("SELECT * FROM employees WHERE id=?", (eid,))
+    embs = json.loads(emp["embeddings"] or "[]")
+    embs.append(json.loads(r["embedding"]))
+    gender = emp["gender"] or r["gender"]
+    db.run("UPDATE employees SET embeddings=?, gender=? WHERE id=?", (json.dumps(embs[-12:]), gender, eid))
+    n = 0
+    for label in [x for x in r["label"].split("|") if x]:
+        db.run("UPDATE intervals SET employee_id=?, label='' WHERE user_id=? AND label=?", (eid, u["id"], label))
+        n += 1
+    db.run("UPDATE unknown_faces SET status='assigned' WHERE id=?", (uid,))
+    return dict(ok=True, employee_id=eid)
+
+
+@app.post("/api/unknown/{uid}/dismiss")
+def unknown_dismiss(uid: int, u=User):
+    db.run("UPDATE unknown_faces SET status='dismissed' WHERE id=? AND user_id=?", (uid, u["id"]))
+    return dict(ok=True)
+
+
 # ------------------------------------------------------------------ employees
 class EmployeeIn(BaseModel):
     name: str = Field(min_length=2, max_length=80)
     position: str = Field(default="", max_length=80)
+    gender: str = Field(default="", pattern="^(|M|F)$")
 
 
 def _emp_out(r):
     n = len(json.loads(r["embeddings"] or "[]"))
-    return dict(id=r["id"], name=r["name"], position=r["position"], faces=n, active=bool(r["active"]))
+    return dict(id=r["id"], name=r["name"], position=r["position"], gender=r["gender"], faces=n, active=bool(r["active"]))
 
 
 def _own_emp(eid, u):
@@ -228,14 +342,14 @@ def employees(u=User):
 
 @app.post("/api/employees")
 def add_employee(b: EmployeeIn, u=User):
-    eid = db.run("INSERT INTO employees(user_id,name,position,created_at) VALUES(?,?,?,?)", (u["id"], b.name.strip(), b.position.strip(), time.time()))
+    eid = db.run("INSERT INTO employees(user_id,name,position,gender,created_at) VALUES(?,?,?,?,?)", (u["id"], b.name.strip(), b.position.strip(), b.gender, time.time()))
     return _emp_out(db.one("SELECT * FROM employees WHERE id=?", (eid,)))
 
 
 @app.put("/api/employees/{eid}")
 def edit_employee(eid: int, b: EmployeeIn, u=User):
     _own_emp(eid, u)
-    db.run("UPDATE employees SET name=?,position=? WHERE id=?", (b.name.strip(), b.position.strip(), eid))
+    db.run("UPDATE employees SET name=?,position=?,gender=? WHERE id=?", (b.name.strip(), b.position.strip(), b.gender, eid))
     return _emp_out(db.one("SELECT * FROM employees WHERE id=?", (eid,)))
 
 
@@ -247,33 +361,62 @@ def del_employee(eid: int, u=User):
     return dict(ok=True)
 
 
-@app.post("/api/employees/{eid}/faces")
-async def add_faces(eid: int, files: list[UploadFile] = File(...), u=User):
-    from .ai import faces
+def _enroll(eid: int, u, imgs):
+    """Rasmlardan sifatli yuz vektorlarini qo'shadi. Qaytaradi: (added, [muammolar], jins)."""
+    import numpy as np
+    from .ai import faces, identity
 
     r = _own_emp(eid, u)
     embs = json.loads(r["embeddings"] or "[]")
-    added, failed = 0, 0
-    for f in files[:10]:
-        data = await f.read()
-        if len(data) > 8_000_000:
-            failed += 1
-            continue
-        img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    bank = identity.Bank(u["id"])
+    added, problems, genders = 0, [], []
+    for name, img in imgs:
         if img is None:
-            failed += 1
+            problems.append(f"{name}: rasm o'qilmadi")
             continue
-        v = faces.embed(img)
-        if v is None:
-            if faces.recognition_error():
-                raise HTTPException(503, f"Yuzni tanish modeli yuklanmadi: {faces.recognition_error()}")
-            failed += 1
+        fl = faces.analyze(img)
+        if faces.recognition_error():
+            raise HTTPException(503, f"Yuzni tanish modeli yuklanmadi: {faces.recognition_error()}")
+        if not fl:
+            problems.append(f"{name}: yuz topilmadi")
             continue
-        embs.append(v)
+        if len(fl) > 1 and fl[1].size > 0.5 * fl[0].size:
+            problems.append(f"{name}: rasmda bir nechta odam bor — faqat bitta odam bo'lgan rasm yuklang")
+            continue
+        f = fl[0]
+        if not f.good:
+            problems.append(f"{name}: yuz sifatsiz yoki juda kichik (kamida {faces.MIN_FACE_PX}px, aniq va yorug' bo'lsin)")
+            continue
+        # boshqa xodimga juda o'xshash bo'lsa — xato rasm bo'lishi mumkin
+        clash = [(s_, n) for s_, i, n in bank.rank(f) if i != eid and s_ >= 0.5]
+        if clash:
+            problems.append(f"{name}: bu yuz '{clash[0][1]}' ga juda o'xshash — to'g'ri xodimga yuklayotganingizni tekshiring")
+            continue
+        if r["embeddings"] and embs:
+            own = max(float(np.dot(f.emb, np.asarray(e, dtype=np.float32))) for e in embs)
+            if own < 0.25:
+                problems.append(f"{name}: bu yuz oldingi rasmlardagi odamga o'xshamayapti — boshqa odam bo'lishi mumkin")
+                continue
+        embs.append([round(float(x), 5) for x in f.emb])
+        genders.append(f.gender)
         added += 1
     embs = embs[-12:]
-    db.run("UPDATE employees SET embeddings=? WHERE id=?", (json.dumps(embs), eid))
-    return dict(added=added, failed=failed, total=len(embs))
+    gender = r["gender"]
+    if genders and not gender:
+        gender = max(set(genders), key=genders.count)
+    db.run("UPDATE employees SET embeddings=?, gender=? WHERE id=?", (json.dumps(embs), gender, eid))
+    return added, problems, gender, len(embs)
+
+
+@app.post("/api/employees/{eid}/faces")
+async def add_faces(eid: int, files: list[UploadFile] = File(...), u=User):
+    imgs = []
+    for f in files[:10]:
+        data = await f.read()
+        img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR) if 0 < len(data) <= 10_000_000 else None
+        imgs.append((f.filename or "rasm", img))
+    added, problems, gender, total = _enroll(eid, u, imgs)
+    return dict(added=added, failed=len(imgs) - added, problems=problems, gender=gender, total=total)
 
 
 @app.delete("/api/employees/{eid}/faces")
@@ -371,7 +514,7 @@ def system(u=User):
     def has(m):
         import importlib.util
         return importlib.util.find_spec(m) is not None
-    return dict(yolo=has("ultralytics"), mediapipe=has("mediapipe"),
+    return dict(yolo=has("ultralytics"), mediapipe=has("mediapipe"), insightface=has("insightface"),
                 cameras_running=len([1 for r in db.q("SELECT id FROM cameras WHERE user_id=?", (u["id"],)) if engine.worker(r["id"])]))
 
 

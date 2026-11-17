@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS cameras(
   source TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'office',
   enabled INTEGER NOT NULL DEFAULT 1,
+  ingest_key TEXT NOT NULL DEFAULT '',
   created_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS employees(
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS employees(
   position TEXT DEFAULT '',
   embeddings TEXT DEFAULT '[]',
   active INTEGER NOT NULL DEFAULT 1,
+  gender TEXT NOT NULL DEFAULT '',
   created_at REAL NOT NULL
 );
 -- kind: present | phone_call | phone_use | talking
@@ -54,6 +56,21 @@ CREATE TABLE IF NOT EXISTS intervals(
   end_ts REAL NOT NULL,
   snapshot TEXT DEFAULT ''
 );
+CREATE TABLE IF NOT EXISTS unknown_faces(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  camera_id INTEGER,
+  label TEXT NOT NULL DEFAULT '',
+  gender TEXT DEFAULT '',
+  age INTEGER DEFAULT 0,
+  embedding TEXT NOT NULL,
+  photo TEXT NOT NULL,
+  first_ts REAL NOT NULL,
+  last_ts REAL NOT NULL,
+  seen INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'pending'
+);
+CREATE INDEX IF NOT EXISTS ix_unk ON unknown_faces(user_id,status,last_ts);
 CREATE INDEX IF NOT EXISTS ix_int_user_time ON intervals(user_id, start_ts, end_ts);
 CREATE INDEX IF NOT EXISTS ix_int_emp ON intervals(employee_id, kind, start_ts);
 """
@@ -73,6 +90,11 @@ def conn() -> sqlite3.Connection:
 
 def init():
     conn().executescript(SCHEMA)
+    # eski bazalarni yangilash
+    for tbl, col, ddl in (("employees", "gender", "TEXT NOT NULL DEFAULT ''"), ("cameras", "ingest_key", "TEXT NOT NULL DEFAULT ''")):
+        cols = [r["name"] for r in conn().execute(f"PRAGMA table_info({tbl})")]
+        if col not in cols:
+            conn().execute(f"ALTER TABLE {tbl} ADD COLUMN {col} {ddl}")
 
 
 def q(sql, args=()):

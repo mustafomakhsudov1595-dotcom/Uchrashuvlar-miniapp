@@ -52,7 +52,7 @@ def build_day(user_id: int, d: date, now: float | None = None) -> dict:
         "SELECT * FROM intervals WHERE user_id=? AND end_ts>=? AND start_ts<? ORDER BY start_ts",
         (user_id, s, e),
     )
-    emps = {r["id"]: dict(r) for r in db.q("SELECT id,name,position FROM employees WHERE user_id=? AND active=1", (user_id,))}
+    emps = {r["id"]: dict(r) for r in db.q("SELECT id,name,position,gender FROM employees WHERE user_id=? AND active=1", (user_id,))}
     groups: dict = {}
     for k in emps:
         groups[("e", k)] = []
@@ -81,7 +81,7 @@ def build_day(user_id: int, d: date, now: float | None = None) -> dict:
                 merged[-1][1] = max(merged[-1][1], b)
             else:
                 merged.append([a, b])
-        p = dict(employee_id=eid, name=name, position=position, unknown=eid is None)
+        p = dict(employee_id=eid, name=name, position=position, unknown=eid is None, gender=emps[key[1]]["gender"] if key[0] == "e" else "")
         p["worked_sec"] = int(sum(b - a for a, b in merged))
         p["arrival"] = hms(merged[0][0], tz) if merged else None
         p["arrival_ts"] = merged[0][0] if merged else None
@@ -143,6 +143,9 @@ def build_day(user_id: int, d: date, now: float | None = None) -> dict:
         came=len(came),
         absent=len([p for p in people if not p["unknown"]]) - len(came),
         late=len([p for p in came if p["late_min"] > 0]),
+        male=len([p for p in came if p["gender"] == "M"]),
+        female=len([p for p in came if p["gender"] == "F"]),
+        unknown_count=len([p for p in people if p["unknown"] and p["came"]]),
         now_present=len([p for p in came if p["status"] in ("working", "phone_call", "phone_use", "talking")]),
         on_phone=len([p for p in came if p["status"] in ("phone_call", "phone_use")]),
         talking=len([p for p in came if p["status"] == "talking"]),

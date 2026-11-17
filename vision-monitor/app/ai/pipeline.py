@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from . import detector, faces
+from . import detector, faces, identity
 from .tracker import Tracker
 
 WINDOW = 2.5  # soniya: gaplashishni baholash oynasi
@@ -45,36 +45,32 @@ class Analyzer:
         self.user_id = user_id
         self.tracker = Tracker()
         self.sens = max(0.3, talk_sensitivity)
-        self._emps = []
-        self._emps_ts = 0.0
-
-    def employees(self):
-        if time.time() - self._emps_ts > 30:
-            self._emps = faces.load_employees(self.user_id)
-            self._emps_ts = time.time()
-        return self._emps
+        self.bank = identity.Bank(user_id)
 
     def process(self, frame):
-        """Qaytaradi: [{track, box, state(set), name, employee_id}]"""
+        """Qaytaradi: items=[{track, box, state(set), name, employee_id, gender, age, tobj}], phones"""
         ts = time.time()
         persons, phones = detector.detect(frame)
         pboxes = [p[:4] for p in persons]
-        tracks = self.tracker.update(pboxes, ts)
+        tracks = self.tracker.update(pboxes, ts, frame)
         owners = assign_phones(pboxes, [p[:4] for p in phones])
         H, W = frame.shape[:2]
+        bank_has = bool(self.bank.load())
+        budget = 2  # bir kadrda ko'pi bilan 2 ta yuz tahlili (CPU yuklamasi uchun)
         out = []
         for i, t in enumerate(tracks):
             x1, y1, x2, y2 = [int(v) for v in t.box]
             x1, y1, x2, y2 = max(0, x1), max(0, y1), min(W, x2), min(H, y2)
             head = frame[y1 : y1 + max(1, int((y2 - y1) * 0.5)), x1:x2]
 
-            # ---- kim ekanini aniqlash (yuz orqali), har 2 soniyada, 8 martagacha
-            if t.employee_id is None and t.id_tries < 8 and ts >= t.next_id_try and self.employees():
-                t.id_tries += 1
-                t.next_id_try = ts + 2
-                m = faces.best_match(faces.embed(head), self.employees())
-                if m:
-                    t.employee_id, t.name = m[0], m[1]
+            # ---- kim ekanini va jinsini aniqlash (yuz orqali)
+            idn = t.ident
+            if budget > 0 and ts >= idn.next_obs and faces.recognition_error() is None:
+                idn.next_obs = ts + (6.0 if idn.employee_id else 0.7)
+                fl = [f for f in faces.analyze(head, with_crop=idn.employee_id is None) if f.good]
+                budget -= 1
+                if fl:
+                    idn.observe(self.bank, fl[0])
 
             # ---- telefon
             mode = None
@@ -100,6 +96,18 @@ class Analyzer:
                     v = np.array([b for _, b in t.jaw])
                     if v.std() > 0.03 / self.sens and v.max() > 0.07:
                         state.add("talking")
-            out.append(dict(track=t.id, box=(x1, y1, x2, y2), state=state, name=t.name,
-                            employee_id=t.employee_id, tobj=t))
+            out.append(dict(track=t.id, box=(x1, y1, x2, y2), state=state, name=idn.name, employee_id=idn.employee_id,
+                            gender=idn.gender, age=idn.age, tobj=t))
+
+        # ---- bitta xodim ikki odamga berilmasin: kuchlisi qoladi
+        by_emp = {}
+        for it in out:
+            if it["employee_id"]:
+                by_emp.setdefault(it["employee_id"], []).append(it)
+        for eid, its in by_emp.items():
+            if len(its) > 1:
+                its.sort(key=lambda it: it["tobj"].ident.score, reverse=True)
+                for loser in its[1:]:
+                    loser["tobj"].ident.reset()
+                    loser.update(name=None, employee_id=None)
         return out, [p[:4] for p in phones]
