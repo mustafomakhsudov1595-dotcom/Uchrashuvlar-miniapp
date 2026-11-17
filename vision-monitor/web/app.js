@@ -153,6 +153,49 @@ function feed(evs) {
 }
 function zoomSnap(name) { modal(`<img src="/api/snap/${esc(name)}?token=${token}" style="width:100%;border-radius:10px"><button class="btn ghost" onclick="this.closest('.modal-bg').remove()">Yopish</button>`, true); }
 
+/* ---------- Kamera QR kodini skanerlash ---------- */
+function parseCameraQR(text) {
+  const t = String(text).trim();
+  let m = t.match(/^rtsps?:\/\/(?:([^:@\/\s]*)(?::([^@\/\s]*))?@)?([^:\/\s]+)(?::(\d+))?(\/\S*)?$/i);
+  if (m) return {kind: 'rtsp', user: decodeURIComponent(m[1] || ''), pw: decodeURIComponent(m[2] || ''), ip: m[3], port: +m[4] || 554, url: t};
+  m = t.match(/^https?:\/\/(?:[^@\/]*@)?(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?(?:\/|$)/i);
+  if (m) return {kind: 'host', ip: m[1], user: '', pw: '', port: 554};
+  if (t.startsWith('{')) { try { const j = JSON.parse(t); const ip = j.ip || j.host || j.address; if (ip) return {kind: 'host', ip: String(ip), user: String(j.user || j.username || j.login || ''), pw: String(j.password || j.pass || j.pwd || ''), port: +j.port || 554}; } catch {} }
+  m = t.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?:[:;,\s]+(\d{2,5}))?(?:[;,\s]+([^;,\s]+)[;,\s]+([^;,\s]+))?$/);
+  if (m) return {kind: 'host', ip: m[1], port: +m[2] || 554, user: m[3] || '', pw: m[4] || ''};
+  return {kind: 'opaque', id: /^[A-Za-z0-9]{6,20}$/.test(t) ? t : '', len: t.length};
+}
+function scanQR(onResult) {
+  const m = modal(`<h2>Kamera QR kodini skanerlang</h2><div class="help">Kameraning o'zidagi (qurilma stikeri) yoki kamera ilovasidagi QR kodni ramkaga tuting.</div>
+    <div style="position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:1"><video id="qv" playsinline muted autoplay style="width:100%;height:100%;object-fit:cover"></video>
+    <div style="position:absolute;inset:18%;border:3px solid #22c55e;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35)"></div></div>
+    <div class="muted small" id="qs">Kamera yoqilmoqda...</div><button class="btn ghost" id="qc">Bekor qilish</button>`);
+  let stop = false, stream = null;
+  const done = () => { stop = true; stream?.getTracks().forEach(t => t.stop()); m.close(); };
+  m.querySelector('#qc').onclick = done;
+  const obs = new MutationObserver(() => { if (!document.body.contains(m)) { stop = true; stream?.getTracks().forEach(t => t.stop()); obs.disconnect(); } }); obs.observe(document.body, {childList: true});
+  (async () => {
+    try {
+      if (!navigator.mediaDevices) throw new Error('Kameraga ruxsat berilmadi: sayt HTTPS orqali ochilishi kerak');
+      stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment', width: {ideal: 1280}}, audio: false});
+      const v = m.querySelector('#qv'); v.srcObject = stream; await v.play(); m.querySelector('#qs').textContent = 'QR kodni qidiryapman...';
+      let det = null;
+      if ('BarcodeDetector' in window) { try { det = new BarcodeDetector({formats: ['qr_code']}); } catch {} }
+      if (!det && !window.jsQR) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; sc.onload = res; sc.onerror = () => rej(new Error('Skaner kutubxonasi yuklanmadi')); document.head.append(sc); });
+      const cv = document.createElement('canvas'), cx = cv.getContext('2d', {willReadFrequently: true});
+      while (!stop) {
+        let text = '';
+        if (v.videoWidth) {
+          if (det) { try { const r = await det.detect(v); if (r.length) text = r[0].rawValue; } catch {} }
+          if (!text && window.jsQR) { const sc = Math.min(1, 800 / v.videoWidth); cv.width = v.videoWidth * sc; cv.height = v.videoHeight * sc; cx.drawImage(v, 0, 0, cv.width, cv.height); const r = window.jsQR(cx.getImageData(0, 0, cv.width, cv.height).data, cv.width, cv.height); if (r) text = r.data; }
+        }
+        if (text) { done(); onResult(text); return; }
+        await new Promise(r => setTimeout(r, 200));
+      }
+    } catch (e) { m.querySelector('#qs').style.color = 'var(--bad)'; m.querySelector('#qs').textContent = e.message; }
+  })();
+}
+
 /* QR kod (havolani telefon bilan skanerlash uchun) */
 function renderQR(el, text) {
   const draw = () => { try { const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make(); el.innerHTML = qr.createSvgTag({cellSize: 4, margin: 2, scalable: true}); const svg = el.querySelector('svg'); if (svg) { svg.style.width = '100%'; svg.style.maxWidth = '220px'; svg.style.background = '#fff'; svg.style.borderRadius = '10px'; } } catch { el.textContent = ''; } };
@@ -180,10 +223,10 @@ async function cameras(el) {
       await api('/cameras/' + b.dataset.del, {method: 'DELETE'}); load();
     });
   }
-  function ipInfo(c) {
+  function ipInfo(c, hint) {
     const link = `${location.origin}/monitor.html?c=${c.id}&k=${c.ingest_key}&src=ip`;
     const dl = `${location.origin}/ipcam_bridge.py`;
-    const cmd = 'python ipcam_bridge.py --ip KAMERA_IP --user admin --password PAROL';
+    const cmd = hint?.url ? `python ipcam_bridge.py --source "${hint.url}"` : hint?.ip ? `python ipcam_bridge.py --ip ${hint.ip}${hint.port && hint.port !== 554 ? ' --port ' + hint.port : ''} --user ${hint.user || 'admin'} --password ${hint.pw || 'PAROL'}` : 'python ipcam_bridge.py --ip KAMERA_IP --user admin --password PAROL';
     const m = modal(`<h2>IP kamerani ulash: ${esc(c.name)}</h2>
       <div class="help"><b>Kamera bilan bir tarmoqdagi kompyuterda</b> (ofisdagi PC/noutbuk; u doim yoniq bo'lishi kerak) quyidagilarni bajaring:</div>
       <h3>1. Ko'prik dasturini yuklang</h3><div class="help"><a href="${esc(dl)}" download style="color:var(--brand);font-weight:600">ipcam_bridge.py ni yuklab olish</a><br>Python 3 kerak, so'ng: <code>pip install opencv-python-headless</code></div>
@@ -198,8 +241,8 @@ async function cameras(el) {
     m.querySelector('#c2').onclick = () => { navigator.clipboard?.writeText(link); toast('Nusxalandi'); };
     renderQR(m.querySelector('#qr'), link);
   }
-  function pushInfo(c) {
-    if (window.VM_EDGE && c.source === 'ip') return ipInfo(c);
+  function pushInfo(c, hint) {
+    if (window.VM_EDGE && c.source === 'ip') return ipInfo(c, hint);
     const link = `${location.origin}/${window.VM_EDGE ? 'monitor' : 'camera'}.html?c=${c.id}&k=${c.ingest_key}`;
     const secure = location.protocol === 'https:' || location.hostname === 'localhost';
     const cmd = `python camera_agent.py --server ${location.origin} --camera ${c.id} --key ${c.ingest_key} --source "rtsp://LOGIN:PAROL@KAMERA_IP:554/YO'L"`;
@@ -219,7 +262,7 @@ async function cameras(el) {
     const cc = m.querySelector('#cc'); if (cc) cc.onclick = () => { navigator.clipboard?.writeText(cmd); toast('Nusxalandi'); };
   }
   function camForm(c) {
-    let method = window.VM_EDGE ? (c?.source === 'push' ? 'push' : 'ipbridge') : c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
+    let qrHint = null; let method = window.VM_EDGE ? (c?.source === 'push' ? 'push' : 'ipbridge') : c ? (c.source === 'push' ? 'push' : 'url') : 'scan', brands = [], src = c?.source || '';
     const m = modal('<div id="cfbody"></div>');
     const box = m.querySelector('#cfbody');
     const METHODS = window.VM_EDGE ? [['ipbridge', '📡 IP kamera (ofis / ko\'cha)'], ['push', '📱 Telefon / noutbuk']] : [['scan', '🔍 Tarmoqdan qidirish'], ['ip', '📷 IP kamera'], ['url', '✍️ Manzil (URL)'], ['push', '📱 Telefon / 🖥 Agent']];
@@ -270,8 +313,14 @@ async function cameras(el) {
       }
       if (method === 'url') mb.innerHTML = `<div class="help">• IP kamera: <code>rtsp://login:parol@IP:554/yo'l</code><br>• HTTP/MJPEG: <code>http://IP:8080/video</code><br>• Serverga ulangan USB kamera: <code>0</code> · Sinash uchun: <code>demo</code></div>`;
       if (method === 'ipbridge') {
-        mb.innerHTML = `<div class="help"><b>Ofis yoki ko'chadagi IP (CCTV) kamera.</b> Kamera RTSP oqimini beradi, brauzer uni to'g'ridan-to'g'ri o'qiy olmaydi, shuning uchun <b>kamera bilan bir tarmoqdagi kompyuterda</b> kichik ko'prik dasturi ishlaydi. Saqlagandan so'ng aniq ko'rsatma chiqadi.<br>Kerak: kamerada RTSP/ONVIF yoqilgan, uning IP manzili va login/paroli.</div>`;
+        mb.innerHTML = `<div class="help"><b>Ofis yoki ko'chadagi IP (CCTV) kamera.</b> Kamera RTSP oqimini beradi, brauzer uni to'g'ridan-to'g'ri o'qiy olmaydi, shuning uchun <b>kamera bilan bir tarmoqdagi kompyuterda</b> kichik ko'prik dasturi ishlaydi. Saqlagandan so'ng aniq ko'rsatma chiqadi.<br>Kerak: kamerada RTSP/ONVIF yoqilgan, uning IP manzili va login/paroli.</div>
+          <button type="button" class="btn ghost" id="qrscan">📷 Kamera QR kodini skanerlash</button><div id="qrres" class="small"></div>`;
         src = 'ip';
+        mb.querySelector('#qrscan').onclick = () => scanQR(text => {
+          const r = parseCameraQR(text), out = mb.querySelector('#qrres');
+          if (r.kind === 'opaque') { qrHint = null; out.style.color = 'var(--warn)'; out.innerHTML = `⚠️ QR o'qildi${r.id ? ' (ID: ' + esc(r.id) + ')' : ''}, lekin bu kamera ishlab chiqaruvchisining <b>yopiq bulut ulashish kodi</b> (${r.len} belgi): uni faqat o'sha kamera ilovasi o'qiy oladi, boshqa sayt ulana olmaydi.<br><b>Nima qilish kerak:</b> kamera ilovasida <b>RTSP/ONVIF</b> ni yoqing, kameraning <b>IP manzili va parolini</b> oling. Ilovada \"RTSP QR\" bo'lsa, shuni skanerlang. Kamera nomini yozib, \"Saqlash\"ni bosing, ko'rsatmada IP/parol kiritiladi.`; return; }
+          qrHint = r; out.style.color = 'var(--ok)'; out.innerHTML = `✅ QR o'qildi: kamera <b>${esc(r.ip)}</b>${r.user ? ', login <b>' + esc(r.user) + '</b>' : ''}${r.pw ? ', parol saqlangan (faqat shu oynada)' : ''}. Endi nom bering va \"Saqlash\"ni bosing.`;
+        });
       }
       if (method === 'push') {
         mb.innerHTML = `${window.VM_EDGE ? `<div class="help"><b>Kamera = telefon yoki noutbuk.</b> Saqlagandan so'ng havola chiqadi: uni kamera sifatida ishlatmoqchi bo'lgan qurilmada oching. Yuz tanish, jins, telefon va gaplashuv shu qurilmaning o'zida aniqlanadi, video internetga chiqmaydi.</div>` : `<div class="help"><b>Sayt internetda (bulutda) bo'lganda</b> u ofis ichidagi IP kameraga ulana olmaydi. Bu usulda kadrlar sizning tomoningizdan yuboriladi:<br>• <b>Telefon/noutbuk kamerasi</b> — maxsus havolani brauzerda ochasiz<br>• <b>Ofis agenti</b> — ofisdagi kompyuterda kichik dastur kameradan olib saytga yuboradi (portlarni ochish shart emas)<br>Saqlagandan so'ng ko'rsatma chiqadi.</div>`}`;
@@ -284,7 +333,7 @@ async function cameras(el) {
       form.onsubmit = async e => {
         e.preventDefault(); const d = data();
         if (!d.source) return say("Avval kamerani ulang (manzilni kiriting yoki 'Avtomatik ulash' ni bosing)", 'var(--bad)');
-        try { const r = await api(c ? '/cameras/' + c.id : '/cameras', {method: c ? 'PUT' : 'POST', json: d}); m.close(); toast('Saqlandi'); await load(); if ((d.source === 'push' || d.source === 'ip') && !c) pushInfo(r); }
+        try { const r = await api(c ? '/cameras/' + c.id : '/cameras', {method: c ? 'PUT' : 'POST', json: d}); m.close(); toast('Saqlandi'); await load(); if ((d.source === 'push' || d.source === 'ip') && !c) pushInfo(r, qrHint); }
         catch (er) { say(er.message, 'var(--bad)'); }
       };
     }
