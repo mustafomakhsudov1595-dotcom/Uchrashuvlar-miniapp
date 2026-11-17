@@ -7,7 +7,6 @@ import remind from './functions/remind.js';
 import report from './functions/report.js';
 import alert from './functions/alert.js';
 import ig from './functions/ig.js';
-import ubot from './functions/ubot.js';
 import privacyHtml from './privacy.html'; // Meta App Review uchun maxfiylik siyosati (/privacy)
 
 async function toEvent(request) {
@@ -23,7 +22,6 @@ function route(pathname) {
   if (pathname === '/api/tg') return bot.handler;
   if (pathname === '/api/meetings') return api.handler;
   if (pathname === '/api/ig') return ig.handler;
-  if (pathname.startsWith('/api/ub/')) return ubot.handler;
   if (pathname.startsWith('/api/cal')) return cal.handler;
   if (pathname.startsWith('/r/')) return report.handler;
   return null;

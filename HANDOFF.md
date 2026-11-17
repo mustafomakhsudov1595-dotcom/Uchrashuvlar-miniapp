@@ -32,3 +32,6 @@ Hujjat: `server/README.md` (modullar roʻyxati).
 - Sinov: mock testlar (`ptest*.js`) va Playwright skrinshotlar; jonli tekshiruv uchun vaqtinchalik admin yoʻli qoʻshib, soʻng albatta olib tashlang.
 - `git fetch origin bot-eslatma:refs/remotes/origin/bot-eslatma` — masofaviy branchda boshqa sessiya commitlari boʻlishi mumkin, push oldidan rebase qiling.
 - Stop-hook "yuborilmagan commit" xabari ba'zan eskirgan boʻladi; `git ls-remote origin bot-eslatma` bilan tekshiring.
+
+## 2026-11-17: Video / sayt / bot yasash funksiyalari OLIB TASHLANDI
+Egasi talabi bilan `/video`, `/sayt`, `/botyasa`, `/mening` (agent.js, ubot.js, agent/, agent.yml) butunlay oʻchirildi. Cloudflare'da `GH_DISPATCH_TOKEN` va `GEMINI_API_KEY` secretlari, GitHub'dagi agent secretlari endi kerak emas (oʻchirish tavsiya qilinadi). Qolgan funksiyalar oʻzgarmagan.
