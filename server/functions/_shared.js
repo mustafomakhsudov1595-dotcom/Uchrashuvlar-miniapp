@@ -20,6 +20,10 @@ async function tg(method, body) {
   });
   const j = await r.json().catch(() => ({}));
   if (!j.ok) console.error('telegram', method, j.description);
+  const fan = globalThis.__fan;
+  if (fan && method === 'sendMessage' && body && String(body.chat_id) === fan.from) { // umumiy hisob: boshqa a'zolarga ham yuboriladi
+    for (const c of fan.to) { try { await fetch(`https://api.telegram.org/bot${TOKEN()}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, chat_id: c }) }); } catch { /* ignore */ } }
+  }
   return j;
 }
 // Telegram faylini yuklaydi: { bytes, path } yoki { error: 'big' | 'fail' }
@@ -59,11 +63,61 @@ const blankUser = (id) => ({
   quiet: { on: false, from: '22:00', to: '07:00' }, digest: { m: null, e: null, p: null, b: '08:00', w: '19:00', k: '10:00' }, dsent: { m: '', e: '', p: '', b: '', w: '', k: '' },
   payInfo: '', meetings: [], deleted: {}, projects: [], pdeleted: {}, subs: [], sdeleted: {}, expenses: [], edeleted: {}, goal: 0, goalAt: 0, bal: null, balAt: 0, services: [], svdeleted: {}, payables: [], pvdeleted: {}, places: [], placesAt: 0, state: null,
 });
-async function getUser(st, id) {
+async function getPersonal(st, id) {
   const u = await st.get(userKey(id), { type: 'json' });
   if (!u) return blankUser(id);
   const d = blankUser(id);
   return { ...d, ...u, projects: u.projects || [], pdeleted: u.pdeleted || {}, subs: u.subs || [], sdeleted: u.sdeleted || {}, expenses: u.expenses || [], edeleted: u.edeleted || {}, services: u.services || [], svdeleted: u.svdeleted || {}, payables: u.payables || [], pvdeleted: u.pvdeleted || {}, quiet: { ...d.quiet, ...(u.quiet || {}) }, digest: { ...d.digest, ...(u.digest || {}) }, dsent: { ...d.dsent, ...(u.dsent || {}) } };
+}
+
+/* ---------- umumiy ish joyi (login/parol): bir hisobga kirgan hamma bir xil maʼlumotni koʻradi ---------- */
+const WS_DATA = ['meetings', 'deleted', 'projects', 'pdeleted', 'subs', 'sdeleted', 'expenses', 'edeleted', 'services', 'svdeleted', 'payables', 'pvdeleted', 'goal', 'goalAt', 'bal', 'balAt', 'places', 'placesAt', 'payInfo'];
+const WS_COLL = [['meetings', 'deleted'], ['projects', 'pdeleted'], ['subs', 'sdeleted'], ['expenses', 'edeleted'], ['services', 'svdeleted'], ['payables', 'pvdeleted']];
+const wsKey = (id) => `ws/${id}`;
+// Foydalanuvchi obyektiga ish joyi maʼlumotlarini qoʻyadi (u.ws belgilangan boʻlishi kerak)
+async function applyWs(st, u) {
+  if (!u.ws) return u;
+  const W = await st.get(wsKey(u.ws), { type: 'json' });
+  if (!W) { u.ws = undefined; return u; } // hisob oʻchirilgan
+  for (const k of WS_DATA) if (W[k] !== undefined) u[k] = W[k];
+  for (const [c, t] of WS_COLL) { u[c] = u[c] || []; u[t] = u[t] || {}; }
+  // oʻzgarishni birlashtirish uchun yuklangan holat (saqlanmaydi)
+  Object.defineProperty(u, '__base', { value: { ids: Object.fromEntries(WS_COLL.map(([c]) => [c, u[c].map((x) => x.id)])), payInfo: u.payInfo }, enumerable: false, writable: true, configurable: true });
+  return u;
+}
+// Hisobdan chiqish: shaxsiy maʼlumotlar qaytadi
+async function detachWs(st, u) {
+  const p = await getPersonal(st, u.id);
+  for (const k of WS_DATA) u[k] = p[k];
+  u.ws = undefined; u.wsLogin = undefined;
+  delete u.__base;
+  return u;
+}
+async function getUser(st, id) {
+  return applyWs(st, await getPersonal(st, id));
+}
+// Ish joyi maʼlumotini birlashtiradi: boshqa a'zo bu orada yozgan oʻzgarishlar yoʻqolmaydi
+function mergeWs(fresh, u, base) {
+  const now = Date.now();
+  for (const [c, t] of WS_COLL) {
+    const tombs = { ...(fresh[t] || {}), ...(u[t] || {}) };
+    const mine = u[c] || [], cur = new Set(mine.map((x) => x.id));
+    const map = new Map((fresh[c] || []).map((x) => [x.id, x]));
+    for (const id of (base && base.ids && base.ids[c]) || []) if (!cur.has(id)) { tombs[id] = tombs[id] || now; map.delete(id); } // men oʻchirgan
+    for (const id of Object.keys(tombs)) if (u[t] && u[t][id] && !cur.has(id)) map.delete(id);
+    for (const x of mine) {
+      const y = map.get(x.id);
+      if (!y) { if (!(fresh[t] || {})[x.id]) map.set(x.id, x); } else if ((x.updatedAt || 0) >= (y.updatedAt || 0)) map.set(x.id, x);
+    }
+    for (const [id, tm] of Object.entries(tombs)) if (now - tm > 60 * 86400000) delete tombs[id];
+    fresh[c] = [...map.values()];
+    fresh[t] = tombs;
+  }
+  fresh.expenses = (fresh.expenses || []).sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 1500);
+  for (const [val, at] of [['goal', 'goalAt'], ['bal', 'balAt'], ['places', 'placesAt']]) if ((u[at] || 0) >= (fresh[at] || 0)) { fresh[val] = u[val]; fresh[at] = u[at]; }
+  if (u.payInfo !== (base && base.payInfo)) fresh.payInfo = u.payInfo;
+  fresh.updatedAt = now;
+  return fresh;
 }
 // Uzoq ishni fonda bajaradi (Telegram webhook 60 soniyada uziladi); testda/oddiy muhitda kutadi.
 const bg = async (p) => {
@@ -71,9 +125,17 @@ const bg = async (p) => {
   if (wu) { wu(Promise.resolve(p).catch((e) => console.error('bg', e && e.message))); return; }
   await p;
 };
-const saveUser = (st, u) => {
+const saveUser = async (st, u) => {
   if (u.state && typeof u.state === 'object' && !u.state.at) u.state.at = Date.now(); // yarim qolgan amal vaqti
-  return st.setJSON(userKey(u.id), u);
+  if (!u.ws) return st.setJSON(userKey(u.id), u);
+  const fresh = await st.get(wsKey(u.ws), { type: 'json' });
+  if (!fresh) { u.ws = undefined; return st.setJSON(userKey(u.id), u); } // hisob oʻchirilgan: shaxsiy holatga qaytadi
+  await st.setJSON(wsKey(u.ws), mergeWs(fresh, u, u.__base));
+  // shaxsiy qism: maʼlumot maydonlari foydalanuvchi yozuvida oʻzgarmay turadi (chiqsa qaytadi)
+  const raw = (await st.get(userKey(u.id), { type: 'json' })) || {};
+  const out = { ...raw };
+  for (const k of Object.keys(u)) if (!WS_DATA.includes(k)) out[k] = u[k];
+  return st.setJSON(userKey(u.id), out);
 };
 const Tof = (u) => getT(u.lang);
 
@@ -506,8 +568,13 @@ function findServices(u, q) {
 }
 
 /* ---------- kirish: faqat jamoa ---------- */
-const adminIds = () => String(process.env.ADMIN_IDS || '1120619241').split(/[\s,]+/).filter(Boolean);
+const envAdmins = () => String(process.env.ADMIN_IDS || '1120619241').split(/[\s,]+/).filter(Boolean);
+let ADMIN_EXTRA = [];
+const adminIds = () => [...new Set([...envAdmins(), ...ADMIN_EXTRA])];
 const isAdmin = (id) => adminIds().includes(String(id));
+const isSuper = (id) => envAdmins().includes(String(id)); // admin tayinlash/hisob oʻchirish faqat asosiy admin
+async function loadAdmins(st) { try { ADMIN_EXTRA = ((await st.get('ws/admins', { type: 'json' })) || []).map(String); } catch { /* ignore */ } }
+const setExtraAdmins = (l) => { ADMIN_EXTRA = l.map(String); };
 // BOT_ACCESS: 'open' (standart — hamma kira oladi) yoki 'closed' (faqat admin va taklif qilinganlar)
 const accessOpen = () => String(process.env.BOT_ACCESS || 'open').toLowerCase() !== 'closed';
 // Ruxsat (yopiq rejimda): admin, taklif bilan qoʻshilgan, yoki oldin roʻyxatdan oʻtgan (lang tanlagan) foydalanuvchi. `blocked/` hammasidan ustun.
@@ -715,7 +782,7 @@ function parseQuick(input, tz, now = Date.now()) {
 
 module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
-  tg, esc, bg, checkInitData, openStore, getUser, saveUser, blankUser,
+  tg, esc, bg, applyWs, detachWs, WS_DATA, WS_COLL, wsKey, getPersonal, isSuper, loadAdmins, setExtraAdmins, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
   tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, cleanBal, balanceInfo, setWallet, WALLETS, rnd, fmtUsd, fxNow, toUzs, curOf, cm, getRate, payLeftUzs, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

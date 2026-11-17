@@ -62,6 +62,8 @@ exports.handler = async (event) => {
   await require('./health').tick(now);
   await S.getRate();
   let sent = 0;
+  const doneWs = new Set();
+  await S.loadAdmins(st);
   const { blobs } = await st.list({ prefix: 'user/' });
   for (const { key } of blobs) {
     try {
@@ -69,7 +71,15 @@ exports.handler = async (event) => {
       if (!u || !u.chat || !u.lang) continue;
       if (!S.isAdmin(u.id) && (await st.get(`blocked/${u.id}`))) continue;
       const full = await S.getUser(st, u.id);
-      const r = await processUser(full, now);
+      if (full.ws) { // umumiy hisob: bir marta qayta ishlanadi, bildirishnomalar hamma a'zoga boradi
+        if (doneWs.has(full.ws)) continue;
+        doneWs.add(full.ws);
+        const w = await st.get(S.wsKey(full.ws), { type: 'json' });
+        const chats = ((w && w.members) || []).map((m) => String(m.id)).filter((c) => c !== String(full.chat));
+        globalThis.__fan = chats.length ? { from: String(full.chat), to: chats } : null;
+      }
+      let r;
+      try { r = await processUser(full, now); } finally { globalThis.__fan = null; }
       sent += r.sent;
       if (r.dirty) {
         // Sayt tekshiruvi sekin boʻlishi mumkin: shu vaqtda foydalanuvchi ilovada oʻzgartirgan maʼlumotni yoʻqotmaslik uchun qayta oʻqib birlashtiramiz.

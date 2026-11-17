@@ -17,7 +17,7 @@ const uz = {
   pvRem: (k, who, note, amt, n) => `${k === 'o' ? '⚠️' : '💸'} <b>${k === 'd7' ? '7 kundan keyin' : k === 'd3' ? '3 kundan keyin' : k === 'd1' ? 'Ertaga' : k === 'd0' ? 'Bugun' : `${n} kun kechikdi`}:</b> ${who}ga <b>${fm(amt)}</b> toʻlash kerak${note ? ` (${note})` : ''}.`,
   pvSumTitle: '📊 <b>Hisob-kitob</b>', pvSumTotal: 'Jami toʻlash kerak', pvSumOver: 'Muddati oʻtgan', pvSumToday: 'Bugun', pvSumWeek: '7 kun ichida', pvSumMonth: 'Shu oyda', pvSumWho: 'Kimga qancha',
   pvForecast: '🔮 <b>30 kunlik prognoz</b>', pvInflow: 'Kutilayotgan tushum (qarzlar + oylik toʻlovlar)', pvOut30: 'Toʻlash kerak (30 kun)', pvBalance: 'Farq', pvEnough: '✅ yetadi', pvShort: '⚠️ yetishmaydi',
-  brMoney: (need, inflow, bal, abs, out) => `💰 <b>Pul holati</b>\nBugun toʻlash kerak: <b>${need}</b>\n30 kunda: kutilayotgan tushum <b>${inflow}</b> − chiqim <b>${out}</b> = <b>${bal < 0 ? '−' : ''}${abs}</b> ${bal >= 0 ? '✅' : '⚠️'}`, brPay: '💸 Toʻlash kerak', wkPay: (t, c) => `💸 Kelgusi 7 kunda toʻlash kerak: <b>${fm(t)}</b> (${c} ta)`, cmdPv: '💸 /tolash — kimga qancha toʻlash kerak\n📄 /hisobot — oylik PDF hisobot\n📒 /hisob — kirim, chiqim, foyda · ➕ /kirim · 💵 /balans',
+  brMoney: (need, inflow, bal, abs, out) => `💰 <b>Pul holati</b>\nBugun toʻlash kerak: <b>${need}</b>\n30 kunda: kutilayotgan tushum <b>${inflow}</b> − chiqim <b>${out}</b> = <b>${bal < 0 ? '−' : ''}${abs}</b> ${bal >= 0 ? '✅' : '⚠️'}`, brPay: '💸 Toʻlash kerak', wkPay: (t, c) => `💸 Kelgusi 7 kunda toʻlash kerak: <b>${fm(t)}</b> (${c} ta)`, cmdPv: '💸 /tolash — kimga qancha toʻlash kerak\n📄 /hisobot — oylik PDF hisobot\n📒 /hisob — kirim, chiqim, foyda · ➕ /kirim · 💵 /balans · 🔐 /kirish — umumiy hisobga kirish',
 };
 const ru = {
   ...uz,
