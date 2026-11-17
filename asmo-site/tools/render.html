@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff">
+<canvas id="c" width="1400" height="1400"></canvas>
+<script src="three.r128.min.js"></script><script src="../js/bucket3d.js"></script>
+<script>
+const THREE_=THREE;
+const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true,preserveDrawingBuffer:true});
+r.setPixelRatio(1); r.setSize(1400,1400,false); r.outputEncoding=THREE.sRGBEncoding; r.toneMapping=THREE.ACESFilmicToneMapping; r.toneMappingExposure=1.05;
+r.shadowMap.enabled=true; r.shadowMap.type=THREE.PCFSoftShadowMap; r.setClearColor(0x000000,0);
+const L=new THREE.TextureLoader();
+const load=u=>new Promise((ok,no)=>L.load(u,t=>{t.encoding=THREE.sRGBEncoding;t.anisotropy=r.capabilities.getMaxAnisotropy();ok(t)},undefined,no));
+window.renderProduct=async(front,back,rotY,elev)=>{
+  const st=ASMO3D.stage(THREE,r);
+  const g=ASMO3D.build(THREE,{front:await load(front),back:await load(back)});
+  g.rotation.y=rotY; st.scene.add(g); ASMO3D.frame(st.cam,1,elev); r.render(st.scene,st.cam);
+  const d=r.domElement.toDataURL('image/png'); st.scene.remove(g); return d;
+};
+window.ready=true;
+</script>

@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@1,500&display=swap">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:2048px;height:1066px;background:#131315;font-family:Jost,Arial,sans-serif;color:#fff;position:relative;overflow:hidden}
+.bg{position:absolute;inset:0}
+.abs{position:absolute}
+.gold{background:linear-gradient(95deg,#a98e3f 0%,#e9d977 30%,#b49a45 52%,#eddf7d 78%,#a58a3b 100%)}
+.band{left:470px;right:130px;top:470px;height:230px;display:flex;align-items:center;justify-content:center}
+.band h1{font-weight:700;font-size:170px;letter-spacing:.09em;color:#151515;line-height:1;white-space:nowrap}
+.band.long h1{font-size:112px;letter-spacing:.07em}
+.sub{left:470px;width:1140px;top:722px;text-align:center;font-weight:600;font-size:38px;letter-spacing:.14em;color:#e8e8ea;white-space:nowrap}
+.sub2{left:470px;width:1140px;top:800px;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:50px;color:#d9c26c}
+.logo{left:790px;top:46px;width:420px}
+.cp{left:470px;right:130px;top:268px;text-align:center;font-weight:700;font-size:38px;letter-spacing:.3em;color:#fff}
+.name{left:470px;right:130px;top:350px;text-align:center;font-weight:600;font-size:56px;letter-spacing:.35em;color:#fff}
+img.p{position:absolute;mix-blend-mode:lighten}
+img.logo{mix-blend-mode:normal}
+.pack{left:100px;bottom:40px;font-weight:700;font-size:70px}
+.made{right:130px;bottom:42px;text-align:right;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:58px;line-height:1.1}
+</style>
+<div class="bg" id="bg"></div>
+<div id="root"></div>
+<script>
+const q=new URLSearchParams(location.search), id=q.get('p'), back=q.get('back')==='1';
+const D={
+ milano:{name:'MILANO',sub:'ДЛЯ ЭКСТЕРЬЕРА И ИНТЕРЬЕРА',it:'ГЛЯНЕЦ · МАТ',glow:'#8a7650',pre:'PREMIUM'},
+ eron:{name:'ЭРОН ТОШ',sub:'ДЛЯ ЭКСТЕРЬЕРА И ИНТЕРЬЕРА',it:'ТРАВЕРТИН',glow:'#7a6a55',pre:'DECORATIVE',long:1},
+ grunt:{name:'ГРУНТОВКА',sub:'ЭМУЛЬСИЯ ДЛЯ ВНУТРЕННИХ РАБОТ',it:'GRUNT EMULSIYA',glow:'#55616f',pre:'PRIMER',pack:'20kg',long:1},
+ vodo:{name:'ВОДОЭМУЛЬСИЯ',sub:'ВОДОЭМУЛЬСИОННАЯ КРАСКА',it:'3 ВИДА · 3 TUR',glow:'#4f6272',pre:'WATER-BASED',long:1},
+ lucida:{name:'LUCIDA',sub:'',it:'',glow:'#555',pre:''}
+};
+const d=D[id]||D.milano;
+const bg=document.getElementById('bg');
+bg.style.background=`radial-gradient(900px 700px at 62% 55%,${d.glow}55,transparent 70%),radial-gradient(700px 500px at 12% 100%,${d.glow}33,transparent 70%),linear-gradient(180deg,#19191c,#0f0f11)`;
+let h='';
+if(!back){
+ h=`<img class="p logo" src="../assets/logo.png" style="left:954px;top:30px;width:480px">
+ <div class="abs name" style="top:355px;font-size:44px">${d.pre}</div>
+ <div class="abs gold band ${d.long?'long':''}"><h1>${d.name}</h1></div>
+ <div class="abs sub">${d.sub}</div>
+ <div class="abs sub2">${d.it}</div>
+ <img class="p" src="../assets/parts/seal.png" style="left:100px;top:76px;width:166px">
+ <img class="p" src="../assets/parts/italy.png" style="left:300px;top:46px;width:190px">
+ <img class="p" src="../assets/parts/icons.png" style="left:92px;top:310px;width:164px">
+ <img class="p" src="../assets/parts/new.png" style="right:60px;top:30px;width:174px">
+ <img class="p" src="../assets/parts/barcode.png" style="right:123px;bottom:150px;width:292px">
+ <div class="abs made" style="bottom:36px">Изготовления<br>Узбекистан</div>
+ ${d.pack?`<div class="abs pack">${d.pack.replace('kg',' kg')}</div>`:''}`;
+}else{
+ h=`<img class="p logo" src="../assets/logo.png" style="left:724px;top:60px;width:600px">
+ <div class="abs gold" style="left:560px;right:560px;top:470px;height:150px;display:flex;align-items:center;justify-content:center"><div style="font-weight:700;font-size:${d.long?70:96}px;letter-spacing:.08em;color:#151515">${d.name}</div></div>
+ <img class="p" src="../assets/parts/seal.png" style="left:600px;top:760px;width:170px">
+ <img class="p" src="../assets/parts/italy.png" style="left:810px;top:740px;width:190px">
+ <img class="p" src="../assets/parts/barcode.png" style="left:1060px;top:760px;width:292px">
+ <div class="abs" style="left:1400px;top:770px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:54px;line-height:1.15">Изготовления<br>Узбекистан</div>
+ <div class="abs" style="left:0;right:0;top:960px;text-align:center;font-weight:600;font-size:34px;letter-spacing:.14em;color:#bdbdc2">O'ZBEKISTON RESPUBLIKASI · FARG'ONA VILOYATI · UCHKO'PRIK TUMANI</div>`;
+}
+document.getElementById('root').innerHTML=h;
+</script>
