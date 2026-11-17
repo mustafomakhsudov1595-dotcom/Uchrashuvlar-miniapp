@@ -28,6 +28,10 @@ for f in list(web.glob("*")) + [here / "monitor.html", here / "monitor.js", here
         ct += "; charset=utf-8"
     files["/" + f.name] = [ct, base64.b64encode(data).decode()]
 
+for f in (here / "vendor").glob("*"):
+    ct = "application/wasm" if f.suffix == ".wasm" else "text/javascript; charset=utf-8"
+    files["/vendor/" + f.name] = [ct, base64.b64encode(f.read_bytes()).decode()]
+
 src = (here / "worker_src.js").read_text()
 # import qatori eng tepada bo'lishi uchun ASSETS ni undan keyin qo'yamiz
 first, rest = src.split("\n", 2)[0:2], src.split("\n", 2)[2]

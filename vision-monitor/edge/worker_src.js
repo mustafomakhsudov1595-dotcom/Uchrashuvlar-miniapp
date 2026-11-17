@@ -20,7 +20,7 @@ export default {
     const f = ASSETS[p];
     if (!f) return new Response("Topilmadi", { status: 404 });
     const bin = Uint8Array.from(atob(f[1]), (c) => c.charCodeAt(0));
-    const dyn = /\.(html|js|json|webmanifest)$/.test(p);
+    const dyn = /\.(html|js|json|webmanifest)$/.test(p) && !p.startsWith("/vendor/");
     return new Response(bin, { headers: { "content-type": f[0], "cache-control": dyn ? "no-cache" : "public, max-age=86400", "x-content-type-options": "nosniff", "referrer-policy": "same-origin", ...(p.endsWith(".html") ? { "permissions-policy": "camera=(self)" } : {}) } });
   },
 };

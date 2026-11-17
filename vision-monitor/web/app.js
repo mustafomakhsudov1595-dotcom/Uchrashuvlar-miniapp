@@ -165,37 +165,72 @@ function parseCameraQR(text) {
   if (m) return {kind: 'host', ip: m[1], port: +m[2] || 554, user: m[3] || '', pw: m[4] || ''};
   return {kind: 'opaque', id: /^[A-Za-z0-9]{6,20}$/.test(t) ? t : '', len: t.length};
 }
+let _qrDet = null;
+async function qrDetector() {
+  if (_qrDet) return _qrDet;
+  try { // zich QR kodlar uchun kuchli dekoder (zxing, saytning o'zidan yuklanadi)
+    if (!window.BarcodeDetectionAPI) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = '/vendor/barcode.js'; sc.onload = res; sc.onerror = rej; document.head.append(sc); });
+    const A = window.BarcodeDetectionAPI;
+    A.setZXingModuleOverrides({locateFile: (p, pre) => p.endsWith('.wasm') ? '/vendor/zxing_reader.wasm' : pre + p});
+    const d = new A.BarcodeDetector({formats: ['qr_code']});
+    await d.detect(new ImageData(8, 8)); // wasm ni oldindan yuklash
+    return (_qrDet = d);
+  } catch (e) { console.warn('zxing yuklanmadi', e); }
+  if ('BarcodeDetector' in window) { try { return (_qrDet = new BarcodeDetector({formats: ['qr_code']})); } catch {} }
+  return null;
+}
+/** Kadr (canvas/bitmap) dan QR o'qish: butun kadr, so'ng markaz kattalashtirilgan holda */
+async function decodeQR(det, src, w, h) {
+  const cv = decodeQR.cv ??= document.createElement('canvas'), cx = cv.getContext('2d', {willReadFrequently: true});
+  const tries = [[0, 0, w, h, Math.min(1, 1600 / w)], [w * .15, h * .15, w * .7, h * .7, Math.min(2, 1400 / (w * .7))], [w * .25, h * .25, w * .5, h * .5, Math.min(3, 1200 / (w * .5))]];
+  for (const [x, y, cw, ch, sc] of tries) {
+    cv.width = Math.round(cw * sc); cv.height = Math.round(ch * sc);
+    cx.drawImage(src, x, y, cw, ch, 0, 0, cv.width, cv.height);
+    try { const r = await det.detect(cv); if (r.length && r[0].rawValue) return r[0].rawValue; } catch {}
+    if (window.jsQR) { const r = window.jsQR(cx.getImageData(0, 0, cv.width, cv.height).data, cv.width, cv.height, {inversionAttempts: 'attemptBoth'}); if (r) return r.data; }
+  }
+  return '';
+}
 function scanQR(onResult) {
-  const m = modal(`<h2>Kamera QR kodini skanerlang</h2><div class="help">Kameraning o'zidagi (qurilma stikeri) yoki kamera ilovasidagi QR kodni ramkaga tuting.</div>
+  const m = modal(`<h2>Kamera QR kodini skanerlang</h2>
+    <div class="help">QR kodni ramka ichiga to'liq sig'dirib, <b>20–30 sm</b> masofada ushlang. Agar kod boshqa telefon ekranida bo'lsa: ekran yorqinligini oshiring va <b>yorug'lik aks etmasligi</b> uchun biroz qiyshaytiring.</div>
     <div style="position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:1"><video id="qv" playsinline muted autoplay style="width:100%;height:100%;object-fit:cover"></video>
-    <div style="position:absolute;inset:18%;border:3px solid #22c55e;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35)"></div></div>
-    <div class="muted small" id="qs">Kamera yoqilmoqda...</div><button class="btn ghost" id="qc">Bekor qilish</button>`);
+    <div style="position:absolute;inset:8%;border:3px solid #22c55e;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.3)"></div></div>
+    <div class="muted small" id="qs">Kamera yoqilmoqda...</div>
+    <label class="btn" style="text-align:center;cursor:pointer">🖼 Rasmdan o'qish (skrinshot / galereya)<input type="file" id="qf" accept="image/*" hidden></label>
+    <button class="btn ghost" id="qc">Bekor qilish</button>`);
   let stop = false, stream = null;
+  const st = (t, bad) => { const e = m.querySelector('#qs'); if (e) { e.style.color = bad ? 'var(--bad)' : ''; e.textContent = t; } };
   const done = () => { stop = true; stream?.getTracks().forEach(t => t.stop()); m.close(); };
   m.querySelector('#qc').onclick = done;
-  const obs = new MutationObserver(() => { if (!document.body.contains(m)) { stop = true; stream?.getTracks().forEach(t => t.stop()); obs.disconnect(); } }); obs.observe(document.body, {childList: true});
+  new MutationObserver((_, o) => { if (!document.body.contains(m)) { stop = true; stream?.getTracks().forEach(t => t.stop()); o.disconnect(); } }).observe(document.body, {childList: true});
+  m.querySelector('#qf').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return; st('Rasm o\'qilmoqda...');
+    try {
+      const det = await qrDetector(); if (!det) throw new Error('Skaner yuklanmadi');
+      const bmp = await createImageBitmap(f); const text = await decodeQR(det, bmp, bmp.width, bmp.height);
+      if (text) { done(); onResult(text); } else st("Rasmdan QR kod topilmadi. QR kod aniq va to'liq ko'ringan rasm tanlang.", true);
+    } catch (er) { st(er.message, true); }
+  };
   (async () => {
     try {
       if (!navigator.mediaDevices) throw new Error('Kameraga ruxsat berilmadi: sayt HTTPS orqali ochilishi kerak');
-      stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment', width: {ideal: 1280}}, audio: false});
-      const v = m.querySelector('#qv'); v.srcObject = stream; await v.play(); m.querySelector('#qs').textContent = 'QR kodni qidiryapman...';
-      let det = null;
-      if ('BarcodeDetector' in window) { try { det = new BarcodeDetector({formats: ['qr_code']}); } catch {} }
-      if (!det && !window.jsQR) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; sc.onload = res; sc.onerror = () => rej(new Error('Skaner kutubxonasi yuklanmadi')); document.head.append(sc); });
-      const cv = document.createElement('canvas'), cx = cv.getContext('2d', {willReadFrequently: true});
+      const det = await qrDetector(); if (!det) throw new Error('Skaner yuklanmadi (internetni tekshiring)');
+      stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: 'environment'}, width: {ideal: 1920}, height: {ideal: 1080}}, audio: false});
+      try { await stream.getVideoTracks()[0].applyConstraints({advanced: [{focusMode: 'continuous'}]}); } catch {}
+      const v = m.querySelector('#qv'); v.srcObject = stream; await v.play(); st('QR kodni qidiryapman...');
+      let n = 0;
       while (!stop) {
-        let text = '';
         if (v.videoWidth) {
-          if (det) { try { const r = await det.detect(v); if (r.length) text = r[0].rawValue; } catch {} }
-          if (!text && window.jsQR) { const sc = Math.min(1, 800 / v.videoWidth); cv.width = v.videoWidth * sc; cv.height = v.videoHeight * sc; cx.drawImage(v, 0, 0, cv.width, cv.height); const r = window.jsQR(cx.getImageData(0, 0, cv.width, cv.height).data, cv.width, cv.height); if (r) text = r.data; }
+          const text = await decodeQR(det, v, v.videoWidth, v.videoHeight);
+          if (text) { done(); onResult(text); return; }
+          if (++n % 8 === 0) st(`QR kodni qidiryapman... (kodni yaqinroq/uzoqroq tuting, aks yorug'likdan qoching) · ${n}`);
         }
-        if (text) { done(); onResult(text); return; }
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 120));
       }
-    } catch (e) { m.querySelector('#qs').style.color = 'var(--bad)'; m.querySelector('#qs').textContent = e.message; }
+    } catch (e) { st(e.message, true); }
   })();
 }
-
 /* QR kod (havolani telefon bilan skanerlash uchun) */
 function renderQR(el, text) {
   const draw = () => { try { const qr = window.qrcode(0, 'M'); qr.addData(text); qr.make(); el.innerHTML = qr.createSvgTag({cellSize: 4, margin: 2, scalable: true}); const svg = el.querySelector('svg'); if (svg) { svg.style.width = '100%'; svg.style.maxWidth = '220px'; svg.style.background = '#fff'; svg.style.borderRadius = '10px'; } } catch { el.textContent = ''; } };
