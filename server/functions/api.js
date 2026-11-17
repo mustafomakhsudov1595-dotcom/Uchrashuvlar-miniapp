@@ -19,6 +19,7 @@ exports.handler = async (event) => {
   if (!(await S.isAllowed(st, user.id))) return json(403, { ok: false, error: 'closed' });
   await S.loadAdmins(st);
   const u = await S.getUser(st, user.id);
+  if (S.needLogin(u)) return json(401, { ok: false, error: 'login' });
   const fx = await S.getRate();
   if (event.httpMethod === 'GET') return json(200, { ...view(u), fx });
   if (event.httpMethod !== 'PUT' && event.httpMethod !== 'POST') return json(405, { ok: false });

@@ -71,6 +71,7 @@ exports.handler = async (event) => {
       if (!u || !u.chat || !u.lang) continue;
       if (!S.isAdmin(u.id) && (await st.get(`blocked/${u.id}`))) continue;
       const full = await S.getUser(st, u.id);
+      if (S.needLogin(full)) continue; // kirmagan foydalanuvchi
       if (full.ws) { // umumiy hisob: bir marta qayta ishlanadi, bildirishnomalar hamma a'zoga boradi
         if (doneWs.has(full.ws)) continue;
         doneWs.add(full.ws);

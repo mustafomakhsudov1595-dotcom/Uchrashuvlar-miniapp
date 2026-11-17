@@ -573,7 +573,14 @@ let ADMIN_EXTRA = [];
 const adminIds = () => [...new Set([...envAdmins(), ...ADMIN_EXTRA])];
 const isAdmin = (id) => adminIds().includes(String(id));
 const isSuper = (id) => envAdmins().includes(String(id)); // admin tayinlash/hisob oʻchirish faqat asosiy admin
-async function loadAdmins(st) { try { ADMIN_EXTRA = ((await st.get('ws/admins', { type: 'json' })) || []).map(String); } catch { /* ignore */ } }
+let GATE = true; // botga kirishda login/parol talab qilinadi (adminlardan tashqari)
+async function loadAdmins(st) {
+  try { ADMIN_EXTRA = ((await st.get('ws/admins', { type: 'json' })) || []).map(String); } catch { /* ignore */ }
+  try { const c = await st.get('ws/cfg', { type: 'json' }); if (c && typeof c.gate === 'boolean') GATE = c.gate; } catch { /* ignore */ }
+}
+const gateOn = () => GATE;
+const setGate = (v) => { GATE = Boolean(v); };
+const needLogin = (u) => GATE && process.env.LOGIN_REQUIRED !== 'off' && !isAdmin(u.id) && !u.ws; // LOGIN_REQUIRED=off — favqulodda oʻchirish / sinov
 const setExtraAdmins = (l) => { ADMIN_EXTRA = l.map(String); };
 // BOT_ACCESS: 'open' (standart — hamma kira oladi) yoki 'closed' (faqat admin va taklif qilinganlar)
 const accessOpen = () => String(process.env.BOT_ACCESS || 'open').toLowerCase() !== 'closed';
@@ -782,7 +789,7 @@ function parseQuick(input, tz, now = Date.now()) {
 
 module.exports = {
   TOKEN, SITE, BOT_USER, DEFAULT_TZ, GRACE_MIN, CATS, CAT_DOT, TZS, tzName, LANGS, getT, Tof,
-  tg, esc, bg, applyWs, detachWs, WS_DATA, WS_COLL, wsKey, getPersonal, isSuper, loadAdmins, setExtraAdmins, checkInitData, openStore, getUser, saveUser, blankUser,
+  tg, esc, bg, gateOn, setGate, needLogin, applyWs, detachWs, WS_DATA, WS_COLL, wsKey, getPersonal, isSuper, loadAdmins, setExtraAdmins, checkInitData, openStore, getUser, saveUser, blankUser,
   pad, localNow, isoOfLocal, hhmmOfLocal, todayISO, addDaysISO, parseISO, weekdayIdx, fmtShort, fmtWd, dayLabel, startUTC, countdown, leadText, toMin, inQuiet,
   tgFile, newId, cleanMeeting, PTYPES, PSTATUS, PICON, SICON, daysBetween, cleanProject, planTasks, projProgress, barText, deadlineTag, projectText, activeProjects, mergeProjects, money, owed, reportLink, cleanSub, mergeSubs, subDue, subsDue, paySub, subsMonthly, paymentsOf, incomeByMonth, clientsOf, clientHash, activeDebt, EXCATS, cleanExpense, mergeExpenses, expensesIn, ledger, cleanBal, balanceInfo, setWallet, WALLETS, rnd, fmtUsd, fxNow, toUzs, curOf, cm, getRate, payLeftUzs, expenseSum, monthRange, incomeIn, adminIds, isAdmin, accessOpen, isAllowed, cleanPayable, mergePayables, payLeft, payOpen, paySummary, applyPayment, undoPayment, projectExpense, goalInfo, goalLine, cleanUrl, addMonthsISO, cleanService, mergeServices, serviceEnd, serviceDays, digitsOf, findServices, prevYM, byStart, upcoming, active, mergeMeetings, mapLinks, meetingText, listText, appBtn, parseQuick,
 };

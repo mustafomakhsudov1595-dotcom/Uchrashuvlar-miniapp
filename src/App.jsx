@@ -6,6 +6,7 @@ import QuickMenu from './components/QuickMenu.jsx';
 import IncomeSheet from './components/IncomeSheet.jsx';
 import BalanceSheet from './components/BalanceSheet.jsx';
 import TransferSheet from './components/TransferSheet.jsx';
+import LoginGate from './components/LoginGate.jsx';
 import { ledgerOf, balances, withWallet } from './lib/ledger.js';
 import { loadFx, saveFx, setRate } from './lib/currency.js';
 import ProjectsView from './components/ProjectsView.jsx';
@@ -66,6 +67,7 @@ export default function App() {
   const [goalState, setGoalState] = useState(loadGoal);
   const [balState, setBalState] = useState(loadBal);
   const [fxState, setFxState] = useState(loadFx);
+  const [needLogin, setNeedLogin] = useState(false);
   setRate(fxState.usd); // kurs hamma hisob-kitoblar uchun (har renderda yangilanadi)
   const [confirmSid, setConfirmSid] = useState(null);
   const [confirmPid, setConfirmPid] = useState(null);
@@ -212,8 +214,9 @@ export default function App() {
           setMeetings(remote.meetings);
         }
       }
-    } catch {
-      /* tarmoq yo'q — keyingi safar urinamiz */
+      setNeedLogin(false);
+    } catch (e) {
+      if (e && e.code === 'login') setNeedLogin(true); // hisobga kirilmagan: botda /kirish
     } finally {
       syncing.current = false;
     }
@@ -811,6 +814,8 @@ export default function App() {
   };
 
   const common = { meetings, now, onOpen: openDetail, onAdd: openAdd, onSettings: openSettings };
+  if (needLogin) return <LoginGate />;
+
   return (
     <div className="app" data-lang={lang || getLang()}>
       <div className="aurora" aria-hidden="true"><i /><i /><i /></div>

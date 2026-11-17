@@ -453,3 +453,9 @@ h1, h2, h3, .sheet-title, .hero-name, .block-head h2 { letter-spacing: -0.025em;
 .ld-actions.three { grid-template-columns: repeat(3, 1fr); }
 .pv-usd { display: block; font-weight: 700; }
 .ld-actions.three .btn { padding: 12px 6px; font-size: 14px; white-space: nowrap; }
+
+/* Kirish talab qilinadi */
+.login-gate { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 32px 24px; }
+.login-gate .lg-ico { font-size: 56px; width: 100px; height: 100px; display: grid; place-items: center; border-radius: 32px; background: var(--grad); box-shadow: 0 24px 50px -24px var(--a1); }
+.login-gate h1 { font-family: var(--display); font-size: 24px; }
+.login-gate p { color: var(--muted); max-width: 300px; line-height: 1.5; }

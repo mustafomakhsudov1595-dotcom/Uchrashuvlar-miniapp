@@ -439,7 +439,11 @@ export async function syncRemote({ meetings, deleted, lang, places, placesAt, pr
     headers: headers(),
     body: JSON.stringify({ meetings, deleted, lang, places, placesAt, projects, pdeleted, subs, sdeleted, expenses, edeleted, services, svdeleted, payables, pvdeleted, goal, goalAt, bal, balAt, tz: -new Date().getTimezoneOffset() }),
   });
-  if (!res.ok) throw new Error(`sync ${res.status}`);
+  if (!res.ok) {
+    let code = '';
+    try { code = (await res.json()).error; } catch { /* ignore */ }
+    throw Object.assign(new Error(`sync ${res.status}`), { code });
+  }
   const data = await res.json();
   return {
     meetings: Array.isArray(data.meetings) ? data.meetings.map(clean).filter(Boolean) : [],

@@ -85,6 +85,20 @@ async function doLogin(chat, u, login, pass) {
   await attach(st, u, w);
   await send(chat, tr(u, TX.ok)(esc(w.login), w.members.length), { inline_keyboard: [[S.appBtn(tr(u, { uz: '📱 Ilovani ochish', ru: '📱 Открыть приложение', en: '📱 Open app' }))]] });
 }
+// Kirish soʻrash: login/parol bosqichini boshlaydi
+async function askLogin(chat, u) {
+  u.state = { kind: 'wslogin', step: 'login' };
+  await send(chat, tr(u, { uz: '🔐 <b>Impro It Notes</b>\n\nBotdan foydalanish uchun hisobingizga kiring.\nLoginni yozing:', ru: '🔐 <b>Impro It Notes</b>\n\nЧтобы пользоваться ботом, войдите в аккаунт.\nНапишите логин:', en: '🔐 <b>Impro It Notes</b>\n\nSign in to your account to use the bot.\nWrite your login:' }));
+}
+const OPEN_CMDS = ['/start', '/kirish', '/login', '/til', '/bekor'];
+// Kirmagan foydalanuvchini toʻxtatadi: true — xabar qayta ishlandi, davom etilmaydi
+async function gate(chat, u, cmd) {
+  if (!S.needLogin(u)) return false;
+  if (OPEN_CMDS.includes(cmd)) return false;
+  if (!cmd && u.state && u.state.kind === 'wslogin') return false; // login/parol yozilmoqda
+  await askLogin(chat, u);
+  return true;
+}
 async function showMine(chat, u) {
   if (!u.ws) { await send(chat, tr(u, TX.notIn), { inline_keyboard: [[{ text: '🔐', callback_data: 'wlg:0' }]] }); return; }
   const w = await getWs(store(), u.ws);
@@ -98,6 +112,7 @@ async function panel(ctx, u) {
   const text = `🛠 <b>Admin panel</b>\n\n🔐 Hisoblar: <b>${list.length}</b>\n👥 Foydalanuvchilar: <b>${users}</b>\n👑 Adminlar: <b>${S.adminIds().length}</b>\n\n<i>Hisob — bitta login/parol. Unga kirgan hamma bir xil uchrashuv, loyiha, kirim, chiqim va balansni koʻradi.</i>`;
   const rows = list.map((w) => [{ text: `🔐 ${w.login} · ${w.members.length} a'zo`.slice(0, 60), callback_data: `wac:${w.id}` }]);
   rows.push([{ text: '➕ Yangi hisob', callback_data: 'wan:0' }]);
+  rows.push([{ text: S.gateOn() ? '🔐 Kirishda login soʻrash: YOQILGAN' : '🔓 Kirishda login soʻrash: OʻCHIRILGAN', callback_data: 'wag:0' }]);
   rows.push([{ text: '👑 Adminlar', callback_data: 'wad:0' }]);
   return show(ctx, text, { inline_keyboard: rows });
 }
@@ -183,6 +198,7 @@ async function onCallback(ctx, u, act, a, b) {
   if (act === 'wal') await panel(ctx, u);
   else if (act === 'wac') await card(ctx, u, a);
   else if (act === 'wad') await adminsView(ctx, u);
+  else if (act === 'wag') { if (!S.isSuper(u.id)) return '🔒'; const v = !S.gateOn(); await st.setJSON('ws/cfg', { gate: v }); S.setGate(v); await panel(ctx, u); return v ? '🔐' : '🔓'; }
   else if (act === 'wan') { u.state = { kind: 'wsnew', step: 'login' }; await send(ctx.chat, '➕ <b>Yangi hisob</b>\n\nLogin yozing (kichik lotin harflar, raqam, nuqta, chiziq; 3-32 belgi):', { inline_keyboard: [[{ text: '❌', callback_data: 'pno' }]] }); }
   else if (act === 'wap') { u.state = { kind: 'wspass', id: a }; await send(ctx.chat, `🔑 Yangi parolni yozing (kamida ${PASS_MIN} belgi). Xabar oʻchiriladi:`, { inline_keyboard: [[{ text: '❌', callback_data: 'pno' }]] }); }
   else if (act === 'waj') {
@@ -223,4 +239,4 @@ async function onCallback(ctx, u, act, a, b) {
   }
   return '';
 }
-module.exports = { onMessage, onCallback, createWs, attach, detach, checkPass, ACTS: ['wlg', 'wlo', 'wal', 'wac', 'wad', 'wan', 'wap', 'waj', 'waq', 'wak', 'wam', 'wax', 'waxy'] };
+module.exports = { onMessage, onCallback, gate, askLogin, createWs, attach, detach, checkPass, ACTS: ['wag', 'wlg', 'wlo', 'wal', 'wac', 'wad', 'wan', 'wap', 'waj', 'waq', 'wak', 'wam', 'wax', 'waxy'] };

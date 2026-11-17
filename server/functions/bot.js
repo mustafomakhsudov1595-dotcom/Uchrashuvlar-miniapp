@@ -306,6 +306,7 @@ const e164 = (p) => { const d = p.replace(/\D/g, ''); return `+${d.length === 9 
 
 /* ---------- xabarlar ---------- */
 async function sendWelcome(chat, u, from) {
+  if (S.needLogin(u)) return wsm.askLogin(chat, u); // avval login/parol
   const T = S.Tof(u);
   const text = T.welcome(esc(from.first_name || ''));
   const ph = await tg('sendPhoto', { chat_id: chat, photo: `${S.SITE()}/welcome-${u.lang}.jpg?v=1`, caption: text, parse_mode: 'HTML', reply_markup: kbFor(T) });
@@ -341,6 +342,7 @@ async function onMessage(st, m) {
     return S.saveUser(st, u);
   }
   const T = S.Tof(u);
+  if (await wsm.gate(chat, u, cmd)) return S.saveUser(st, u); // kirish talab qilinadi
 
   // Zaxira fayli (JSON) yuborilsa — tiklaymiz
   if (m.document && !text && await ext.onDocument(chat, u, m.document)) return S.saveUser(st, u);
@@ -443,6 +445,7 @@ async function onCallback(st, q) {
   }
   if (!u.lang) { await tg('answerCallbackQuery', { callback_query_id: q.id }); await send(chat, STR.uz.chooseLang, langKb); return; }
   const T = S.Tof(u);
+  if (S.needLogin(u) && !['lg', 'wlg', 'pno'].includes(act)) { await tg('answerCallbackQuery', { callback_query_id: q.id, text: '🔐' }); await wsm.askLogin(chat, u); return S.saveUser(st, u); }
 
   if (proj.ACTS.includes(act)) { toast = await proj.onCallback(ctx, u, act, a, b); }
   else if (fin.ACTS.includes(act)) { toast = await fin.onCallback(ctx, u, act, a, b); }
