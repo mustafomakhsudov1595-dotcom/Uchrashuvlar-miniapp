@@ -56,8 +56,9 @@ async function processUser(u, now) {
   const pr2 = await pay.remind(u, now);
   const inr = await inc.remind(u, now);
   const tkr = await tasksm.remind(u, now);
+  const dr = await require('./dir').remind(u, now).catch((e) => { console.error('dir', e.message); return { dirty: false, sent: 0 }; });
   const ir = await ig.remind(u, now).catch((e) => { console.error('ig', e.message); return { dirty: false, sent: 0 }; });
-  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty || pr2.dirty || inr.dirty || tkr.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent + pr2.sent + inr.sent + ir.sent + tkr.sent, slow: Boolean(er.slow) };
+  return { dirty: dirty || pr.dirty || fr.dirty || er.dirty || sr.dirty || pr2.dirty || inr.dirty || tkr.dirty, sent: sent + pr.sent + fr.sent + er.sent + sr.sent + pr2.sent + inr.sent + ir.sent + tkr.sent + dr.sent, slow: Boolean(er.slow) };
 }
 
 exports.handler = async (event) => {

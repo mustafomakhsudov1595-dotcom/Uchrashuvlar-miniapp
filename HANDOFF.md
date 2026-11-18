@@ -76,3 +76,6 @@ Egasi chatda oʻzi yozsa AI shu chatda jim: `ig/cfg.muteMin` (15/60/240/720/0 da
 - Muhim odamlar (`ig/cfg.vip`): AI javob bermaydi, egasiga darhol (har 10 daqiqada 1 marta) `notifyVip`. Boshqarish: `/muhim [@username]`, `/ig` → ⭐, lid kartasida «⭐ Muhim qilish».
 - Mijozga toʻlov eslatmasi: lid kartasi → «🔗 Loyihaga bogʻlash» (KV `ig/clink`: loyiha id → {lead, conn, chat, name}). `inc.js` loyiha `pdue` 3/1/0 kun va kechiksa mijozga `biz.sendAs` bilan yuboradi (7 kunlik faqat egasiga).
 - Callback: `bot.js` `ig.onCallback(ctx,u,act,a,b)` (b = uchinchi boʻlak).
+
+## Direktor (haftalik tahlil va prognoz)
+`server/functions/dir.js`: dushanba 09:00 dan keyin (hafta ichida bir marta, KV `dir/<ws|id>`) haftalik hisobot: kirim/chiqim/foyda oʻtgan hafta bilan solishtirilgan, balans, bu haftadagi kutilayotgan/chiqadigan pul, kechikkanlar, hodimlar reytingi + AI tavsiyasi (AI ishlamasa qoida asosida). Buyruqlar: `/direktor` (hozir), `/prognoz [N] [narx]` (yil oxirigacha bashorat, oyiga N ta yangi loyiha).
