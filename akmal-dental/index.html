@@ -6,7 +6,13 @@
 <title>Akmal Anvarovich — Stomatolog-implantolog | Toshkent</title>
 <meta name="description" content="Akmal Anvarovich — 15 yildan ortiq tajribaga ega stomatolog va implantolog. Tish implantatsiyasi, All-on, estetik restavratsiya, koronkalar. Toshkent, Yunusobod. Qabulga yozilish: +998 95 126 56 66.">
 <meta name="theme-color" content="#f7f3ec">
+<meta name="format-detection" content="telephone=no">
+<link rel="canonical" href="https://akmal-anvarovich.uchrashuvlar-mini-app.workers.dev/">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://akmal-anvarovich.uchrashuvlar-mini-app.workers.dev/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta property="og:locale" content="uz_UZ">
 <meta property="og:title" content="Akmal Anvarovich — Stomatolog-implantolog | Toshkent">
 <meta property="og:description" content="15+ yillik tajriba. Zamonaviy implantatsiya va estetik stomatologiya. Qabulga yozilish: +998 95 126 56 66.">
@@ -28,7 +34,9 @@
   --ease:cubic-bezier(.22,.8,.24,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:rgba(184,145,74,.22)}
+a,button,summary,input,select,textarea{touch-action:manipulation}
+section[id]{scroll-margin-top:72px}
 body{font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.65;color:var(--txt);background:var(--ivory);overflow-x:clip;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 img,svg{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}
@@ -37,7 +45,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .skip{position:fixed;left:12px;top:-60px;z-index:200;background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;transition:top .2s}
 .skip:focus{top:12px}
-.wrap{width:min(1200px,100% - 2*var(--gut));margin-inline:auto}
+.wrap{width:100%;max-width:calc(1200px + 2*var(--gut));padding-inline:max(var(--gut),env(safe-area-inset-left),env(safe-area-inset-right));margin-inline:auto}
 .wrap>*,.hero-grid>*,.ao-grid>*,.an-grid>*,.ig-grid>*,.c-grid>*,.faq-grid>*,.about-top>*{min-width:0}
 .i{width:1.25em;height:1.25em;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 h1,h2,h3,h4{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;line-height:1.04;letter-spacing:-.015em;color:var(--ink)}
@@ -71,6 +79,9 @@ section{position:relative;padding:clamp(72px,11vw,150px) 0}
 .top a{color:var(--gold-l);font-weight:700;white-space:nowrap;display:inline-block;padding:8px 2px;margin:-8px 0}
 header{position:sticky;top:0;z-index:100;transition:background .35s,box-shadow .35s,backdrop-filter .35s}
 header.stuck{background:rgba(247,243,236,.95);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 1px 0 var(--line)}
+.prog{position:absolute;left:0;bottom:0;height:2px;width:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));transform:scaleX(0);transform-origin:left;pointer-events:none}
+.hr{display:none;align-items:center;gap:10px}
+.hcall{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(120deg,#f0d99c,#c9a05a);color:#1a1306;box-shadow:0 8px 20px -8px rgba(184,145,74,.9)}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:20px;height:78px}
 .brand{display:flex;align-items:center;gap:13px;min-width:0}
 .brand img{width:46px;height:46px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--ivory),0 0 0 3.5px var(--gold)}
@@ -82,7 +93,7 @@ header.stuck{background:rgba(247,243,236,.95);backdrop-filter:blur(18px) saturat
 .nav a:hover,.nav a.on{color:var(--ink)}
 .nav a:hover::after,.nav a.on::after{transform:scaleX(1)}
 .bar .btn{min-height:46px;padding:0 24px;font-size:.88rem}
-.burger{display:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);place-items:center;position:relative;z-index:130}
+.burger{display:grid;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);place-items:center;position:relative;z-index:130}
 .burger span{position:absolute;left:14px;right:14px;height:1.8px;background:var(--ink);transition:transform .4s var(--ease),opacity .2s,background .3s}
 .burger span:nth-child(1){top:18px}.burger span:nth-child(2){top:23px}.burger span:nth-child(3){top:28px}
 .menu-open .burger span{background:#fff}
@@ -90,7 +101,7 @@ header.stuck{background:rgba(247,243,236,.95);backdrop-filter:blur(18px) saturat
 .menu-open .burger span:nth-child(1){transform:translateY(5px) rotate(45deg)}
 .menu-open .burger span:nth-child(2){opacity:0}
 .menu-open .burger span:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
-.drawer{position:fixed;inset:0;z-index:120;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:100px var(--gut) 40px;opacity:0;visibility:hidden;transform:translateY(-12px);transition:opacity .4s var(--ease),transform .4s var(--ease),visibility 0s .4s}
+.drawer{position:fixed;inset:0;z-index:120;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:96px var(--gut) calc(32px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;opacity:0;visibility:hidden;transform:translateY(-12px);transition:opacity .4s var(--ease),transform .4s var(--ease),visibility 0s .4s}
 .menu-open .drawer{opacity:1;visibility:visible;transform:none;transition-delay:0s}
 .menu-open{overflow:hidden}
 .menu-open header{z-index:130;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -98,7 +109,10 @@ header.stuck{background:rgba(247,243,236,.95);backdrop-filter:blur(18px) saturat
 .menu-open .brand img{box-shadow:0 0 0 2px var(--ink),0 0 0 3.5px var(--gold)}
 .drawer a.l{font-family:"Cormorant Garamond",serif;font-size:clamp(2rem,9vw,3rem);font-weight:600;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center}
 .drawer a.l .i{opacity:.4;font-size:.6em}
-.drawer .btn{margin-top:30px;width:100%}
+.drawer>.btn{margin-top:30px;width:100%}
+.d-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.d-sub .btn{padding:0 12px;min-height:50px;font-size:.88rem}
+.d-addr{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:22px;font-size:.84rem;color:rgba(255,255,255,.6)}
 
 /* hero */
 .hero{padding:clamp(34px,6vw,70px) 0 0;background:
@@ -165,7 +179,7 @@ header.stuck{background:rgba(247,243,236,.95);backdrop-filter:blur(18px) saturat
 /* anatomy */
 .anat{background:radial-gradient(900px circle at 75% 40%,rgba(35,92,88,.55),transparent 62%),var(--ink)}
 .an-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:clamp(30px,6vw,90px);align-items:center;margin-top:clamp(40px,5vw,70px)}
-.an-art{position:relative;max-width:520px;width:100%;justify-self:center;aspect-ratio:440/620}
+.an-art{position:relative;max-width:520px;width:100%;justify-self:center;aspect-ratio:440/524}
 .an-art svg{width:100%;height:100%;overflow:visible}
 .part{transition:opacity .5s var(--ease),filter .5s var(--ease)}
 .an-art.act .part:not(.on){opacity:.5}
@@ -193,6 +207,7 @@ header.stuck{background:rgba(247,243,236,.95);backdrop-filter:blur(18px) saturat
 .an-body p{padding:0 4px 26px 52px;color:rgba(255,255,255,.7);max-width:58ch}
 .js .an-item:not(.on) .an-body{grid-template-rows:0fr}
 .note-sm{margin-top:26px;font-size:.82rem;color:rgba(255,255,255,.5)}
+.m-note{display:none}
 
 /* services */
 .svc-head{display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap;margin-bottom:clamp(36px,5vw,64px)}
@@ -323,7 +338,7 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
   .nav,.bar>.btn{display:none}
   .burger{display:grid}
   .hero-grid,.about-top,.an-grid,.ao-grid,.ig-grid,.faq-grid,.c-grid{grid-template-columns:1fr}
-  .stage{order:-1;width:min(380px,82%);margin-block:20px 10px}
+  .stage{width:min(400px,84%);margin-block:26px 8px}
   .faq-grid .sticky{position:static}
   .c7,.c5{grid-column:span 6}.c4{grid-column:span 6}
   .c4:last-of-type{grid-column:span 12}
@@ -373,6 +388,98 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
   .btn{padding:0 22px}
   .fact b{font-size:2rem}
 }
+
+.cta-out{margin-top:clamp(14px,1.8vw,22px)}
+.dots{display:none}
+.hide-s{}
+.an-chips{display:none}
+.mbar{transition:transform .45s var(--ease),opacity .3s}
+.mbar.hide{transform:translateY(160%);opacity:0;pointer-events:none}
+.btn:active{transform:scale(.97)}
+@media(hover:none){
+  .btn:hover,.card:hover,.pillar:hover,.info a:hover,.dock a:hover{transform:none}
+  .card:hover,.pillar:hover{box-shadow:none;border-color:var(--line)}
+  .card.feat:hover{border-color:transparent}
+  .btn-gold:hover{box-shadow:0 14px 34px -14px rgba(184,145,74,.9)}
+  .btn-line:hover{background:transparent;color:var(--ink);border-color:var(--line)}
+  .dark .btn-line:hover{background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}
+  .nav a::after{display:none}
+}
+@media(max-width:1020px){
+  .hr{display:flex}
+  .an-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:sticky;top:77px;z-index:20;margin:0 calc(-1*var(--gut));padding:12px var(--gut);background:rgba(12,26,28,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08)}
+  .an-chips button{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.2);font-size:.8rem;font-weight:700;color:rgba(255,255,255,.75);padding:0 4px;transition:background .3s,color .3s,border-color .3s}
+  .an-chips button[aria-selected=true]{background:var(--gold-l);border-color:var(--gold-l);color:var(--ink)}
+  .an-grid{gap:18px;margin-top:0}
+  .an-chips{order:-2}
+  .an-grid>.rv:last-child{order:-1}
+  .an-grid .an-art{max-width:300px;margin-top:6px}
+  .an-item:not(.on){display:none}
+  .an-item>button{pointer-events:none;padding:4px 0 8px}
+  .an-item>button .pl{display:none}
+  .an-list{border-top:0;border-radius:24px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);padding:22px 22px 6px}
+  .an-item{border-bottom:0}
+  .an-body p{padding:0 0 18px}
+  .an-list+.note-sm,.an-grid .note-sm{display:none}
+  .m-note{display:block;margin-top:14px;text-align:center}
+}
+@media(max-width:760px){
+  .an-chips{top:63px}
+  section{padding:clamp(56px,14vw,72px) 0}
+  .bar{height:64px}
+  .brand img{width:40px;height:40px}
+  .burger,.hcall{width:44px;height:44px}
+  .burger span{left:13px;right:13px}.burger span:nth-child(1){top:16px}.burger span:nth-child(2){top:21px}.burger span:nth-child(3){top:26px}
+  section[id]{scroll-margin-top:64px}
+  .hero{padding-top:22px}
+  .hero-grid{gap:8px;padding-bottom:36px}
+  .hero h1{margin-bottom:18px}
+  .hero .lead{margin-bottom:26px}
+  .pill{margin-bottom:20px;font-size:.76rem}
+  .proof{margin-top:28px;font-size:.82rem}
+  .eyebrow{margin-bottom:14px;font-size:.7rem}
+  h2{font-size:clamp(2.1rem,9.4vw,2.6rem)}
+  .lead{font-size:1rem}
+  .bento{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;margin-inline:calc(-1*var(--gut));padding:4px var(--gut) 12px;scroll-padding-inline:var(--gut);scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .bento::-webkit-scrollbar{display:none}
+  .bento .card{flex:0 0 82%;scroll-snap-align:start;min-height:320px}
+  .dots{display:flex;justify-content:center;gap:8px;margin:6px 0 22px}
+  .dots i{width:7px;height:7px;border-radius:99px;background:rgba(12,26,28,.2);transition:width .35s var(--ease),background .3s}
+  .dots i.on{width:24px;background:var(--gold-d)}
+  .pillar{display:grid;grid-template-columns:auto 1fr;column-gap:18px;padding:22px;align-items:start}
+  .pillar .ib{grid-row:span 2;margin:0;width:52px;height:52px}
+  .pillar h3{margin:0 0 6px;font-size:1.6rem}
+  .pillars{gap:12px;margin-top:34px}
+  .steps{margin-top:34px}
+  .faq-grid{gap:22px}
+  summary{padding:22px 2px}
+  .js .rv{transform:translateY(22px);transition-duration:.7s}
+  .fact{padding:20px 14px}
+  .ig-card{padding:24px 20px}
+  form{padding:26px 20px}
+  .info a,.info .row{padding:16px 18px}
+  .card.cta-out{margin-top:6px}
+}
+@media(max-width:560px){.hide-s{display:none}}
+@media(max-height:640px) and (max-width:1020px){
+  .drawer{justify-content:flex-start;padding-top:84px}
+  .drawer a.l{font-size:1.7rem;padding:4px 0}
+  .drawer>.btn{margin-top:18px}
+}
+@media(max-width:340px){
+  .hero h1{font-size:2.6rem}
+  .an-chips button{font-size:.72rem}
+  .brand b{font-size:1.05rem}
+  .cta .btn{padding:0 16px;font-size:.9rem}
+}
+@media(orientation:landscape) and (max-height:500px){
+  .hero{padding-top:14px}
+  .stage{width:min(260px,40%)}
+  .mbar{display:none}
+  body{padding-bottom:0}
+  .dock{display:flex;flex-direction:row;right:max(14px,env(safe-area-inset-right))}
+  .dock a{width:46px;height:46px}
+}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -405,7 +512,7 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
 </svg>
 
 <a class="skip" href="#main">Asosiy mazmunga o‘tish</a>
-<div class="top">Qabulga yozilish: <a href="tel:+998951265666">+998 95 126 56 66</a> · Toshkent, Yunusobod</div>
+<div class="top">Qabulga yozilish: <a href="tel:+998951265666">+998 95 126 56 66</a><span class="hide-s"> · Toshkent, Yunusobod</span></div>
 
 <header id="hdr">
   <div class="wrap bar">
@@ -417,8 +524,10 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
       <a href="#about">Shifokor</a><a href="#implant">Implantatsiya</a><a href="#services">Xizmatlar</a><a href="#process">Bosqichlar</a><a href="#faq">Savollar</a><a href="#contact">Aloqa</a>
     </nav>
     <a href="#contact" class="btn btn-gold">Qabulga yozilish <svg class="i go"><use href="#i-go"/></svg></a>
-    <button class="burger" id="burger" aria-label="Menyuni ochish" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+    <div class="hr"><a class="hcall" href="tel:+998951265666" aria-label="Qo‘ng‘iroq qilish"><svg class="i"><use href="#i-phone"/></svg></a>
+    <button class="burger" id="burger" aria-label="Menyuni ochish" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button></div>
   </div>
+  <div class="prog" id="prog"></div>
 </header>
 
 <div class="drawer" id="drawer" aria-hidden="true">
@@ -429,6 +538,8 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
   <a class="l" href="#faq">Savollar <svg class="i"><use href="#i-go"/></svg></a>
   <a class="l" href="#contact">Aloqa <svg class="i"><use href="#i-go"/></svg></a>
   <a class="btn btn-gold" href="tel:+998951265666"><svg class="i"><use href="#i-phone"/></svg> +998 95 126 56 66</a>
+  <div class="d-sub"><a class="btn btn-line" href="https://wa.me/998951265666" target="_blank" rel="noopener"><svg class="i"><use href="#i-wa"/></svg> WhatsApp</a><a class="btn btn-line" href="https://www.instagram.com/akmal_anvarovich_/" target="_blank" rel="noopener"><svg class="i"><use href="#i-ig"/></svg> Instagram</a></div>
+  <p class="d-addr"><svg class="i"><use href="#i-pin"/></svg> Yunus Obod, A.Temur 119, Toshkent</p>
 </div>
 
 <main id="main">
@@ -437,9 +548,9 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
 <section class="hero" id="top" style="padding-bottom:0">
   <div class="wrap hero-grid">
     <div class="rv">
-      <div class="pill"><i></i> Toshkent · Yunusobod · Yangi bemorlar qabul qilinadi</div>
+      <div class="pill"><i></i> Toshkent · Yunusobod<span class="hide-s"> · Yangi bemorlar qabul qilinadi</span></div>
       <h1><span class="ln">Tabiiy tishlar.</span><span class="ln"><em>Umrbod</em> ishonch.</span></h1>
-      <p class="lead">Stomatolog va implantolog <b style="color:var(--ink)">Akmal Anvarovich</b> — 15 yildan ortiq amaliyot, aniq diagnostika va har bir bemor uchun shaxsiy davolash rejasi. Estetik, mustahkam va tabiiy natija.</p>
+      <p class="lead">Stomatolog va implantolog <b style="color:var(--ink)">Akmal Anvarovich</b> — 15 yildan ortiq amaliyot, aniq diagnostika va har bir bemor uchun shaxsiy davolash rejasi. <span class="hide-s"> Estetik, mustahkam va tabiiy natija.</span></p>
       <div class="cta">
         <a href="#contact" class="btn btn-gold">Qabulga yozilish <svg class="i go"><use href="#i-go"/></svg></a>
         <a href="tel:+998951265666" class="btn btn-line"><svg class="i"><use href="#i-phone"/></svg> +998 95 126 56 66</a>
@@ -451,7 +562,7 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
     </div>
 
     <div class="stage rv" style="--d:150ms" id="stage">
-      <div class="portrait" id="portrait"><img src="img/doctor.jpg" alt="Stomatolog-implantolog Akmal Anvarovich ish joyida" width="703" height="703" fetchpriority="high"></div>
+      <div class="portrait" id="portrait"><img src="img/doctor.jpg" alt="Stomatolog-implantolog Akmal Anvarovich ish joyida" width="703" height="703" fetchpriority="high" decoding="async"></div>
       <div class="orbit" aria-hidden="true">
         <svg class="t" viewBox="0 0 140 140"><defs><path id="circ" d="M70 70m-56 0a56 56 0 1 1 112 0a56 56 0 1 1-112 0"/></defs><text><textPath href="#circ">IMPLANTOLOGIYA • ESTETIKA • TAJRIBA •</textPath></text></svg>
         <svg class="i"><use href="#i-implant"/></svg>
@@ -510,8 +621,11 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
       <p class="lead" style="margin-top:20px">Zamonaviy implant to‘rt qismdan iborat. Har bir qismni bosib, uning vazifasi bilan tanishing.</p>
     </div>
     <div class="an-grid">
+      <div class="an-chips" id="anChips" role="tablist" aria-label="Implant qismlari">
+        <button type="button" role="tab" data-k="crown" aria-selected="true">Koronka</button><button type="button" role="tab" data-k="abutment" aria-selected="false">Abutment</button><button type="button" role="tab" data-k="implant" aria-selected="false">Implant</button><button type="button" role="tab" data-k="bone" aria-selected="false">Suyak</button>
+      </div>
       <div class="an-art rv" id="anArt">
-        <svg viewBox="0 0 440 620" role="img" aria-label="Tish implantining kesim sxemasi: koronka, abutment, titan implant va suyak">
+        <svg viewBox="0 96 440 524" role="img" aria-label="Tish implantining kesim sxemasi: koronka, abutment, titan implant va suyak">
           <defs>
             <linearGradient id="gBone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecdcc0"/><stop offset="1" stop-color="#c9ae82"/></linearGradient>
             <linearGradient id="gMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5f6c78"/><stop offset=".3" stop-color="#e2e8ee"/><stop offset=".55" stop-color="#a9b4be"/><stop offset="1" stop-color="#56636f"/></linearGradient>
@@ -551,10 +665,10 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
             <path d="M220 134C214 150 216 170 222 186" fill="none" stroke="#cfc4a8" stroke-width="2" stroke-linecap="round" opacity=".6"/>
           </g>
           <!-- hotspots -->
-          <g class="hs" data-k="crown" tabindex="0" role="button" aria-label="1. Koronka"><circle class="pr" cx="220" cy="196" r="14"/><circle class="dot" cx="220" cy="196" r="14"/><text x="220" y="196">1</text></g>
-          <g class="hs" data-k="abutment" tabindex="0" role="button" aria-label="2. Abutment"><circle class="pr" cx="220" cy="292" r="14"/><circle class="dot" cx="220" cy="292" r="14"/><text x="220" y="292">2</text></g>
-          <g class="hs" data-k="implant" tabindex="0" role="button" aria-label="3. Titan implant"><circle class="pr" cx="220" cy="448" r="14"/><circle class="dot" cx="220" cy="448" r="14"/><text x="220" y="448">3</text></g>
-          <g class="hs" data-k="bone" tabindex="0" role="button" aria-label="4. Suyak"><circle class="pr" cx="352" cy="470" r="14"/><circle class="dot" cx="352" cy="470" r="14"/><text x="352" y="470">4</text></g>
+          <g class="hs" data-k="crown" tabindex="0" role="button" aria-label="1. Koronka"><circle cx="220" cy="196" r="30" fill="transparent"/><circle class="pr" cx="220" cy="196" r="14"/><circle class="dot" cx="220" cy="196" r="14"/><text x="220" y="196">1</text></g>
+          <g class="hs" data-k="abutment" tabindex="0" role="button" aria-label="2. Abutment"><circle cx="220" cy="292" r="30" fill="transparent"/><circle class="pr" cx="220" cy="292" r="14"/><circle class="dot" cx="220" cy="292" r="14"/><text x="220" y="292">2</text></g>
+          <g class="hs" data-k="implant" tabindex="0" role="button" aria-label="3. Titan implant"><circle cx="220" cy="448" r="30" fill="transparent"/><circle class="pr" cx="220" cy="448" r="14"/><circle class="dot" cx="220" cy="448" r="14"/><text x="220" y="448">3</text></g>
+          <g class="hs" data-k="bone" tabindex="0" role="button" aria-label="4. Suyak"><circle cx="352" cy="470" r="30" fill="transparent"/><circle class="pr" cx="352" cy="470" r="14"/><circle class="dot" cx="352" cy="470" r="14"/><text x="352" y="470">4</text></g>
         </svg>
       </div>
 
@@ -580,6 +694,7 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
         <p class="note-sm">Sxema tushuntirish uchun soddalashtirilgan. Aniq davolash rejasi shifokor ko‘rigidan so‘ng tuziladi.</p>
       </div>
     </div>
+    <p class="note-sm m-note">Sxema tushuntirish uchun soddalashtirilgan. Aniq davolash rejasi shifokor ko‘rigidan so‘ng tuziladi.</p>
   </div>
 </section>
 
@@ -620,14 +735,15 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
         <h3>Davolash</h3>
         <p>Kariesdan murakkab holatlargacha — og‘riqsiz va ehtiyotkor davolash.</p>
       </article>
-      <article class="card cta-card c12 rv">
+    </div>
+    <div class="dots" id="svcDots" aria-hidden="true"></div>
+    <article class="card cta-card cta-out rv">
         <div>
           <h3>Qaysi usul sizga mos?</h3>
           <p>Konsultatsiyada holatingizni ko‘rib, variantlarni tushuntirib beramiz.</p>
         </div>
         <a class="btn" href="#contact">Konsultatsiyaga yozilish <svg class="i go"><use href="#i-go"/></svg></a>
-      </article>
-    </div>
+    </article>
   </div>
 </section>
 
@@ -735,8 +851,8 @@ footer{background:#081213;color:rgba(255,255,255,.6);padding:34px 0;font-size:.8
       <h3>Qabulga yozilish</h3>
       <p>Ma’lumotlaringizni qoldiring — biz siz bilan bog‘lanamiz.</p>
       <div class="two">
-        <div class="fld"><label for="fn">Ismingiz</label><input id="fn" name="name" autocomplete="name" placeholder="Ism familiya" required><span class="err">Iltimos, ismingizni kiriting</span></div>
-        <div class="fld"><label for="fp">Telefon</label><input id="fp" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998 90 123 45 67" required><span class="err">Telefon raqamini to‘liq kiriting</span></div>
+        <div class="fld"><label for="fn">Ismingiz</label><input id="fn" name="name" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="Ism familiya" required><span class="err">Iltimos, ismingizni kiriting</span></div>
+        <div class="fld"><label for="fp">Telefon</label><input id="fp" name="phone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="done" maxlength="17" placeholder="+998 90 123 45 67" required><span class="err">Telefon raqamini to‘liq kiriting</span></div>
       </div>
       <div class="fld"><label for="fs">Xizmat</label>
         <select id="fs" name="svc"><option>Konsultatsiya</option><option>Tish implantatsiyasi</option><option>All-on tiklash</option><option>Estetik restavratsiya</option><option>Koronka va protezlash</option><option>Tishlarni davolash</option></select>
@@ -773,7 +889,8 @@ const body=document.body,hdr=$('#hdr'),burger=$('#burger'),drawer=$('#drawer');
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 
 /* header + menu */
-const onScroll=()=>hdr.classList.toggle('stuck',scrollY>20);
+const prog=$('#prog');
+const onScroll=()=>{hdr.classList.toggle('stuck',scrollY>20);const m=document.documentElement.scrollHeight-innerHeight;prog.style.transform='scaleX('+(m>0?Math.min(scrollY/m,1):0)+')'};
 onScroll();addEventListener('scroll',onScroll,{passive:true});
 const setMenu=o=>{body.classList.toggle('menu-open',o);burger.setAttribute('aria-expanded',o);burger.setAttribute('aria-label',o?'Menyuni yopish':'Menyuni ochish');drawer.setAttribute('aria-hidden',!o)};
 burger.addEventListener('click',()=>setMenu(!body.classList.contains('menu-open')));
@@ -811,9 +928,11 @@ const act=k=>{
   items.forEach(i=>{const on=i.dataset.k===k;i.classList.toggle('on',on);$('button',i).setAttribute('aria-expanded',on)});
   Object.entries(parts).forEach(([n,el])=>el.classList.toggle('on',n===k));
   hs.forEach(h=>h.classList.toggle('on',h.dataset.k===k));
+  $$('#anChips button').forEach(c=>c.setAttribute('aria-selected',c.dataset.k===k));
 };
 items.forEach(i=>$('button',i).addEventListener('click',()=>act(i.dataset.k)));
 hs.forEach(h=>{h.addEventListener('click',()=>act(h.dataset.k));h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act(h.dataset.k)}})});
+$$('#anChips button').forEach(c=>c.addEventListener('click',()=>act(c.dataset.k)));
 act('crown');
 
 /* all-on arch */
@@ -866,7 +985,7 @@ form.addEventListener('submit',e=>{
   e.preventDefault();
   const nb=fn.value.trim().length<2,pb=digits(fp.value).length<12;
   mark(fn,nb);mark(fp,pb);
-  if(nb||pb){(nb?fn:fp).focus();return}
+  if(nb||pb){const f=nb?fn:fp;f.focus();f.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});return}
   const f=new FormData(form);
   const msg=`Assalomu alaykum! Qabulga yozilmoqchiman.\nIsm: ${f.get('name').trim()}\nTelefon: ${f.get('phone')}\nXizmat: ${f.get('svc')}`+(f.get('msg').trim()?`\nIzoh: ${f.get('msg').trim()}`:'');
   const url='https://wa.me/998951265666?text='+encodeURIComponent(msg);
@@ -874,6 +993,16 @@ form.addEventListener('submit',e=>{
   window.open(url,'_blank','noopener');
 });
 
+/* services dots */
+(()=>{const bn=$('.bento'),dots=$('#svcDots');if(!bn||!dots)return;const cards=$$('.card',bn);
+  dots.innerHTML=cards.map(()=>'<i></i>').join('');const ds=$$('i',dots);
+  const upd=()=>{const w=cards[0].offsetWidth+14;const i=Math.min(cards.length-1,Math.round(bn.scrollLeft/w));ds.forEach((d,k)=>d.classList.toggle('on',k===i))};
+  bn.addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();})();
+/* hide bottom bar over contact + while typing */
+(()=>{const mb=$('.mbar'),c=$('#contact');if(!mb)return;let inC=false,typing=false;const u=()=>mb.classList.toggle('hide',inC||typing);
+  new IntersectionObserver(es=>{inC=es[0].isIntersecting;u()},{threshold:.12}).observe(c);
+  document.addEventListener('focusin',e=>{if(e.target.matches('input,select,textarea')){typing=true;u()}});
+  document.addEventListener('focusout',()=>{typing=false;u()});})();
 $('#yr').textContent=new Date().getFullYear();
 })();
 </script>
