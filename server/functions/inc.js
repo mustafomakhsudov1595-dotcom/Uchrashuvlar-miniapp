@@ -26,6 +26,14 @@ function nextSubDue(x, today) {
   const c = at(ym);
   return c >= today ? c : null; // muddati oʻtgan — boshqa eslatma (subRem)
 }
+const clientLinks = async () => (await S.openStore({}).get('ig/clink', { type: 'json' }).catch(() => null)) || {};
+async function sendClient(lk, p, kind, over) {
+  const amount = S.money(S.owed(p)), nm = String(lk.name || '').split(' ')[0];
+  const when = kind === 'd3' ? `3 kundan keyin (${p.pdue})` : kind === 'd1' ? `ertaga (${p.pdue})` : kind === 'd0' ? 'bugun' : `${over} kun oldin edi (${p.pdue})`;
+  const t = `Assalomu alaykum${nm ? `, ${nm}` : ''}! ${kind === 'o' ? 'Eslatma: ' : 'Eslatib qoʻyamiz: '}«${p.name}» loyihasi boʻyicha ${amount} soʻm toʻlov muddati ${when}. ${kind === 'o' ? 'Iltimos, imkon qadar tezroq toʻlab yuboring. ' : ''}Savollar boʻlsa yozing. Rahmat! — Impro It`;
+  const r = await require('./biz').sendAs(lk.conn, lk.chat, t);
+  return { ok: r.ok, error: r.description };
+}
 const kindOf = (d) => (d === 7 ? 'd7' : d === 3 ? 'd3' : d === 1 ? 'd1' : d === 0 ? 'd0' : '');
 
 async function remind(u, now) {
@@ -59,6 +67,11 @@ async function remind(u, now) {
     if (!mark(p, key, kind === 'o' ? '' : p.pdue)) continue;
     const res = await send(u.chat, `${text(u, kind, esc(p.client || p.name), S.money(S.owed(p)), over)}\n\n<i>${esc(p.name)}</i>`, { inline_keyboard: [[{ text: P.bPay, callback_data: `pp:${p.id}` }, { text: P.bPayFull, callback_data: `ppf:${p.id}` }]] });
     if (res.ok) sent += 1;
+    const lk = (await clientLinks())[p.id];
+    if (lk && kind !== 'd7') { // mijoz Telegram'ga bogʻlangan: unga ham eslatma
+      const cs = await sendClient(lk, p, kind, over);
+      await send(u.chat, cs.ok ? `📨 Mijozga ham eslatma yuborildi (${esc(lk.name || '—')}).` : `⚠️ Mijozga eslatma yuborilmadi: ${esc(cs.error || 'xato')}`);
+    }
   }
   return { dirty, sent };
 }

@@ -453,7 +453,7 @@ async function onCallback(st, q) {
   else if (ext.ACTS.includes(act)) { toast = await ext.onCallback(ctx, u, act, a, b); }
   else if (svc.ACTS.includes(act)) { toast = await svc.onCallback(ctx, u, act, a, b); }
   else if (pay.ACTS.includes(act)) { toast = await pay.onCallback(ctx, u, act, a); }
-  else if (ig.ACTS.includes(act)) { toast = await ig.onCallback(ctx, u, act, a); }
+  else if (ig.ACTS.includes(act)) { toast = await ig.onCallback(ctx, u, act, a, b); }
   else if (health.ACTS.includes(act)) { toast = await health.onCallback(ctx, u, act); }
   else if (acc.ACTS.includes(act)) { toast = await acc.onCallback(ctx, u, act, a); }
   else if (wsm.ACTS.includes(act)) { toast = await wsm.onCallback(ctx, u, act, a, b); }

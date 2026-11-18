@@ -31,6 +31,29 @@ async function connections(st) {
 }
 const sendAs = (connId, chat, text) => tg('sendMessage', { business_connection_id: connId, chat_id: chat, text: String(text).slice(0, 4000) });
 
+// Ovoz va rasmni matnga aylantiradi: { text } | { fail: true }
+async function mediaText(c, m) {
+  const ext = require('./ext'), voice = require('./voice');
+  const src = m.voice || m.audio || m.video_note;
+  if (src) {
+    const tr = await voice.transcribe(src, 'uz');
+    return tr.text ? { text: `[ovozli xabar] ${tr.text.slice(0, 900)}` } : { fail: true };
+  }
+  const isImgDoc = m.document && /^image\//i.test(m.document.mime_type || '');
+  if (!m.photo && !isImgDoc) return { fail: true };
+  const sizes = Array.isArray(m.photo) ? [...m.photo].reverse() : [];
+  const ph = sizes.find((x) => !x.file_size || x.file_size <= 3.5e6);
+  const fileId = ph ? ph.file_id : isImgDoc ? m.document.file_id : '';
+  if (!fileId) return { fail: true };
+  const f = await S.tgFile(fileId, 5e6);
+  if (f.error) return { fail: true };
+  const mime = ph ? 'image/jpeg' : (m.document.mime_type || 'image/jpeg');
+  const owner = { tz: 300, lang: 'uz', ai: c.ai };
+  const r = await ext.aiCall(owner, 'Describe this picture factually in 1-3 short sentences in Uzbek (Latin). Read any visible text, names, amounts and dates exactly as printed. If it is a receipt, screenshot, document or design, say what it is. Do not guess or invent.', 'Rasmda nima bor?', { auto: true, image: `data:${mime};base64,${voice.b64(f.bytes)}`, limit: 300 });
+  c.ai = owner.ai;
+  return r.text ? { text: `[rasm: ${r.text.slice(0, 600)}]` } : { fail: true };
+}
+
 async function onMessage(st, m) {
   const conn = m.business_connection_id ? await st.get(`bc/${m.business_connection_id}`, { type: 'json' }) : null;
   if (!conn || !conn.on || !m.chat || m.chat.type !== 'private' || !m.from) return;
@@ -46,10 +69,33 @@ async function onMessage(st, m) {
     return;
   }
   if (m.from.is_bot) return;
-  const text = String(m.text || m.caption || '').trim() || ((m.photo || m.voice || m.video_note || m.audio || m.document || m.video) ? '[rasm/ovoz]' : '');
-  if (!text) return;
   const c = await ig.cfg(st);
   c.ai = (await st.get('ig/ai', { type: 'json' })) || null;
+  const cap = String(m.text || m.caption || '').trim();
+  const hasMedia = Boolean(m.photo || m.voice || m.video_note || m.audio || m.document || m.video);
+  let text = cap;
+  if (!m.text && hasMedia && c.on && !(m.video || (m.document && !/^image\//i.test(m.document.mime_type || '')))) {
+    const md = await mediaText(c, m).catch(() => ({ fail: true }));
+    text = md.text ? (cap ? `${md.text} ${cap}` : md.text) : cap || '[rasm/ovoz]';
+  } else if (!text && hasMedia) text = '[rasm/ovoz]';
+  if (!text) return;
+  if (text === '[rasm/ovoz]' && !ig.isVip(c, m.chat.id)) { // ovoz/rasm tushunilmadi: AI'ga yubormay, aniq javob
+    const l0 = await ig.getLead(st, leadId);
+    if (c.on && conn.can && !(l0 && l0.muted && l0.muted > Date.now())) await sendAs(conn.id, m.chat.id, m.voice || m.audio || m.video_note ? 'Ovozli xabaringizni tushuna olmadim (juda uzun yoki shovqinli boʻlishi mumkin). Iltimos, qisqaroq yuboring yoki matn bilan yozing 🙂' : 'Rahmat! Iltimos, savolingizni matn bilan yozing, yordam beramiz 🙂');
+    return;
+  }
+  if (ig.isVip(c, m.chat.id)) { // muhim odam: AI jim, egasiga darhol xabar
+    const now = Date.now();
+    let l = await ig.getLead(st, leadId);
+    if (!l) l = { id: leadId, name: [m.chat.first_name, m.chat.last_name].filter(Boolean).join(' '), username: m.chat.username || '', src: 'tg', first: now, last: now, intent: '', phone: '', hot: false, handoff: false, muted: 0, msgs: [], n: 0, spam: false };
+    l.vip = true; l.last = now; l.n += 1; l.conn = conn.id; l.chatId = String(m.chat.id);
+    l.msgs.push({ r: 'u', t: text.slice(0, 600), ts: now });
+    const ping = !l.vn || now - l.vn > 10 * 60000;
+    if (ping) l.vn = now;
+    await ig.saveLead(st, l);
+    if (ping) await ig.notifyVip(l, text, conn.chat);
+    return;
+  }
   const r = await ig.handleIncoming(st, c, leadId, text, { profile: { name: [m.from.first_name, m.from.last_name].filter(Boolean).join(' '), username: m.from.username || '' }, src: 'tg', conn: conn.id, chatId: String(m.chat.id) });
   if (r.reply && conn.can) {
     const sent = await sendAs(conn.id, m.chat.id, r.reply);

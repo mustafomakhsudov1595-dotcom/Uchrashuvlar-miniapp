@@ -29,6 +29,15 @@ async function cfg(st) {
 const saveCfg = (st, c) => st.setJSON('ig/cfg', c);
 const muteUntil = (c) => (c.muteMin > 0 ? Date.now() + c.muteMin * 60000 : 0); // egasi yozgach AI shuncha jim
 const muteText = (m) => (m === 0 ? 'jim boʻlmaydi' : m < 60 ? `${m} daqiqa` : `${m / 60} soat`);
+const isVip = (c, id) => (Array.isArray(c.vip) ? c.vip : []).some((v) => String(v.id) === String(id));
+async function toggleVip(st, l) {
+  const c = await cfg(st); c.vip = Array.isArray(c.vip) ? c.vip : [];
+  const id = String(l.chatId || String(l.id).replace(/^tg/, '')), i = c.vip.findIndex((v) => String(v.id) === id);
+  if (i >= 0) { c.vip.splice(i, 1); l.vip = false; } else { c.vip.push({ id, name: l.name || (l.username ? `@${l.username}` : id), lead: l.id }); l.vip = true; l.handoff = false; }
+  await saveCfg(st, c); await saveLead(st, l);
+  return l.vip;
+}
+const getLinks = async (st) => (await st.get('ig/clink', { type: 'json' })) || {}; // loyiha id -> { lead, conn, chat, name }
 async function getLead(st, id) { return (await st.get(`iglead/${id}`, { type: 'json' })) || null; }
 async function saveLead(st, l) {
   await st.setJSON(`iglead/${l.id}`, l);
@@ -97,7 +106,7 @@ Rules:
 - Answer the actual question first. Never steer the conversation to websites, bots, videos or any business. Do not offer services. Mention the owner's work only if the person explicitly asks what the owner does (then use: ${about || DEFAULT_ABOUT}).
 - Match the person: their language (Uzbek Latin by default; Russian or English if they write so), tone, and level. Casual with casual, formal with formal, detailed when they want details, one short line for a simple greeting or small talk (greet back warmly, ask how you can help).
 - Length: as short as the question allows (usually 1-5 sentences, more only if needed for a real answer). Under 1200 characters. At most one or two emoji. No markdown symbols.
-- Never invent personal facts about the owner, and never promise, agree, schedule, pay or decide anything on the owner's behalf: say you will pass it on and add the token [[OPERATOR]] at the very end.
+- Messages starting with [ovozli xabar] are speech-to-text transcripts and [rasm: ...] are automatic descriptions of a picture the person sent. Treat them as what the person said or showed, answer naturally, never mention the brackets, and if a transcript looks garbled, politely ask to repeat.\n- Never invent personal facts about the owner, and never promise, agree, schedule, pay or decide anything on the owner's behalf: say you will pass it on and add the token [[OPERATOR]] at the very end.
 - If asked whether you are a bot/AI, say honestly you are a virtual assistant and the owner can read the chat.
 - For medical, legal or financial questions give careful general information and suggest a specialist. Politely decline harmful or illegal requests.
 - If the person wants the owner personally or complains, say the owner will reply soon and add [[OPERATOR]] at the end.
@@ -110,7 +119,7 @@ ${about || DEFAULT_ABOUT}
 
 Rules:
 ${topics}
-- Reply in the person's language (Uzbek in Latin script by default; Russian or English if they write that way).
+- Messages starting with [ovozli xabar] are speech-to-text transcripts and [rasm: ...] are automatic descriptions of a picture the person sent. Treat them as what the person said or showed, answer naturally, never mention the brackets, and if a transcript looks garbled, politely ask to repeat.\n- Reply in the person's language (Uzbek in Latin script by default; Russian or English if they write that way).
 - Length: as short as the question allows (usually 1-4 sentences); give more only when asked. Keep under 900 characters. At most one or two emoji. No markdown symbols, no lists with asterisks.
 - If the person is interested in a website, Telegram bot or video, understand the need, ask ONE helpful question at a time and, when it is clear, politely ask for their name and phone number so the team can contact them. Do not push business on people who just chat. For a plain greeting (salom, assalomu alaykum, hi) just greet back warmly in one short line and ask how you can help or how they are; do NOT list or ask about services.
 - Never invent prices, deadlines, discounts, addresses, phone numbers, or personal facts about the owner. If asked about price or deadline and the facts above do not state it, say an exact quote comes after a short chat with the team and ask for a phone number.
@@ -232,7 +241,7 @@ function leadCard(l) {
   const last = l.msgs.slice(-6).map((m) => `${m.r === 'u' ? '👤' : m.r === 'b' ? '🤖' : '🧑‍💼'} ${esc(m.t.slice(0, 200))}`).join('\n');
   return `${l.src === 'tg' ? '✈️' : '📩'} <b>${leadName(l)}</b>${l.username ? ` · @${esc(l.username)}` : ''}\n${INTENT[l.intent] || INTENT['']}${l.phone ? ` · 📞 <b>${esc(l.phone)}</b>` : ''}${l.hot ? ' · 🔥' : ''}${l.handoff ? ' · 🙋 operator kerak' : ''}${l.muted && l.muted > Date.now() ? ' · 🔇 AI toʻxtatilgan' : ''}\n\n${last}`;
 }
-const leadKb = (l) => ({ inline_keyboard: [[{ text: '✍️ Javob yozish', callback_data: `igo:${l.id}` }, { text: l.muted && l.muted > Date.now() ? '🤖 AI yoqish' : '🔇 AI toʻxtatish', callback_data: `igm:${l.id}` }], [{ text: '👥 Lidlar', callback_data: 'igl:0' }]] });
+const leadKb = (l) => ({ inline_keyboard: [[{ text: '✍️ Javob yozish', callback_data: `igo:${l.id}` }, { text: l.muted && l.muted > Date.now() ? '🤖 AI yoqish' : '🔇 AI toʻxtatish', callback_data: `igm:${l.id}` }], ...(l.src === 'tg' ? [[{ text: l.vip ? '⭐ Muhimdan chiqarish' : '⭐ Muhim qilish', callback_data: `igv:${l.id}` }, { text: '🔗 Loyihaga bogʻlash', callback_data: `igp:${l.id}` }]] : []), [{ text: '👥 Lidlar', callback_data: 'igl:0' }]] });
 
 async function notifyOwner(c, r, extraChat) {
   if (c.notify === 'report') return; // faqat kunlik hisobot rejimi
@@ -245,6 +254,13 @@ async function notifyOwner(c, r, extraChat) {
     if (u && u.chat) await send(u.chat, `${title}\n\n${leadCard(l)}`, leadKb(l));
   }
   if (extraChat && !ids.includes(String(extraChat))) await send(extraChat, `${title}\n\n${leadCard(l)}`, leadKb(l)); // akkaunt egasi admin boʻlmasa ham
+}
+
+async function notifyVip(l, text, extraChat) {
+  const c = await cfg(store()), ids = [c.owner, ...S.adminIds()].filter((x, i, arr) => x && arr.indexOf(x) === i), st = store();
+  const msg = `⭐ <b>Muhim odam yozdi: ${leadName(l)}</b>${l.username ? ` · @${esc(l.username)}` : ''}\n\n${esc(String(text).slice(0, 700))}\n\n<i>AI javob bermadi — oʻzingiz javob yozing.</i>`;
+  for (const id of ids) { const u = await S.getUser(st, id).catch(() => null); if (u && u.chat) await send(u.chat, msg, leadKb(l)); }
+  if (extraChat && !ids.includes(String(extraChat))) await send(extraChat, msg, leadKb(l));
 }
 
 /* ---------- webhook ---------- */
@@ -329,7 +345,13 @@ async function showMain(ctx, u) {
   const bz = await require('./biz').connections(st);
   const conn = process.env.IG_TOKEN && process.env.IG_ACCOUNT_ID ? `✅ ulangan${tk && tk.err ? ' · ⚠️ token yangilanmadi' : tk && tk.exp ? ` · token ${new Date(tk.exp).toISOString().slice(8, 10)}.${new Date(tk.exp).toISOString().slice(5, 7)} gacha` : ''}` : '⏳ ulanmagan (Meta kalitlari kerak)';
   const text = `📸 <b>Lidlar (Instagram + Telegram Business)</b>\n\nMeta ulanishi: ${conn}\nTelegram Business: ${bz.length ? `✅ ulangan (${bz.map((x) => esc(x.name)).join(', ')})` : '⏳ ulanmagan (Sozlamalar → Biznes → Chat avtomatlashtirish)'}\nAI javob: ${c.on ? '🟢 yoqilgan' : '⏸ oʻchirilgan'}\nJavob doirasi: ${c.mode === 'work' ? '🎯 faqat ish' : '🌐 hamma mavzu (kim nima soʻrasa)'}\nEgam yozsa AI jim: ${muteText(c.muteMin)}\nKunlik hisobot: ${c.hour}\nBildirishnoma: ${c.notify === 'report' ? '📊 faqat hisobot' : '🔔 muhim lidlar + hisobot'}\n\nBugun: <b>${s.day.length}</b> ta yozgan · 🔥 ${s.hot.length} · 📞 ${s.phones.length}\n\n<i>Biznes haqida matn: ${c.about ? 'oʻrnatilgan ✅' : 'standart (oʻzgartirish tavsiya)'}</i>`;
-  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.mode === 'work' ? '🌐 Hamma mavzuda javob ber' : '🎯 Faqat ish boʻyicha', callback_data: 'igd:0' }], [{ text: `🔇 Egam yozsa AI jim: ${muteText(c.muteMin)} (almashtirish)`, callback_data: 'igu:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
+  return show(ctx, text, { inline_keyboard: [[{ text: c.on ? '⏸ AI oʻchirish' : '🟢 AI yoqish', callback_data: 'igt:0' }, { text: '✍️ Biznes haqida', callback_data: 'iga:0' }], [{ text: '🧪 Sinab koʻrish', callback_data: 'igx:0' }, { text: '👥 Lidlar', callback_data: 'igl:0' }], [{ text: c.mode === 'work' ? '🌐 Hamma mavzuda javob ber' : '🎯 Faqat ish boʻyicha', callback_data: 'igd:0' }], [{ text: `🔇 Egam yozsa AI jim: ${muteText(c.muteMin)} (almashtirish)`, callback_data: 'igu:0' }], [{ text: `⭐ Muhim odamlar (${(c.vip || []).length})`, callback_data: 'igvl:0' }], [{ text: c.notify === 'report' ? '🔔 Muhim lidlarni ham yuborish' : '🔕 Faqat hisobot', callback_data: 'ign:0' }, { text: '📊 Hisobot hozir', callback_data: 'igr:0' }]] });
+}
+async function showVip(ctx, u) {
+  const c = await cfg(store()), list = Array.isArray(c.vip) ? c.vip : [];
+  const rows = list.slice(0, 20).map((v) => [{ text: `❌ ${String(v.name).slice(0, 40)}`, callback_data: `igvr:${v.id}` }]);
+  rows.push([{ text: '⬅️', callback_data: 'igs:0' }]);
+  return show(ctx, `⭐ <b>Muhim odamlar</b>\n\nBularga AI <b>javob bermaydi</b> — xabari darhol sizga keladi (yozganda har 10 daqiqada bir marta).\n\n${list.length ? list.map((v) => `• ${esc(v.name)}`).join('\n') : '<i>Hozircha boʻsh.</i>'}\n\nQoʻshish: odam yozgach suhbat kartasida «⭐ Muhim qilish» ni bosing yoki <code>/muhim @username</code>.\nOlib tashlash uchun ❌ ni bosing.`, { inline_keyboard: rows });
 }
 async function showLeads(ctx, u) {
   const st = store(), leads = (await recentLeads(st, 20)).filter((l) => !l.spam);
@@ -341,6 +363,15 @@ async function showLeads(ctx, u) {
 async function onMessage(chat, u, cmd, args, text) {
   if (!isOwner(u)) return false;
   if (cmd === '/ig' || cmd === '/instagram') { await showMain({ chat }, u); return true; }
+  if (cmd === '/muhim' || cmd === '/vip') {
+    const un = String(args || '').trim().replace(/^@/, '').toLowerCase();
+    if (un) {
+      const l = (await recentLeads(store(), 400)).find((x) => String(x.username || '').toLowerCase() === un && x.src === 'tg');
+      if (!l) { await send(chat, 'Bunday odam lidlar orasida topilmadi. U avval sizga yozgan boʻlishi kerak yoki suhbat kartasidagi «⭐ Muhim qilish» tugmasini bosing.'); return true; }
+      if (!isVip(await cfg(store()), l.chatId)) await toggleVip(store(), l);
+    }
+    await showVip({ chat }, u); return true;
+  }
   if (cmd === '/igtest') { u.state = { kind: 'igtest' }; await send(chat, '🧪 Sinov rejimi. Mijoz kabi yozing, AI qanday javob berishini koʻrasiz. Chiqish: /bekor'); if (args) return runTest(chat, u, args); return true; }
   if (!cmd && u.state && u.state.kind === 'igtest') { if (!text) return true; return runTest(chat, u, text); }
   if (!cmd && u.state && u.state.kind === 'igabout') {
@@ -354,7 +385,7 @@ async function onMessage(chat, u, cmd, args, text) {
     const st = store(), l = await getLead(st, u.state.id); u.state = null;
     if (!l) { await send(chat, 'Lid topilmadi.'); return true; }
     const r = l.src === 'tg' ? await (async () => { const x = await require('./biz').sendAs(l.conn, l.chatId, text); return { ok: x.ok, error: x.description }; })() : await igSend(l.id, text);
-    if (r.ok) { l.msgs.push({ r: 'o', t: text.slice(0, 600), ts: Date.now() }); l.muted = muteUntil(await cfg(st)); l.handoff = false; await saveLead(st, l); await send(chat, (l.src === 'tg' ? '✅ Telegramga yuborildi.' : '✅ Instagramga yuborildi.') + ' AI 12 soat aralashmaydi.', leadKb(l)); }
+    if (r.ok) { l.msgs.push({ r: 'o', t: text.slice(0, 600), ts: Date.now() }); const c1 = await cfg(st); l.muted = muteUntil(c1); l.handoff = false; await saveLead(st, l); await send(chat, (l.src === 'tg' ? '✅ Telegramga yuborildi.' : '✅ Instagramga yuborildi.') + (c1.muteMin ? ` AI ${muteText(c1.muteMin)} aralashmaydi.` : ''), leadKb(l)); }
     else await send(chat, `❌ Yuborilmadi: ${esc(r.error)}\n\n<i>Instagram faqat mijoz yozgandan keyin 24 soat ichida javob berishga ruxsat beradi.</i>`);
     return true;
   }
@@ -370,7 +401,7 @@ async function runTest(chat, u, text) {
   await send(chat, `${r.reply ? `🤖 ${esc(r.reply)}` : '⚠️ AI javob bera olmadi (limit yoki xato)'}\n\n<i>${tags}</i>`);
   return true;
 }
-async function onCallback(ctx, u, act, a) {
+async function onCallback(ctx, u, act, a, b) {
   if (!isOwner(u)) return '🔒';
   const st = store();
   if (act === 'igs') await showMain(ctx, u);
@@ -380,6 +411,22 @@ async function onCallback(ctx, u, act, a) {
   else if (act === 'ign') { const c = await cfg(st); c.notify = c.notify === 'report' ? 'hot' : 'report'; await saveCfg(st, c); await showMain(ctx, u); return c.notify === 'report' ? '🔕' : '🔔'; }
   else if (act === 'iga') { u.state = { kind: 'igabout' }; await send(ctx.chat, '✍️ <b>Biznesingiz haqida</b> yozing: xizmatlar, narxlar (agar aytsa boʻladigan boʻlsa), muddatlar, ish vaqti, qanday gaplashish kerak.\n\nAI faqat shu maʼlumotdan foydalanadi, oʻzidan narx oʻylab topmaydi.\n\nHozirgi matn:\n' + esc((await cfg(st)).about || DEFAULT_ABOUT), { inline_keyboard: [[{ text: '❌ Bekor', callback_data: 'pno' }]] }); }
   else if (act === 'igx') { u.state = { kind: 'igtest' }; await send(ctx.chat, '🧪 Sinov rejimi. Mijoz kabi yozing (masalan: <i>Assalomu alaykum, sayt kerak edi</i>). Chiqish: /bekor'); }
+  else if (act === 'igv') { const l = await getLead(st, a); if (l) { const on = await toggleVip(st, l); await show(ctx, leadCard(l), leadKb(l)); return on ? '⭐' : '☆'; } }
+  else if (act === 'igvl') await showVip(ctx, u);
+  else if (act === 'igvr') { const c = await cfg(st); c.vip = (c.vip || []).filter((v) => String(v.id) !== String(a)); await saveCfg(st, c); const l = await getLead(st, `tg${a}`); if (l && l.vip) { l.vip = false; await saveLead(st, l); } await showVip(ctx, u); return '☆'; }
+  else if (act === 'igp') {
+    const lid = a, ix = b, l = await getLead(st, lid);
+    if (!l || l.src !== 'tg') return '';
+    const ps = S.activeProjects(u).filter((p) => S.owed(p) > 0), links = await getLinks(st);
+    if (ix !== undefined && ps[Number(ix)]) {
+      const p = ps[Number(ix)];
+      if (links[p.id] && links[p.id].lead === l.id) delete links[p.id]; else links[p.id] = { lead: l.id, conn: l.conn, chat: l.chatId, name: l.name || l.username || '' };
+      await st.setJSON('ig/clink', links);
+    }
+    const rows = ps.slice(0, 12).map((p, i) => [{ text: `${links[p.id] && links[p.id].lead === l.id ? '✅ ' : links[p.id] ? '↪️ ' : ''}${p.name} · ${S.money(S.owed(p))}${p.pdue ? '' : ' ⚠️ muddat yoʻq'}`.slice(0, 60), callback_data: `igp:${l.id}:${i}` }]);
+    rows.push([{ text: '⬅️', callback_data: `igj:${l.id}` }]);
+    await show(ctx, `🔗 <b>${leadName(l)}</b> qaysi loyiha mijozi?\n\nBogʻlangan (✅) loyihada toʻlov muddati yaqinlashganda (3 kun, 1 kun, bugun va kechiksa) mijozga <b>sizning nomingizdan</b> Telegramda eslatma yuboriladi. Bosib yana bog'lash/uzish mumkin.${ps.length ? '' : '\n\n<i>Qarzi bor faol loyiha yoʻq.</i>'}`, { inline_keyboard: rows });
+  }
   else if (act === 'igl') await showLeads(ctx, u);
   else if (act === 'igr') { const s = await dayStats(st, S.todayISO(u.tz), u.tz); await send(ctx.chat, reportText(s, S.todayISO(u.tz))); }
   else if (act === 'igj') { const l = await getLead(st, a); if (l) await show(ctx, leadCard(l), leadKb(l)); }
@@ -406,4 +453,4 @@ async function remind(u, now) {
   return { dirty: false, sent: r.ok ? 1 : 0 };
 }
 
-module.exports = { handler: exports.handler, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign', 'igd', 'igu'] };
+module.exports = { handler: exports.handler, isVip, toggleVip, notifyVip, getLinks, cfg, getLead, saveLead, notifyOwner, onMessage, onCallback, remind, refreshToken, igToken, deleteLead, pruneLeads, isDeleteAsk, handleIncoming, classify, recentLeads, ACTS: ['igs', 'igt', 'iga', 'igx', 'igl', 'igr', 'igj', 'igo', 'igm', 'ign', 'igd', 'igu', 'igv', 'igvl', 'igvr', 'igp'] };

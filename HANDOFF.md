@@ -70,3 +70,9 @@ Egasi chatda oʻzi yozsa AI shu chatda jim: `ig/cfg.muteMin` (15/60/240/720/0 da
 
 ## Doimiy xotira (bot)
 `server/functions/ig.js` ichida `MEMORY` konstantasi: bot har doim biladigan faktlar. Hozir: Impro It direktori (xojayini) — Ali. Yangi fakt qoʻshish uchun shu satrni tahrirlang.
+
+## Business: ovoz/rasm, muhim odamlar, mijozga eslatma
+- `biz.js` `mediaText`: ovozli xabar (whisper, ≤90 s) → `[ovozli xabar] ...`, rasm (vision) → `[rasm: ...]`; AI shuni mijoz gapi deb javob beradi. Tushunilmasa AI'ga yuborilmaydi, aniq xabar ketadi.
+- Muhim odamlar (`ig/cfg.vip`): AI javob bermaydi, egasiga darhol (har 10 daqiqada 1 marta) `notifyVip`. Boshqarish: `/muhim [@username]`, `/ig` → ⭐, lid kartasida «⭐ Muhim qilish».
+- Mijozga toʻlov eslatmasi: lid kartasi → «🔗 Loyihaga bogʻlash» (KV `ig/clink`: loyiha id → {lead, conn, chat, name}). `inc.js` loyiha `pdue` 3/1/0 kun va kechiksa mijozga `biz.sendAs` bilan yuboradi (7 kunlik faqat egasiga).
+- Callback: `bot.js` `ig.onCallback(ctx,u,act,a,b)` (b = uchinchi boʻlak).
