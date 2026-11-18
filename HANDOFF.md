@@ -67,3 +67,6 @@ Toʻlash kerak (Chiqim): hammasi uchun 7/3/1 kun oldin + kun + kechikkan (`pay.r
 
 ## 2026-11-17: Telegram Business jim vaqti va ruxsat
 Egasi chatda oʻzi yozsa AI shu chatda jim: `ig/cfg.muteMin` (15/60/240/720/0 daq; standart 60, `/ig` → «Egam yozsa AI jim» tugmasi). Egasi birinchi yozgan suhbatda ham lid yaratilib jim qilinadi. Telegram Business ulanishi faqat adminlar va hisobga kirgan aʼzolar uchun (`biz.onConnection`), begona akkauntlar rad etiladi.
+
+## Doimiy xotira (bot)
+`server/functions/ig.js` ichida `MEMORY` konstantasi: bot har doim biladigan faktlar. Hozir: Impro It direktori (xojayini) — Ali. Yangi fakt qoʻshish uchun shu satrni tahrirlang.

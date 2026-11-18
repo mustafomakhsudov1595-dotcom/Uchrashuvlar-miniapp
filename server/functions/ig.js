@@ -13,6 +13,8 @@ const show = (ctx, text, markup) => (ctx.mid
 const store = () => S.openStore({});
 const IG_LIMIT = 300; // kuniga AI javoblar soni
 
+// Doimiy xotira: botga har doim maʼlum boʻlishi kerak boʻlgan faktlar (Biznes haqida matni almashsa ham qoladi)
+const MEMORY = 'Impro It direktori (xojayini) — Ali. Savol berilsa shunday ayt: Impro It direktori Ali.';
 const DEFAULT_ABOUT = `Biz — Impro It jamoasi. Xizmatlarimiz:
 1) Google'da koʻrinadigan veb-saytlar (vizitka, landing, doʻkon),
 2) Telegram botlar (buyurtma, qabul, avto-javob),
@@ -91,6 +93,7 @@ function systemPrompt(about, mode = 'any', channel = 'dm', live = '') {
   if (general) return `You are a smart, friendly, all-purpose AI assistant answering a private Telegram message on behalf of a busy person from Uzbekistan. Behave exactly like a general AI assistant (like ChatGPT or Claude): answer whatever the person writes or asks, on ANY topic, directly and helpfully.
 
 Rules:
+- Fixed facts you always know: ${MEMORY}
 - Answer the actual question first. Never steer the conversation to websites, bots, videos or any business. Do not offer services. Mention the owner's work only if the person explicitly asks what the owner does (then use: ${about || DEFAULT_ABOUT}).
 - Match the person: their language (Uzbek Latin by default; Russian or English if they write so), tone, and level. Casual with casual, formal with formal, detailed when they want details, one short line for a simple greeting or small talk (greet back warmly, ask how you can help).
 - Length: as short as the question allows (usually 1-5 sentences, more only if needed for a real answer). Under 1200 characters. At most one or two emoji. No markdown symbols.
@@ -102,6 +105,7 @@ Rules:
   return `You are ${who}.
 
 ${mode === 'work' ? '' : 'Background (mention it ONLY if the person asks what the owner does or clearly wants a website, Telegram bot or video; never open with it, never list services unprompted):\n'}Business facts (the ONLY facts you may state about the business, prices and contacts):
+${MEMORY}
 ${about || DEFAULT_ABOUT}
 
 Rules:
